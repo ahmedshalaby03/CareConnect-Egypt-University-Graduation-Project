@@ -252,7 +252,7 @@ After running migrations, use these to explore the platform:
 | Eslam Salem | Full-Stack Developer |
 | Abdelrahman Rabea | Full-Stack Developer |
 | Abdelrahman Siam | Flutter Developer |
-| Alaa Nasser | Flutter Developer |
+| Alaa Naser | Flutter Developer |
 | Saif Omran | Cloud Architect |
 
 ---
