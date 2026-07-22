@@ -12,6 +12,7 @@ import {
   HospitalDirectoryItem,
   HospitalDirectoryQuery,
 } from '../models/directory.model';
+import { AvailableSlotsResponse } from '../models/slot.model';
 
 /**
  * Browse endpoints shared by every signed-in role. The API only ever returns completed
@@ -59,6 +60,23 @@ export class DirectoryService {
   getDoctor(id: string): Observable<DoctorDirectoryDetails> {
     return this.http
       .get<ApiResponse<DoctorDirectoryDetails>>(`${this.doctorsUrl}/${id}`)
+      .pipe(map((response) => response.data!));
+  }
+
+  /** Slot generation always happens server-side; this just asks for the result. */
+  getAvailableSlots(
+    doctorProfileId: string,
+    hospitalProfileId: string,
+    date: string,
+  ): Observable<AvailableSlotsResponse> {
+    const params = new HttpParams()
+      .set('hospitalProfileId', hospitalProfileId)
+      .set('date', date);
+
+    return this.http
+      .get<ApiResponse<AvailableSlotsResponse>>(`${this.doctorsUrl}/${doctorProfileId}/available-slots`, {
+        params,
+      })
       .pipe(map((response) => response.data!));
   }
 

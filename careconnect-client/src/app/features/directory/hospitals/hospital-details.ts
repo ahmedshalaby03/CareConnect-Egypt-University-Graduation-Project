@@ -6,6 +6,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { RouterLink } from '@angular/router';
 import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor';
 import { HospitalDirectoryDetails } from '../../../core/models/directory.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { DirectoryService } from '../../../core/services/directory.service';
 
 /** Public hospital page: profile, specialties and the doctors approved to work there. */
@@ -18,6 +19,7 @@ import { DirectoryService } from '../../../core/services/directory.service';
 })
 export class HospitalDetails implements OnInit {
   private readonly directory = inject(DirectoryService);
+  private readonly auth = inject(AuthService);
 
   /** Bound from the route parameter through withComponentInputBinding(). */
   readonly id = input.required<string>();
@@ -25,6 +27,8 @@ export class HospitalDetails implements OnInit {
   protected readonly hospital = signal<HospitalDirectoryDetails | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
+
+  protected readonly canBook = () => this.auth.role() === 'Patient';
 
   ngOnInit(): void {
     this.directory.getHospital(this.id()).subscribe({

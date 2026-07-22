@@ -40,6 +40,11 @@ public static class DependencyInjection
         services.AddScoped<IDoctorHospitalAffiliationService, DoctorHospitalAffiliationService>();
         services.AddScoped<IHealthcareDirectoryService, HealthcareDirectoryService>();
 
+        services.AddScoped<IDoctorAvailabilityService, DoctorAvailabilityService>();
+        services.AddScoped<IDoctorUnavailablePeriodService, DoctorUnavailablePeriodService>();
+        services.AddScoped<IAvailableSlotService, AvailableSlotService>();
+        services.AddScoped<IAppointmentService, AppointmentService>();
+
         services.AddScoped<DatabaseSeeder>();
 
         return services;

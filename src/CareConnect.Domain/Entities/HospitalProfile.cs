@@ -43,6 +43,11 @@ public class HospitalProfile
     public ICollection<DoctorHospitalAffiliation> DoctorAffiliations { get; set; } =
         new List<DoctorHospitalAffiliation>();
 
+    public ICollection<DoctorAvailability> Availabilities { get; set; } =
+        new List<DoctorAvailability>();
+
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
     public bool HasRequiredProfileFields() =>
         !string.IsNullOrWhiteSpace(HospitalName)
         && !string.IsNullOrWhiteSpace(Address)

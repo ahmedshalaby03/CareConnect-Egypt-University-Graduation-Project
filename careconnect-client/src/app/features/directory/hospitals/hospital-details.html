@@ -99,7 +99,18 @@
                     </span>
                   </div>
 
-                  <a [routerLink]="['/doctors', doctor.doctorProfileId]" mat-button>View</a>
+                  <div class="doctors__actions">
+                    <a [routerLink]="['/doctors', doctor.doctorProfileId]" mat-button>View</a>
+                    @if (canBook()) {
+                      <a
+                        [routerLink]="['/doctors', doctor.doctorProfileId, 'book']"
+                        mat-flat-button
+                        color="primary"
+                      >
+                        Book
+                      </a>
+                    }
+                  </div>
                 </li>
               }
             </ul>

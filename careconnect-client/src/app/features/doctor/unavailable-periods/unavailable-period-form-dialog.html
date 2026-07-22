@@ -1,0 +1,73 @@
+<h2 mat-dialog-title>Add unavailable period</h2>
+
+<mat-dialog-content>
+  @if (serverError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+    </div>
+  }
+
+  @if (data.hospitals.length === 0) {
+    <div class="cc-error-summary" role="alert">
+      <span>You need an approved hospital affiliation before you can add an unavailable period.</span>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Hospital</mat-label>
+      <mat-select formControlName="hospitalProfileId">
+        @for (hospital of data.hospitals; track hospital.id) {
+          <mat-option [value]="hospital.id">{{ hospital.hospitalName }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.hospitalProfileId.hasError('required') && form.controls.hospitalProfileId.touched) {
+        <mat-error>Please select a hospital.</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="cc-form-grid">
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Start date</mat-label>
+        <input matInput type="date" formControlName="startDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Start time</mat-label>
+        <input matInput type="time" formControlName="startTime" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>End date</mat-label>
+        <input matInput type="date" formControlName="endDate" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>End time</mat-label>
+        <input matInput type="time" formControlName="endTime" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Reason (optional)</mat-label>
+      <textarea matInput formControlName="reason" rows="3" placeholder="e.g. Annual leave"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button (click)="dialogRef.close()">Cancel</button>
+  <button
+    type="button"
+    mat-flat-button
+    color="primary"
+    [disabled]="saving() || data.hospitals.length === 0"
+    (click)="submit()"
+  >
+    @if (saving()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      <span>Add period</span>
+    }
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,116 @@
+<div class="cc-page">
+  <a routerLink="/dashboard/doctor/appointments" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All appointments
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading appointment…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Appointment unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (appointment(); as a) {
+    <header class="cc-page-header details-head">
+      <div>
+        <h1>{{ a.patientName }}</h1>
+        <p>{{ a.appointmentDate | date: 'fullDate' }} · {{ a.startTime.slice(0, 5) }} - {{ a.endTime.slice(0, 5) }}</p>
+      </div>
+      <span class="cc-status-chip" [class]="statusClass(a.statusName)">{{ a.statusName }}</span>
+    </header>
+
+    <div class="layout">
+      <div class="layout__main">
+        <section class="cc-card">
+          <h2>Visit details</h2>
+          <dl class="facts">
+            <div>
+              <dt>Hospital</dt>
+              <dd>{{ a.hospitalName }}</dd>
+            </div>
+            <div>
+              <dt>Patient phone</dt>
+              <dd>{{ a.patientPhoneNumber ?? '—' }}</dd>
+            </div>
+            <div class="facts__full">
+              <dt>Reason for visit</dt>
+              <dd>{{ a.reason ?? '—' }}</dd>
+            </div>
+            @if (a.patientNotes) {
+              <div class="facts__full">
+                <dt>Patient notes</dt>
+                <dd>{{ a.patientNotes }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (a.statusName === 'Rejected' && a.rejectionReason) {
+            <p class="note">Rejection reason: {{ a.rejectionReason }}</p>
+          }
+          @if (a.statusName === 'Cancelled' && a.cancellationReason) {
+            <p class="note">Cancellation reason: {{ a.cancellationReason }}</p>
+          }
+        </section>
+
+        <section class="cc-card">
+          <h2>Clinical notes</h2>
+          <p class="lead">Only you can see these notes - patients and hospitals never do.</p>
+
+          <form [formGroup]="notesForm" (ngSubmit)="saveNotes()" novalidate>
+            <mat-form-field appearance="outline" class="cc-form-field">
+              <mat-label>Doctor notes</mat-label>
+              <textarea matInput formControlName="doctorNotes" rows="6"></textarea>
+              <mat-hint align="end">{{ notesForm.controls.doctorNotes.value.length }} / 4000</mat-hint>
+            </mat-form-field>
+
+            <div class="actions">
+              <button type="submit" mat-flat-button color="primary" [disabled]="savingNotes()">
+                @if (savingNotes()) {
+                  <mat-spinner diameter="20" />
+                } @else {
+                  <span>Save notes</span>
+                }
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+
+      <aside class="layout__side">
+        <section class="cc-card">
+          <h2>Actions</h2>
+
+          @if (a.statusName === 'Pending') {
+            <div class="action-buttons">
+              <button type="button" mat-flat-button color="primary" [disabled]="busy()" (click)="confirm()">
+                Confirm
+              </button>
+              <button type="button" mat-stroked-button color="warn" [disabled]="busy()" (click)="reject()">
+                Reject
+              </button>
+            </div>
+          } @else if (a.statusName === 'Confirmed') {
+            <div class="action-buttons">
+              <button type="button" mat-flat-button color="primary" [disabled]="busy()" (click)="complete()">
+                Mark completed
+              </button>
+              <button type="button" mat-stroked-button [disabled]="busy()" (click)="markNoShow()">
+                Mark no-show
+              </button>
+              <button type="button" mat-button color="warn" [disabled]="busy()" (click)="cancel()">
+                Cancel appointment
+              </button>
+            </div>
+          } @else {
+            <p class="lead">No further actions are available for a {{ a.statusName }} appointment.</p>
+          }
+        </section>
+      </aside>
+    </div>
+  }
+</div>

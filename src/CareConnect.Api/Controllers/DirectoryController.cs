@@ -1,6 +1,7 @@
 using CareConnect.Api.Common;
 using CareConnect.Application.Common.Models;
 using CareConnect.Application.DTOs.Directory;
+using CareConnect.Application.DTOs.Scheduling;
 using CareConnect.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -53,8 +54,13 @@ public class HospitalsDirectoryController : ApiControllerBase
 public class DoctorsDirectoryController : ApiControllerBase
 {
     private readonly IHealthcareDirectoryService _directory;
+    private readonly IAvailableSlotService _slots;
 
-    public DoctorsDirectoryController(IHealthcareDirectoryService directory) => _directory = directory;
+    public DoctorsDirectoryController(IHealthcareDirectoryService directory, IAvailableSlotService slots)
+    {
+        _directory = directory;
+        _slots = slots;
+    }
 
     [HttpGet]
     [ProducesResponseType(typeof(ApiResponse<PagedResult<DoctorDirectoryItemDto>>), StatusCodes.Status200OK)]
@@ -74,6 +80,23 @@ public class DoctorsDirectoryController : ApiControllerBase
     public async Task<IActionResult> GetById(Guid id, CancellationToken ct)
     {
         var result = await _directory.GetDoctorAsync(id, ct);
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Bookable slots for one doctor, at one hospital, on one date. Slot generation is
+    /// always computed here, on the server - Angular never calculates a slot itself.
+    /// </summary>
+    [HttpGet("{doctorProfileId:guid}/available-slots")]
+    [ProducesResponseType(typeof(ApiResponse<AvailableSlotsResponse>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAvailableSlots(
+        Guid doctorProfileId,
+        [FromQuery] Guid hospitalProfileId,
+        [FromQuery] DateOnly date,
+        CancellationToken ct)
+    {
+        var result = await _slots.GetAvailableSlotsAsync(doctorProfileId, hospitalProfileId, date, ct);
         return FromResult(result);
     }
 }

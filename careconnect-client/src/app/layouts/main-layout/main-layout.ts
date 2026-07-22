@@ -21,18 +21,21 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Dashboard', route: '/dashboard/patient', icon: 'dashboard', exact: true },
     { label: 'Doctors', route: '/doctors', icon: 'medical_information' },
     { label: 'Hospitals', route: '/hospitals', icon: 'local_hospital' },
+    { label: 'My appointments', route: '/dashboard/patient/appointments', icon: 'event_note' },
   ],
   Doctor: [
     { label: 'Dashboard', route: '/dashboard/doctor', icon: 'dashboard', exact: true },
     { label: 'My profile', route: '/dashboard/doctor/profile', icon: 'badge' },
     { label: 'Find hospitals', route: '/dashboard/doctor/hospitals', icon: 'travel_explore' },
     { label: 'My requests', route: '/dashboard/doctor/hospital-requests', icon: 'assignment' },
+    { label: 'Appointments', route: '/dashboard/doctor/appointments', icon: 'event_note' },
   ],
   Hospital: [
     { label: 'Dashboard', route: '/dashboard/hospital', icon: 'dashboard', exact: true },
     { label: 'Profile', route: '/dashboard/hospital/profile', icon: 'domain' },
     { label: 'Requests', route: '/dashboard/hospital/doctor-requests', icon: 'how_to_reg' },
     { label: 'Our doctors', route: '/dashboard/hospital/doctors', icon: 'groups' },
+    { label: 'Appointments', route: '/dashboard/hospital/appointments', icon: 'event_note' },
   ],
   MedicalServiceProvider: [
     { label: 'Dashboard', route: '/dashboard/service-provider', icon: 'dashboard', exact: true },

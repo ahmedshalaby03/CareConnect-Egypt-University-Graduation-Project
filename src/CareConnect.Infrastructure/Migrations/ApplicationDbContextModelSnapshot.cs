@@ -135,6 +135,158 @@ namespace CareConnect.Infrastructure.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("CareConnect.Domain.Entities.Appointment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateOnly>("AppointmentDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CancelledByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ConfirmedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DoctorNotes")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.Property<Guid>("DoctorProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("HospitalProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PatientNotes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<Guid>("PatientProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RejectionReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentDate");
+
+                    b.HasIndex("CancelledByUserId");
+
+                    b.HasIndex("DoctorProfileId");
+
+                    b.HasIndex("HospitalProfileId");
+
+                    b.HasIndex("PatientProfileId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("DoctorProfileId", "AppointmentDate")
+                        .HasDatabaseName("IX_Appointments_Doctor_Date");
+
+                    b.HasIndex("HospitalProfileId", "AppointmentDate")
+                        .HasDatabaseName("IX_Appointments_Hospital_Date");
+
+                    b.HasIndex("DoctorProfileId", "AppointmentDate", "StartTime")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Appointments_Doctor_Date_StartTime_ActiveUnique")
+                        .HasFilter("[Status] IN ('Pending', 'Confirmed')");
+
+                    b.ToTable("Appointments", (string)null);
+                });
+
+            modelBuilder.Entity("CareConnect.Domain.Entities.DoctorAvailability", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DayOfWeek")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.Property<Guid>("DoctorProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<TimeOnly>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<Guid>("HospitalProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<int>("SlotDurationMinutes")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DayOfWeek");
+
+                    b.HasIndex("DoctorProfileId");
+
+                    b.HasIndex("HospitalProfileId");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("DoctorProfileId", "HospitalProfileId", "DayOfWeek")
+                        .HasDatabaseName("IX_DoctorAvailabilities_Doctor_Hospital_Day");
+
+                    b.ToTable("DoctorAvailabilities", (string)null);
+                });
+
             modelBuilder.Entity("CareConnect.Domain.Entities.DoctorHospitalAffiliation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -257,6 +409,44 @@ namespace CareConnect.Infrastructure.Migrations
                         .HasDatabaseName("IX_DoctorProfiles_Completed_Location");
 
                     b.ToTable("DoctorProfiles", (string)null);
+                });
+
+            modelBuilder.Entity("CareConnect.Domain.Entities.DoctorUnavailablePeriod", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DoctorProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("EndDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("HospitalProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("StartDateTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorProfileId");
+
+                    b.HasIndex("EndDateTime");
+
+                    b.HasIndex("HospitalProfileId");
+
+                    b.HasIndex("StartDateTime");
+
+                    b.ToTable("DoctorUnavailablePeriods", (string)null);
                 });
 
             modelBuilder.Entity("CareConnect.Domain.Entities.HospitalProfile", b =>
@@ -632,6 +822,59 @@ namespace CareConnect.Infrastructure.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("CareConnect.Domain.Entities.Appointment", b =>
+                {
+                    b.HasOne("CareConnect.Domain.Entities.ApplicationUser", "CancelledByUser")
+                        .WithMany()
+                        .HasForeignKey("CancelledByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CareConnect.Domain.Entities.DoctorProfile", "DoctorProfile")
+                        .WithMany("Appointments")
+                        .HasForeignKey("DoctorProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.HospitalProfile", "HospitalProfile")
+                        .WithMany("Appointments")
+                        .HasForeignKey("HospitalProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.PatientProfile", "PatientProfile")
+                        .WithMany("Appointments")
+                        .HasForeignKey("PatientProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CancelledByUser");
+
+                    b.Navigation("DoctorProfile");
+
+                    b.Navigation("HospitalProfile");
+
+                    b.Navigation("PatientProfile");
+                });
+
+            modelBuilder.Entity("CareConnect.Domain.Entities.DoctorAvailability", b =>
+                {
+                    b.HasOne("CareConnect.Domain.Entities.DoctorProfile", "DoctorProfile")
+                        .WithMany("Availabilities")
+                        .HasForeignKey("DoctorProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.HospitalProfile", "HospitalProfile")
+                        .WithMany("Availabilities")
+                        .HasForeignKey("HospitalProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DoctorProfile");
+
+                    b.Navigation("HospitalProfile");
+                });
+
             modelBuilder.Entity("CareConnect.Domain.Entities.DoctorHospitalAffiliation", b =>
                 {
                     b.HasOne("CareConnect.Domain.Entities.DoctorProfile", "DoctorProfile")
@@ -667,6 +910,25 @@ namespace CareConnect.Infrastructure.Migrations
                     b.Navigation("Specialty");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("CareConnect.Domain.Entities.DoctorUnavailablePeriod", b =>
+                {
+                    b.HasOne("CareConnect.Domain.Entities.DoctorProfile", "DoctorProfile")
+                        .WithMany("UnavailablePeriods")
+                        .HasForeignKey("DoctorProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.HospitalProfile", "HospitalProfile")
+                        .WithMany()
+                        .HasForeignKey("HospitalProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("DoctorProfile");
+
+                    b.Navigation("HospitalProfile");
                 });
 
             modelBuilder.Entity("CareConnect.Domain.Entities.HospitalProfile", b =>
@@ -798,14 +1060,29 @@ namespace CareConnect.Infrastructure.Migrations
 
             modelBuilder.Entity("CareConnect.Domain.Entities.DoctorProfile", b =>
                 {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("Availabilities");
+
                     b.Navigation("HospitalAffiliations");
+
+                    b.Navigation("UnavailablePeriods");
                 });
 
             modelBuilder.Entity("CareConnect.Domain.Entities.HospitalProfile", b =>
                 {
+                    b.Navigation("Appointments");
+
+                    b.Navigation("Availabilities");
+
                     b.Navigation("DoctorAffiliations");
 
                     b.Navigation("HospitalSpecialties");
+                });
+
+            modelBuilder.Entity("CareConnect.Domain.Entities.PatientProfile", b =>
+                {
+                    b.Navigation("Appointments");
                 });
 
             modelBuilder.Entity("CareConnect.Domain.Entities.Specialty", b =>

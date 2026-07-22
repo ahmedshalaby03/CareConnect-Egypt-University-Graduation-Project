@@ -47,6 +47,24 @@ export const routes: Routes = [
           import('./features/dashboard/role-dashboard/role-dashboard').then((m) => m.RoleDashboard),
         data: { role: 'Patient' },
       },
+      {
+        path: 'dashboard/patient/appointments',
+        title: 'My appointments - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/appointments/patient-appointments').then(
+            (m) => m.PatientAppointments,
+          ),
+      },
+      {
+        path: 'dashboard/patient/appointments/:id',
+        title: 'Appointment - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/appointments/patient-appointment-details').then(
+            (m) => m.PatientAppointmentDetails,
+          ),
+      },
 
       // ------------------------------------------------------------- Doctor
       {
@@ -78,6 +96,40 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/doctor/hospital-requests/doctor-hospital-requests').then(
             (m) => m.DoctorHospitalRequests,
+          ),
+      },
+      {
+        path: 'dashboard/doctor/availability',
+        title: 'My availability - CareConnect Egypt',
+        canActivate: [roleGuard('Doctor')],
+        loadComponent: () =>
+          import('./features/doctor/availability/availability').then((m) => m.DoctorAvailability),
+      },
+      {
+        path: 'dashboard/doctor/unavailable-periods',
+        title: 'Unavailable periods - CareConnect Egypt',
+        canActivate: [roleGuard('Doctor')],
+        loadComponent: () =>
+          import('./features/doctor/unavailable-periods/unavailable-periods').then(
+            (m) => m.DoctorUnavailablePeriods,
+          ),
+      },
+      {
+        path: 'dashboard/doctor/appointments',
+        title: 'My appointments - CareConnect Egypt',
+        canActivate: [roleGuard('Doctor')],
+        loadComponent: () =>
+          import('./features/doctor/appointments/doctor-appointments').then(
+            (m) => m.DoctorAppointments,
+          ),
+      },
+      {
+        path: 'dashboard/doctor/appointments/:id',
+        title: 'Appointment - CareConnect Egypt',
+        canActivate: [roleGuard('Doctor')],
+        loadComponent: () =>
+          import('./features/doctor/appointments/doctor-appointment-details').then(
+            (m) => m.DoctorAppointmentDetails,
           ),
       },
 
@@ -112,6 +164,15 @@ export const routes: Routes = [
         canActivate: [roleGuard('Hospital')],
         loadComponent: () =>
           import('./features/hospital/doctors/hospital-doctors').then((m) => m.HospitalDoctors),
+      },
+      {
+        path: 'dashboard/hospital/appointments',
+        title: 'Appointments - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/hospital/appointments/hospital-appointments').then(
+            (m) => m.HospitalAppointments,
+          ),
       },
 
       {
@@ -166,6 +227,15 @@ export const routes: Routes = [
         title: 'Doctor - CareConnect Egypt',
         loadComponent: () =>
           import('./features/directory/doctors/doctor-details').then((m) => m.DoctorDetails),
+      },
+      {
+        path: 'doctors/:id/book',
+        title: 'Book an appointment - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/booking/book-appointment/book-appointment').then(
+            (m) => m.BookAppointment,
+          ),
       },
     ],
   },

@@ -12,6 +12,20 @@
       </div>
     </section>
 
+    @if (stats() && stats()!.length > 0) {
+      <div class="stat-row">
+        @for (tile of stats()!; track tile.label) {
+          <article class="stat-tile">
+            <mat-icon>{{ tile.icon }}</mat-icon>
+            <div>
+              <span class="stat-tile__value">{{ tile.value }}</span>
+              <span class="stat-tile__label">{{ tile.label }}</span>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
     @if (config().quickLinks.length) {
       <nav class="quick-links" aria-label="Quick actions">
         @for (link of config().quickLinks; track link.route) {

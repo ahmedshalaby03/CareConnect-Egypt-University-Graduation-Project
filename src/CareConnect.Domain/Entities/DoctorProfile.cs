@@ -38,6 +38,14 @@ public class DoctorProfile
     public ICollection<DoctorHospitalAffiliation> HospitalAffiliations { get; set; } =
         new List<DoctorHospitalAffiliation>();
 
+    public ICollection<DoctorAvailability> Availabilities { get; set; } =
+        new List<DoctorAvailability>();
+
+    public ICollection<DoctorUnavailablePeriod> UnavailablePeriods { get; set; } =
+        new List<DoctorUnavailablePeriod>();
+
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
     /// <summary>
     /// The completion rule, kept next to the data it describes so the API and any future
     /// caller cannot disagree about what "completed" means.

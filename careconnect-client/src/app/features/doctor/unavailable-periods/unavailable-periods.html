@@ -1,0 +1,56 @@
+<div class="cc-page">
+  <header class="cc-page-header page-head">
+    <div>
+      <h1>Unavailable periods</h1>
+      <p>Block time off - a single absence, a partial day, or a vacation span.</p>
+    </div>
+    <button type="button" mat-flat-button color="primary" (click)="openForm()">
+      <mat-icon>event_busy</mat-icon>
+      Add period
+    </button>
+  </header>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && periods().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>event_available</mat-icon>
+      <h2>No unavailable periods</h2>
+      <p>Your schedule is open. Add a period when you need to block off time.</p>
+    </div>
+  } @else {
+    <div class="periods">
+      @for (period of periods(); track period.id) {
+        <article class="cc-card period-card">
+          <div class="period-card__main">
+            <h2>{{ period.hospitalName }}</h2>
+            <p class="period-card__range">
+              <mat-icon>event</mat-icon>
+              {{ period.startDateTime | date: 'medium' }} – {{ period.endDateTime | date: 'medium' }}
+            </p>
+            @if (period.reason) {
+              <p class="period-card__reason">{{ period.reason }}</p>
+            }
+          </div>
+
+          @if (isFuture(period)) {
+            <button
+              type="button"
+              mat-button
+              color="warn"
+              [disabled]="deletingId() === period.id"
+              (click)="delete(period)"
+            >
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
+          } @else {
+            <span class="cc-status-chip cc-status-chip--inactive">Past</span>
+          }
+        </article>
+      }
+    </div>
+  }
+</div>
