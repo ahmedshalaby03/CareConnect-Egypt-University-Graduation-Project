@@ -1,0 +1,140 @@
+.auth-card {
+  width: 100%;
+  max-width: 620px;
+}
+
+.auth-card__head {
+  margin-bottom: 20px;
+
+  h2 {
+    margin: 0 0 6px;
+    font-size: 1.7rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+.role-picker {
+  border: none;
+  margin: 4px 0 12px;
+  padding: 0;
+
+  legend {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--mat-sys-on-surface-variant);
+    margin-bottom: 10px;
+    padding: 0;
+  }
+
+  &__error {
+    margin: 8px 2px 0;
+    font-size: 0.75rem;
+    color: var(--cc-danger);
+  }
+}
+
+.role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.role-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'icon label'
+    'icon desc';
+  align-items: center;
+  gap: 2px 12px;
+  text-align: start;
+  padding: 14px;
+  border-radius: 14px;
+  border: 1.5px solid var(--mat-sys-outline-variant);
+  background: var(--mat-sys-surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+
+  mat-icon {
+    grid-area: icon;
+    color: var(--cc-brand);
+  }
+
+  &__label {
+    grid-area: label;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  &__desc {
+    grid-area: desc;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  &:hover {
+    border-color: var(--cc-brand);
+    background: color-mix(in srgb, var(--cc-brand) 4%, transparent);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--cc-brand);
+    outline-offset: 2px;
+  }
+
+  &--selected {
+    border-color: var(--cc-brand);
+    background: color-mix(in srgb, var(--cc-brand) 8%, transparent);
+    box-shadow: 0 0 0 1px var(--cc-brand) inset;
+  }
+}
+
+.password-hint {
+  margin: 2px 2px 12px;
+  font-size: 0.78rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.auth-card__submit {
+  height: 48px;
+  margin-top: 8px;
+  font-size: 1rem;
+
+  mat-spinner {
+    margin: 0 auto;
+  }
+}
+
+.auth-card__foot {
+  margin-top: 22px;
+  text-align: center;
+  color: var(--mat-sys-on-surface-variant);
+
+  a {
+    color: var(--cc-brand);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .role-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

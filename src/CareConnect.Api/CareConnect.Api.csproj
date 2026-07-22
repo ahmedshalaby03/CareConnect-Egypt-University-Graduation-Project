@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>68e565cf-b00c-4988-aac6-7584897915c1</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.10" />
+    <!-- Pinned so the whole IdentityModel stack resolves to one version instead of mixing
+         the 7.x that JwtBearer ships with the 8.x used for token creation. -->
+    <PackageReference Include="Microsoft.IdentityModel.Protocols" Version="8.20.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.20.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.20.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.10">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.2.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CareConnect.Infrastructure\CareConnect.Infrastructure.csproj" />
+    <ProjectReference Include="..\CareConnect.Application\CareConnect.Application.csproj" />
+  </ItemGroup>
+
+</Project>

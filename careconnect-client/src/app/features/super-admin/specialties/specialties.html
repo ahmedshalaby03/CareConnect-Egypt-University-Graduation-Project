@@ -1,0 +1,132 @@
+<div class="cc-page">
+  <header class="cc-page-header page-head">
+    <div>
+      <h1>Medical specialties</h1>
+      <p>The controlled list doctors and hospitals choose from across CareConnect.</p>
+    </div>
+    <button type="button" mat-flat-button color="primary" (click)="openForm(null)">
+      <mat-icon>add</mat-icon>
+      Add specialty
+    </button>
+  </header>
+
+  <section class="cc-card filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search by English or Arabic name</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="e.g. Cardiology or أمراض القلب" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filters__status">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onStatusChange()">
+        @for (option of statusFilters; track option.label) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  <section class="cc-card table-card">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+
+    <div class="table-scroll">
+      <table mat-table [dataSource]="specialties()" class="specialties-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Specialty</th>
+          <td mat-cell *matCellDef="let specialty">
+            <div class="name-cell">
+              <span class="name-cell__name">{{ specialty.name }}</span>
+              @if (specialty.description) {
+                <span class="name-cell__desc">{{ specialty.description }}</span>
+              }
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="arabicName">
+          <th mat-header-cell *matHeaderCellDef>Arabic name</th>
+          <td mat-cell *matCellDef="let specialty">
+            @if (specialty.arabicName) {
+              <span dir="rtl" class="arabic">{{ specialty.arabicName }}</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="usage">
+          <th mat-header-cell *matHeaderCellDef>In use by</th>
+          <td mat-cell *matCellDef="let specialty">
+            <span class="usage">
+              <span [matTooltip]="'Doctors with this specialty'">
+                <mat-icon>badge</mat-icon>{{ specialty.doctorCount }}
+              </span>
+              <span [matTooltip]="'Hospitals offering this specialty'">
+                <mat-icon>local_hospital</mat-icon>{{ specialty.hospitalCount }}
+              </span>
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let specialty">
+            <span
+              class="cc-status-chip"
+              [class.cc-status-chip--active]="specialty.isActive"
+              [class.cc-status-chip--inactive]="!specialty.isActive"
+            >
+              {{ specialty.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+          <td mat-cell *matCellDef="let specialty" class="col-actions">
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Edit specialty"
+              (click)="openForm(specialty)"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <mat-slide-toggle
+              [checked]="specialty.isActive"
+              [disabled]="togglingId() === specialty.id"
+              (change)="toggleStatus(specialty)"
+              [matTooltip]="
+                specialty.isActive
+                  ? 'Deactivate (hidden from new selections, existing profiles keep it)'
+                  : 'Activate'
+              "
+            />
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    @if (!loading() && specialties().length === 0) {
+      <div class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <p>No specialties match the current filters.</p>
+      </div>
+    }
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  </section>
+</div>

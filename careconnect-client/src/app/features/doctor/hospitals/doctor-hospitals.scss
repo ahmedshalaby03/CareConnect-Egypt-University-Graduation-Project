@@ -1,0 +1,36 @@
+// Card, chip and empty-state styling is shared globally; only the filter bar layout is
+// specific to this page.
+.filters {
+  grid-template-columns: 2fr 1fr 1fr 1fr auto;
+}
+
+.filters__clear {
+  align-self: center;
+  margin-bottom: 18px;
+}
+
+mat-progress-bar {
+  margin-bottom: 16px;
+}
+
+@media (max-width: 1000px) {
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filters__search {
+    grid-column: 1 / -1;
+  }
+
+  .filters__clear {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-bottom: 8px;
+  }
+}
+
+@media (max-width: 600px) {
+  .filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

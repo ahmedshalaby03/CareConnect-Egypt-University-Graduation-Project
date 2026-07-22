@@ -1,0 +1,137 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+}
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  min-height: 100dvh;
+}
+
+.auth-brand {
+  position: relative;
+  color: #fff;
+  background: linear-gradient(155deg, var(--cc-brand-dark) 0%, var(--cc-brand) 55%, var(--cc-accent) 100%);
+  display: flex;
+  align-items: center;
+  padding: 48px;
+  overflow: hidden;
+
+  // Soft medical-cross watermark, kept subtle so it never competes with the form.
+  &::after {
+    content: '';
+    position: absolute;
+    inset-block-start: -80px;
+    inset-inline-end: -80px;
+    width: 320px;
+    height: 320px;
+    border-radius: 50%;
+    background: rgb(255 255 255 / 7%);
+  }
+}
+
+.auth-brand__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 420px;
+}
+
+.auth-brand__logo {
+  width: 60px;
+  height: 60px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: rgb(255 255 255 / 16%);
+  margin-bottom: 28px;
+}
+
+.auth-brand h1 {
+  margin: 0 0 12px;
+  font-size: 2.4rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+
+  span {
+    font-weight: 300;
+    opacity: 0.85;
+  }
+}
+
+.auth-brand__tagline {
+  margin: 0 0 32px;
+  font-size: 1.02rem;
+  line-height: 1.6;
+  opacity: 0.9;
+}
+
+.auth-brand__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+
+  li {
+    position: relative;
+    padding-inline-start: 28px;
+    font-size: 0.93rem;
+    line-height: 1.5;
+    opacity: 0.92;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset-inline-start: 0;
+      inset-block-start: 6px;
+      width: 12px;
+      height: 12px;
+      border-radius: 4px;
+      background: rgb(255 255 255 / 60%);
+    }
+  }
+}
+
+.auth-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--mat-sys-surface);
+}
+
+@media (max-width: 960px) {
+  .auth-shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  // On a phone the brand panel becomes a compact header rather than a full screen.
+  .auth-brand {
+    padding: 28px 24px;
+  }
+
+  .auth-brand h1 {
+    font-size: 1.8rem;
+  }
+
+  .auth-brand__logo {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+  }
+
+  .auth-brand__tagline {
+    margin-bottom: 0;
+    font-size: 0.95rem;
+  }
+
+  .auth-brand__list {
+    display: none;
+  }
+
+  .auth-content {
+    padding: 24px 16px 48px;
+  }
+}

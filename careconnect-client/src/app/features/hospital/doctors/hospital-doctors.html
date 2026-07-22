@@ -1,0 +1,127 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Our doctors</h1>
+    <p>Doctors currently approved to work at your hospital.</p>
+  </header>
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search by doctor name</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="e.g. Mona" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Specialty</mat-label>
+      <mat-select [formControl]="specialtyControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All specialties</mat-option>
+        @for (specialty of specialties(); track specialty.id) {
+          <mat-option [value]="specialty.id">{{ specialty.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && doctors().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>groups</mat-icon>
+      <h2>No doctors yet</h2>
+      <p>Approve a pending request to add doctors to your medical team.</p>
+      <a routerLink="/dashboard/hospital/doctor-requests" mat-flat-button color="primary">
+        Review requests
+      </a>
+    </div>
+  } @else {
+    <div class="cc-card-grid">
+      @for (doctor of doctors(); track doctor.doctorProfileId) {
+        <article class="cc-card doctor-card">
+          <header class="doctor-card__head">
+            @if (doctor.profileImageUrl) {
+              <img [src]="doctor.profileImageUrl" [alt]="doctor.doctorName" class="doctor-card__avatar" />
+            } @else {
+              <span class="doctor-card__avatar" aria-hidden="true">
+                <mat-icon>person</mat-icon>
+              </span>
+            }
+            <div>
+              <h2>{{ doctor.doctorName }}</h2>
+              @if (doctor.specialty) {
+                <p class="doctor-card__location">
+                  <mat-icon>medical_information</mat-icon>
+                  <span>{{ doctor.specialty.name }}</span>
+                </p>
+              }
+            </div>
+          </header>
+
+          <dl class="facts">
+            <div>
+              <dt>License</dt>
+              <dd>{{ doctor.licenseNumber ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Experience</dt>
+              <dd>
+                @if (doctor.yearsOfExperience !== null) {
+                  {{ doctor.yearsOfExperience }} yrs
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+            <div>
+              <dt>Fee</dt>
+              <dd>
+                @if (doctor.consultationPrice !== null) {
+                  {{ doctor.consultationPrice }} EGP
+                } @else {
+                  —
+                }
+              </dd>
+            </div>
+          </dl>
+
+          @if (doctor.approvedAt) {
+            <p class="doctor-card__meta">
+              <mat-icon>event_available</mat-icon>
+              <span>Joined {{ doctor.approvedAt | date: 'mediumDate' }}</span>
+            </p>
+          }
+
+          @if (doctor.isPrimary) {
+            <p class="doctor-card__meta" matTooltip="This doctor lists your hospital as their primary workplace">
+              <mat-icon>star</mat-icon>
+              <span>Primary workplace</span>
+            </p>
+          }
+
+          <footer class="doctor-card__actions">
+            <a [routerLink]="['/doctors', doctor.doctorProfileId]" mat-stroked-button>View profile</a>
+            <button
+              type="button"
+              mat-button
+              color="warn"
+              [disabled]="busyId() === doctor.doctorProfileId"
+              (click)="remove(doctor)"
+            >
+              Remove
+            </button>
+          </footer>
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[12, 24, 48]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

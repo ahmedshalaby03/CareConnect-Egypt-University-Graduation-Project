@@ -1,0 +1,54 @@
+form {
+  display: grid;
+  gap: 20px;
+}
+
+.cc-card h2 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+form .cc-card h2 {
+  margin-bottom: 18px;
+}
+
+.specialties {
+  margin-top: 20px;
+}
+
+.specialties__lead {
+  margin: 0 0 18px;
+  font-size: 0.86rem;
+  color: var(--mat-sys-on-surface-variant);
+  max-width: 620px;
+}
+
+.specialties__current {
+  margin: 4px 0 18px;
+}
+
+.arabic-hint {
+  color: var(--mat-sys-on-surface-variant);
+  font-size: 0.85em;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+
+  button {
+    min-width: 190px;
+    height: 46px;
+  }
+
+  mat-spinner {
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .actions button {
+    width: 100%;
+  }
+}

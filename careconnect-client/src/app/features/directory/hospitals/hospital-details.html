@@ -1,0 +1,137 @@
+<div class="cc-page">
+  <a routerLink="/hospitals" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All hospitals
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading hospital…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Hospital unavailable</h2>
+      <p>{{ error }}</p>
+      <a routerLink="/hospitals" mat-flat-button color="primary">Back to hospitals</a>
+    </div>
+  } @else if (hospital(); as h) {
+    <section class="hero">
+      @if (h.logoUrl) {
+        <img [src]="h.logoUrl" [alt]="h.hospitalName" class="hero__logo" />
+      } @else {
+        <span class="hero__logo" aria-hidden="true"><mat-icon>local_hospital</mat-icon></span>
+      }
+
+      <div class="hero__body">
+        <h1>{{ h.hospitalName }}</h1>
+        <p class="hero__location">
+          <mat-icon>place</mat-icon>
+          <span>{{ h.address }}</span>
+        </p>
+        <p class="hero__location">
+          <mat-icon>map</mat-icon>
+          <span>{{ h.city }}{{ h.city && h.governorate ? ', ' : '' }}{{ h.governorate }}</span>
+        </p>
+
+        <div class="hero__meta">
+          @if (h.phoneNumber) {
+            <a [href]="'tel:' + h.phoneNumber" class="hero__pill">
+              <mat-icon>call</mat-icon> {{ h.phoneNumber }}
+            </a>
+          }
+          @if (h.openingTime && h.closingTime) {
+            <span class="hero__pill">
+              <mat-icon>schedule</mat-icon> {{ h.openingTime }} – {{ h.closingTime }}
+            </span>
+          }
+          @if (h.websiteUrl) {
+            <a [href]="h.websiteUrl" target="_blank" rel="noopener noreferrer" class="hero__pill">
+              <mat-icon>language</mat-icon> Website
+            </a>
+          }
+          <span class="hero__pill">
+            <mat-icon>groups</mat-icon>
+            {{ h.numberOfApprovedDoctors }}
+            {{ h.numberOfApprovedDoctors === 1 ? 'doctor' : 'doctors' }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="layout__main">
+        @if (h.description) {
+          <section class="cc-card">
+            <h2>About</h2>
+            <p class="about">{{ h.description }}</p>
+          </section>
+        }
+
+        <section class="cc-card">
+          <h2>Doctors at this hospital</h2>
+
+          @if (h.doctors.length === 0) {
+            <p class="muted">This hospital has not added any doctors yet.</p>
+          } @else {
+            <ul class="doctors">
+              @for (doctor of h.doctors; track doctor.doctorProfileId) {
+                <li class="doctors__item">
+                  @if (doctor.profileImageUrl) {
+                    <img [src]="doctor.profileImageUrl" [alt]="doctor.fullName" class="doctors__avatar" />
+                  } @else {
+                    <span class="doctors__avatar" aria-hidden="true"><mat-icon>person</mat-icon></span>
+                  }
+
+                  <div class="doctors__info">
+                    <span class="doctors__name">{{ doctor.fullName }}</span>
+                    <span class="doctors__meta">
+                      @if (doctor.specialty) {
+                        {{ doctor.specialty.name }}
+                      }
+                      @if (doctor.yearsOfExperience !== null) {
+                        · {{ doctor.yearsOfExperience }} yrs experience
+                      }
+                      @if (doctor.consultationPrice !== null) {
+                        · {{ doctor.consultationPrice }} EGP
+                      }
+                    </span>
+                  </div>
+
+                  <a [routerLink]="['/doctors', doctor.doctorProfileId]" mat-button>View</a>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+      </div>
+
+      <aside class="layout__side">
+        <section class="cc-card">
+          <h2>Specialties</h2>
+          @if (h.specialties.length === 0) {
+            <p class="muted">No specialties listed yet.</p>
+          } @else {
+            <div class="cc-chips">
+              @for (specialty of h.specialties; track specialty.id) {
+                <span class="cc-role-chip" [matTooltip]="specialty.arabicName ?? ''">
+                  {{ specialty.name }}
+                </span>
+              }
+            </div>
+          }
+        </section>
+
+        <section class="cc-card">
+          <h2>Appointments</h2>
+          <p class="muted">Online booking is not available yet.</p>
+          <button type="button" mat-flat-button color="primary" disabled class="future-button">
+            Book appointment
+          </button>
+          <p class="future-note">Coming in a future release.</p>
+        </section>
+      </aside>
+    </div>
+  }
+</div>

@@ -1,0 +1,365 @@
+// Angular Material theming with `mat.theme()`, which generates the M3 CSS variables the
+// components read. See https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  height: 100%;
+
+  @include mat.theme(
+    (
+      color: (
+        // Teal reads as clinical and calm, which suits a healthcare product better than
+        // the default indigo.
+        primary: mat.$cyan-palette,
+        tertiary: mat.$azure-palette,
+      ),
+      typography: Roboto,
+      density: 0,
+    )
+  );
+}
+
+body {
+  color-scheme: light;
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+  margin: 0;
+  min-height: 100%;
+}
+
+// ---------------------------------------------------------------- Design tokens
+
+:root {
+  --cc-brand: #00796b;
+  --cc-brand-dark: #004d40;
+  --cc-brand-light: #e0f2f1;
+  --cc-accent: #0277bd;
+  --cc-danger: #c62828;
+  --cc-success: #2e7d32;
+  --cc-page-max: 1180px;
+  --cc-radius: 16px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+// ------------------------------------------------------------------- Utilities
+
+.cc-page {
+  max-width: var(--cc-page-max);
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.cc-page-header {
+  margin-bottom: 24px;
+
+  h1 {
+    margin: 0 0 4px;
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.cc-card {
+  background: var(--mat-sys-surface-container-lowest, #fff);
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: var(--cc-radius);
+  padding: 24px;
+}
+
+.cc-form-field {
+  width: 100%;
+}
+
+.cc-form-grid {
+  display: grid;
+  gap: 4px 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.cc-form-grid--full {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 700px) {
+  .cc-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cc-form-grid--full {
+    grid-column: auto;
+  }
+}
+
+.cc-error-summary {
+  border: 1px solid color-mix(in srgb, var(--cc-danger) 35%, transparent);
+  background: color-mix(in srgb, var(--cc-danger) 7%, transparent);
+  color: var(--cc-danger);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 16px;
+  font-size: 0.875rem;
+
+  ul {
+    margin: 4px 0 0;
+    padding-inline-start: 18px;
+  }
+}
+
+.cc-status-chip,
+.cc-role-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.cc-status-chip--active {
+  background: color-mix(in srgb, var(--cc-success) 12%, transparent);
+  color: var(--cc-success);
+}
+
+.cc-status-chip--inactive {
+  background: color-mix(in srgb, var(--cc-danger) 12%, transparent);
+  color: var(--cc-danger);
+}
+
+.cc-role-chip {
+  background: var(--cc-brand-light);
+  color: var(--cc-brand-dark);
+}
+
+// ------------------------------------------------- Shared page building blocks
+// Used by the directory, doctor and hospital feature pages so the card, filter and
+// empty-state patterns stay identical across the app.
+
+.cc-filters {
+  display: grid;
+  gap: 8px 16px;
+  margin-bottom: 20px;
+  padding-bottom: 4px;
+  align-items: start;
+}
+
+.cc-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 8px;
+}
+
+.cc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 56px 24px;
+
+  mat-icon {
+    font-size: 44px;
+    width: 44px;
+    height: 44px;
+    opacity: 0.5;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  p {
+    margin: 0;
+    color: var(--mat-sys-on-surface-variant);
+    max-width: 420px;
+  }
+}
+
+.cc-notice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--cc-accent) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cc-accent) 30%, transparent);
+  font-size: 0.9rem;
+
+  > mat-icon {
+    color: var(--cc-accent);
+    flex-shrink: 0;
+  }
+
+  > a,
+  > button {
+    margin-inline-start: auto;
+    flex-shrink: 0;
+  }
+}
+
+.cc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Pending sits between active and inactive, so it gets its own amber treatment. */
+.cc-status-chip--pending {
+  background: color-mix(in srgb, #b26a00 14%, transparent);
+  color: #8a5200;
+}
+
+.cc-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px 16px;
+  color: var(--mat-sys-on-surface-variant);
+
+  p {
+    margin: 0;
+  }
+}
+
+/* Hospital and doctor cards appear in the public directory and in the doctor's browse
+   screen, so they live here rather than being duplicated per component. */
+.hospital-card,
+.doctor-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+}
+
+.hospital-card__head,
+.doctor-card__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.hospital-card__logo,
+.doctor-card__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: var(--cc-brand-light);
+  color: var(--cc-brand-dark);
+}
+
+.doctor-card__avatar {
+  border-radius: 50%;
+  font-weight: 700;
+}
+
+.hospital-card__location,
+.doctor-card__location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.hospital-card__desc,
+.doctor-card__desc {
+  margin: 0;
+  font-size: 0.86rem;
+  line-height: 1.5;
+  color: var(--mat-sys-on-surface-variant);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hospital-card__meta,
+.doctor-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    font-size: 17px;
+    width: 17px;
+    height: 17px;
+  }
+}
+
+.hospital-card__actions,
+.doctor-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.cc-status-chip mat-icon {
+  font-size: 15px;
+  width: 15px;
+  height: 15px;
+}
+
+@media (max-width: 560px) {
+  .cc-notice {
+    flex-wrap: wrap;
+
+    > a,
+    > button {
+      margin-inline-start: 0;
+    }
+  }
+}
+
+// --------------------------------------------------------------------- Toasts
+
+.cc-snack-success {
+  --mdc-snackbar-container-color: var(--cc-success);
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}
+
+.cc-snack-error {
+  --mdc-snackbar-container-color: var(--cc-danger);
+  --mdc-snackbar-supporting-text-color: #fff;
+  --mat-snack-bar-button-color: #fff;
+}

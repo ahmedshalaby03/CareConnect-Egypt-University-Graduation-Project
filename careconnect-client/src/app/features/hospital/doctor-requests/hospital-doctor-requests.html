@@ -1,0 +1,144 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Doctor requests</h1>
+    <p>Review doctors applying to join your hospital's medical team.</p>
+  </header>
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search by doctor name</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="e.g. Mona" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Specialty</mat-label>
+      <mat-select [formControl]="specialtyControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All specialties</mat-option>
+        @for (specialty of specialties(); track specialty.id) {
+          <mat-option [value]="specialty.id">{{ specialty.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && requests().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>how_to_reg</mat-icon>
+      <h2>No requests to show</h2>
+      <p>
+        Nothing matches these filters. Make sure your profile lists the specialties you cover,
+        so doctors can find and apply to you.
+      </p>
+      <a routerLink="/dashboard/hospital/profile" mat-stroked-button>Manage specialties</a>
+    </div>
+  } @else {
+    <div class="requests">
+      @for (request of requests(); track request.id) {
+        <article class="cc-card request-card">
+          <div class="request-card__doctor">
+            @if (request.profileImageUrl) {
+              <img [src]="request.profileImageUrl" [alt]="request.doctorName" class="avatar" />
+            } @else {
+              <span class="avatar avatar--placeholder" aria-hidden="true">
+                <mat-icon>person</mat-icon>
+              </span>
+            }
+
+            <div class="request-card__info">
+              <h2>{{ request.doctorName }}</h2>
+
+              <div class="cc-chips">
+                @if (request.specialty) {
+                  <span class="cc-role-chip">{{ request.specialty.name }}</span>
+                }
+                <span class="cc-status-chip" [class]="statusClass(request.statusName)">
+                  {{ request.statusName }}
+                </span>
+              </div>
+
+              <dl class="request-card__facts">
+                <div>
+                  <dt>License</dt>
+                  <dd>{{ request.licenseNumber ?? '—' }}</dd>
+                </div>
+                <div>
+                  <dt>Experience</dt>
+                  <dd>
+                    @if (request.yearsOfExperience !== null) {
+                      {{ request.yearsOfExperience }} years
+                    } @else {
+                      —
+                    }
+                  </dd>
+                </div>
+                <div>
+                  <dt>Requested</dt>
+                  <dd>{{ request.requestedAt | date: 'mediumDate' }}</dd>
+                </div>
+              </dl>
+
+              @if (request.biography) {
+                <p class="request-card__bio">{{ request.biography }}</p>
+              }
+
+              @if (request.statusName === 'Rejected' && request.rejectionReason) {
+                <p class="request-card__reason">
+                  <strong>Rejection reason:</strong> {{ request.rejectionReason }}
+                </p>
+              }
+            </div>
+          </div>
+
+          @if (request.statusName === 'Pending') {
+            <div class="request-card__actions">
+              <button
+                type="button"
+                mat-flat-button
+                color="primary"
+                [disabled]="busyId() === request.id"
+                (click)="approve(request)"
+              >
+                <mat-icon>check</mat-icon>
+                Approve
+              </button>
+              <button
+                type="button"
+                mat-stroked-button
+                color="warn"
+                [disabled]="busyId() === request.id"
+                (click)="reject(request)"
+              >
+                <mat-icon>close</mat-icon>
+                Reject
+              </button>
+            </div>
+          }
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

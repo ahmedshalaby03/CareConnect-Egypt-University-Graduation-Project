@@ -1,0 +1,159 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Find hospitals</h1>
+    <p>Browse hospitals on CareConnect and apply to join their medical team.</p>
+  </header>
+
+  @if (!canRequest()) {
+    <div class="cc-notice" role="status">
+      <mat-icon>info</mat-icon>
+      <span>Complete your doctor profile before applying. You can still browse hospitals here.</span>
+      <a routerLink="/dashboard/doctor/profile" mat-button color="primary">Complete profile</a>
+    </div>
+  }
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search hospitals</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="Name or description" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Governorate</mat-label>
+      <mat-select [formControl]="governorateControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All governorates</mat-option>
+        @for (governorate of governorates; track governorate) {
+          <mat-option [value]="governorate">{{ governorate }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>City</mat-label>
+      <input matInput [formControl]="cityControl" placeholder="e.g. Maadi" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Specialty</mat-label>
+      <mat-select [formControl]="specialtyControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All specialties</mat-option>
+        @for (specialty of specialties(); track specialty.id) {
+          <mat-option [value]="specialty.id">{{ specialty.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <button type="button" mat-button class="filters__clear" (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Clear
+    </button>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && hospitals().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>domain_disabled</mat-icon>
+      <h2>No hospitals found</h2>
+      <p>Try widening your filters, or clear them to see every hospital.</p>
+      <button type="button" mat-stroked-button (click)="clearFilters()">Clear filters</button>
+    </div>
+  } @else {
+    <div class="cc-card-grid">
+      @for (hospital of hospitals(); track hospital.id) {
+        <article class="cc-card hospital-card">
+          <header class="hospital-card__head">
+            @if (hospital.logoUrl) {
+              <img [src]="hospital.logoUrl" [alt]="hospital.hospitalName" class="hospital-card__logo" />
+            } @else {
+              <span class="hospital-card__logo hospital-card__logo--placeholder" aria-hidden="true">
+                <mat-icon>local_hospital</mat-icon>
+              </span>
+            }
+            <div>
+              <h2>{{ hospital.hospitalName }}</h2>
+              <p class="hospital-card__location">
+                <mat-icon>place</mat-icon>
+                <span>{{ hospital.city }}{{ hospital.city && hospital.governorate ? ', ' : '' }}{{ hospital.governorate }}</span>
+              </p>
+            </div>
+          </header>
+
+          @if (hospital.description) {
+            <p class="hospital-card__desc">{{ hospital.description }}</p>
+          }
+
+          <div class="cc-chips">
+            @for (specialty of hospital.specialties.slice(0, 4); track specialty.id) {
+              <span class="cc-role-chip">{{ specialty.name }}</span>
+            }
+            @if (hospital.specialties.length > 4) {
+              <span class="cc-role-chip">+{{ hospital.specialties.length - 4 }} more</span>
+            }
+          </div>
+
+          <p class="hospital-card__meta">
+            <mat-icon>groups</mat-icon>
+            {{ hospital.numberOfApprovedDoctors }} approved
+            {{ hospital.numberOfApprovedDoctors === 1 ? 'doctor' : 'doctors' }}
+          </p>
+
+          <footer class="hospital-card__actions">
+            <a [routerLink]="['/hospitals', hospital.id]" mat-stroked-button>View details</a>
+
+            @if (statusFor(hospital.id); as status) {
+              @if (status === 'Pending') {
+                <span class="cc-status-chip cc-status-chip--pending">
+                  <mat-icon>hourglass_top</mat-icon> Request pending
+                </span>
+              } @else if (status === 'Approved') {
+                <span class="cc-status-chip cc-status-chip--active">
+                  <mat-icon>check_circle</mat-icon> You work here
+                </span>
+              } @else {
+                <button
+                  type="button"
+                  mat-flat-button
+                  color="primary"
+                  [disabled]="!canRequest() || sendingFor() === hospital.id"
+                  (click)="requestAffiliation(hospital)"
+                >
+                  Apply again
+                </button>
+              }
+            } @else {
+              <button
+                type="button"
+                mat-flat-button
+                color="primary"
+                [disabled]="!canRequest() || sendingFor() === hospital.id"
+                [matTooltip]="
+                  !canRequest()
+                    ? 'Complete your profile first'
+                    : !offersMySpecialty(hospital)
+                      ? 'This hospital does not list your specialty, so the request will be declined'
+                      : 'Send an affiliation request'
+                "
+                (click)="requestAffiliation(hospital)"
+              >
+                {{ sendingFor() === hospital.id ? 'Sending…' : 'Request affiliation' }}
+              </button>
+            }
+          </footer>
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[9, 18, 36]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

@@ -1,0 +1,74 @@
+<section class="auth-card">
+  <header class="auth-card__head">
+    <h2>Welcome back</h2>
+    <p>Sign in to your CareConnect Egypt account.</p>
+  </header>
+
+  @if (serverError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Email</mat-label>
+      <input
+        matInput
+        type="email"
+        formControlName="email"
+        autocomplete="email"
+        placeholder="you@example.com"
+      />
+      <mat-icon matSuffix>mail</mat-icon>
+      @if (form.controls.email.hasError('required') && form.controls.email.touched) {
+        <mat-error>Email is required.</mat-error>
+      }
+      @if (form.controls.email.hasError('email')) {
+        <mat-error>Enter a valid email address.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Password</mat-label>
+      <input
+        matInput
+        [type]="hidePassword() ? 'password' : 'text'"
+        formControlName="password"
+        autocomplete="current-password"
+      />
+      <button
+        type="button"
+        mat-icon-button
+        matSuffix
+        (click)="hidePassword.set(!hidePassword())"
+        [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+        [attr.aria-pressed]="!hidePassword()"
+      >
+        <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+      </button>
+      @if (form.controls.password.hasError('required') && form.controls.password.touched) {
+        <mat-error>Password is required.</mat-error>
+      }
+    </mat-form-field>
+
+    <button
+      type="submit"
+      mat-flat-button
+      color="primary"
+      class="auth-card__submit"
+      [disabled]="submitting()"
+    >
+      @if (submitting()) {
+        <mat-spinner diameter="20" />
+      } @else {
+        <span>Sign in</span>
+      }
+    </button>
+  </form>
+
+  <p class="auth-card__foot">
+    Don't have an account?
+    <a routerLink="/register">Create one</a>
+  </p>
+</section>

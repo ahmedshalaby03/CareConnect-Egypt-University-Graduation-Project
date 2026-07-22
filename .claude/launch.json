@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "careconnect-client",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start", "--prefix", "careconnect-client"],
+      "port": 4200
+    }
+  ]
+}
