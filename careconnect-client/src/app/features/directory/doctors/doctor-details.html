@@ -117,11 +117,22 @@
 
         <section class="cc-card">
           <h2>Appointments</h2>
-          <p class="muted">Online booking is not available yet.</p>
-          <button type="button" mat-flat-button color="primary" disabled class="future-button">
-            Book appointment
-          </button>
-          <p class="future-note">Coming in a future release.</p>
+
+          @if (canBook() && d.hospitals.length > 0) {
+            <a [routerLink]="['/doctors', d.doctorProfileId, 'book']" mat-flat-button color="primary" class="future-button">
+              Book appointment
+            </a>
+          } @else if (d.hospitals.length === 0) {
+            <p class="muted">This doctor is not currently bookable at any hospital.</p>
+            <button type="button" mat-flat-button color="primary" disabled class="future-button">
+              Book appointment
+            </button>
+          } @else {
+            <p class="muted">Booking is available to patient accounts.</p>
+            <button type="button" mat-flat-button color="primary" disabled class="future-button">
+              Book appointment
+            </button>
+          }
         </section>
       </aside>
     </div>

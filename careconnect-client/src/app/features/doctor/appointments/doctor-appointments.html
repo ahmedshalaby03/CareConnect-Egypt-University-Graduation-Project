@@ -1,0 +1,174 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>My appointments</h1>
+    <p>Review requests, run your schedule, and keep clinical notes.</p>
+  </header>
+
+  <nav class="view-tabs" aria-label="Appointment view">
+    <button
+      type="button"
+      class="view-tab"
+      [class.view-tab--active]="view() === 'today'"
+      (click)="setView('today')"
+    >
+      Today
+    </button>
+    <button
+      type="button"
+      class="view-tab"
+      [class.view-tab--active]="view() === 'upcoming'"
+      (click)="setView('upcoming')"
+    >
+      Upcoming
+    </button>
+    <button
+      type="button"
+      class="view-tab"
+      [class.view-tab--active]="view() === 'all'"
+      (click)="setView('all')"
+    >
+      All
+    </button>
+  </nav>
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search by patient name</mat-label>
+      <input matInput [formControl]="searchControl" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hospital</mat-label>
+      <mat-select [formControl]="hospitalControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All hospitals</mat-option>
+        @for (hospital of hospitals(); track hospital.id) {
+          <mat-option [value]="hospital.id">{{ hospital.hospitalName }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && appointments().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>event_note</mat-icon>
+      <h2>No appointments here</h2>
+      <p>Nothing matches this view and these filters.</p>
+    </div>
+  } @else {
+    <div class="appointments">
+      @for (appointment of appointments(); track appointment.appointmentId) {
+        <article class="cc-card appointment-card">
+          <div class="appointment-card__main">
+            <div class="appointment-card__head">
+              <h2>{{ appointment.patientName }}</h2>
+              <span class="cc-status-chip" [class]="statusClass(appointment.statusName)">
+                {{ appointment.statusName }}
+              </span>
+            </div>
+
+            <p class="appointment-card__meta">
+              <mat-icon>event</mat-icon>
+              {{ appointment.appointmentDate | date: 'mediumDate' }} ·
+              {{ appointment.startTime.slice(0, 5) }} - {{ appointment.endTime.slice(0, 5) }}
+            </p>
+            <p class="appointment-card__meta">
+              <mat-icon>local_hospital</mat-icon>
+              {{ appointment.hospitalName }}
+            </p>
+
+            @if (appointment.reason) {
+              <p class="appointment-card__reason"><strong>Reason:</strong> {{ appointment.reason }}</p>
+            }
+
+            @if (appointment.statusName === 'Rejected' && appointment.rejectionReason) {
+              <p class="appointment-card__note">Rejected: {{ appointment.rejectionReason }}</p>
+            }
+            @if (appointment.statusName === 'Cancelled' && appointment.cancellationReason) {
+              <p class="appointment-card__note">Cancelled: {{ appointment.cancellationReason }}</p>
+            }
+          </div>
+
+          <div class="appointment-card__actions">
+            <a [routerLink]="['/dashboard/doctor/appointments', appointment.appointmentId]" mat-button>
+              Details
+            </a>
+
+            @if (appointment.statusName === 'Pending') {
+              <button
+                type="button"
+                mat-flat-button
+                color="primary"
+                [disabled]="busyId() === appointment.appointmentId"
+                (click)="confirm(appointment)"
+              >
+                Confirm
+              </button>
+              <button
+                type="button"
+                mat-stroked-button
+                color="warn"
+                [disabled]="busyId() === appointment.appointmentId"
+                (click)="reject(appointment)"
+              >
+                Reject
+              </button>
+            }
+
+            @if (appointment.statusName === 'Confirmed') {
+              <button
+                type="button"
+                mat-flat-button
+                color="primary"
+                [disabled]="busyId() === appointment.appointmentId"
+                (click)="complete(appointment)"
+              >
+                Completed
+              </button>
+              <button
+                type="button"
+                mat-stroked-button
+                [disabled]="busyId() === appointment.appointmentId"
+                (click)="markNoShow(appointment)"
+              >
+                No-show
+              </button>
+              <button
+                type="button"
+                mat-button
+                color="warn"
+                [disabled]="busyId() === appointment.appointmentId"
+                (click)="cancel(appointment)"
+              >
+                Cancel
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

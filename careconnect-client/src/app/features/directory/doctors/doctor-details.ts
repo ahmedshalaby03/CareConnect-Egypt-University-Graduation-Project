@@ -5,6 +5,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor';
 import { DoctorDirectoryDetails } from '../../../core/models/directory.model';
+import { AuthService } from '../../../core/services/auth.service';
 import { DirectoryService } from '../../../core/services/directory.service';
 
 /** Public doctor page: professional details and the hospitals they are approved at. */
@@ -17,6 +18,7 @@ import { DirectoryService } from '../../../core/services/directory.service';
 })
 export class DoctorDetails implements OnInit {
   private readonly directory = inject(DirectoryService);
+  private readonly auth = inject(AuthService);
 
   /** Bound from the route parameter through withComponentInputBinding(). */
   readonly id = input.required<string>();
@@ -24,6 +26,9 @@ export class DoctorDetails implements OnInit {
   protected readonly doctor = signal<DoctorDirectoryDetails | null>(null);
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
+
+  /** Booking is patient-only; other roles see a disabled, clearly labelled button instead. */
+  protected readonly canBook = () => this.auth.role() === 'Patient';
 
   ngOnInit(): void {
     this.directory.getDoctor(this.id()).subscribe({

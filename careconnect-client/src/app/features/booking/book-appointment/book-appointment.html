@@ -1,0 +1,130 @@
+<div class="cc-page">
+  <a [routerLink]="['/doctors', id()]" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    Back to doctor profile
+  </a>
+
+  @if (loadingDoctor()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading doctor…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Booking unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (doctor(); as d) {
+    <header class="cc-page-header">
+      <h1>Book an appointment</h1>
+      <p>with {{ d.fullName }}{{ d.specialty ? ' · ' + d.specialty.name : '' }}</p>
+    </header>
+
+    @if (d.hospitals.length === 0) {
+      <div class="cc-card cc-empty-state">
+        <mat-icon>domain_disabled</mat-icon>
+        <h2>Not currently bookable</h2>
+        <p>This doctor is not approved at any hospital right now.</p>
+      </div>
+    } @else {
+      <section class="cc-card step">
+        <h2>1. Choose a hospital and date</h2>
+        <div class="cc-form-grid">
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Hospital</mat-label>
+            <mat-select [formControl]="hospitalControl" (selectionChange)="onHospitalOrDateChange()">
+              @for (hospital of d.hospitals; track hospital.id) {
+                <mat-option [value]="hospital.id">
+                  {{ hospital.hospitalName }}
+                  @if (hospital.isPrimary) {
+                    (primary)
+                  }
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Date</mat-label>
+            <input
+              matInput
+              type="date"
+              [formControl]="dateControl"
+              [min]="minDate"
+              (change)="onHospitalOrDateChange()"
+            />
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="cc-card step">
+        <h2>2. Choose a time</h2>
+
+        @if (loadingSlots()) {
+          <mat-progress-bar mode="indeterminate" />
+        }
+
+        @if (slotsLoaded() && !loadingSlots()) {
+          @if (slots().length === 0) {
+            <div class="no-slots">
+              <mat-icon>event_busy</mat-icon>
+              <p>No slots are available on this date. Try another date or hospital.</p>
+            </div>
+          } @else {
+            <div class="slot-grid">
+              @for (slot of slots(); track slot.startTime) {
+                <button
+                  type="button"
+                  class="slot-button"
+                  [class.slot-button--selected]="selectedSlot()?.startTime === slot.startTime"
+                  (click)="selectSlot(slot)"
+                >
+                  {{ slot.startTime.slice(0, 5) }}
+                </button>
+              }
+            </div>
+          }
+        }
+      </section>
+
+      @if (selectedSlot(); as slot) {
+        <section class="cc-card step">
+          <h2>3. Tell us why you're visiting</h2>
+
+          <form [formGroup]="detailsForm" (ngSubmit)="submit()" novalidate>
+            <mat-form-field appearance="outline" class="cc-form-field">
+              <mat-label>Reason for visit</mat-label>
+              <input matInput formControlName="reason" placeholder="e.g. Follow-up consultation" />
+              @if (detailsForm.controls.reason.hasError('required') && detailsForm.controls.reason.touched) {
+                <mat-error>Please give a reason for the visit.</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="cc-form-field">
+              <mat-label>Notes for the doctor (optional)</mat-label>
+              <textarea matInput formControlName="patientNotes" rows="3"></textarea>
+            </mat-form-field>
+
+            <div class="summary">
+              <mat-icon>event_available</mat-icon>
+              <span>
+                {{ dateControl.value }} at {{ slot.startTime.slice(0, 5) }} - {{ slot.endTime.slice(0, 5) }}
+              </span>
+            </div>
+
+            <div class="actions">
+              <button type="submit" mat-flat-button color="primary" [disabled]="submitting()">
+                @if (submitting()) {
+                  <mat-spinner diameter="20" />
+                } @else {
+                  <span>Confirm booking</span>
+                }
+              </button>
+            </div>
+          </form>
+        </section>
+      }
+    }
+  }
+</div>

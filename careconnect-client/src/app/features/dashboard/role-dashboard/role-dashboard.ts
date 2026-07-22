@@ -1,9 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { ROLE_LABELS, UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
+import { AppointmentService } from '../../../core/services/appointment.service';
+
+interface StatTile {
+  label: string;
+  value: number | string;
+  icon: string;
+}
 
 interface QuickLink {
   label: string;
@@ -40,8 +47,14 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/hospitals',
         icon: 'local_hospital',
       },
+      {
+        label: 'My appointments',
+        description: 'Track your bookings and their status.',
+        route: '/dashboard/patient/appointments',
+        icon: 'event_note',
+      },
     ],
-    comingSoon: ['Book appointments', 'View medical records', 'Insurance requests'],
+    comingSoon: ['View medical records', 'Insurance requests', 'Blood bank'],
   },
   Doctor: {
     accent: '#00695c',
@@ -66,8 +79,20 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/doctor/hospital-requests',
         icon: 'assignment',
       },
+      {
+        label: 'My availability',
+        description: 'Set the hours patients can book you for.',
+        route: '/dashboard/doctor/availability',
+        icon: 'schedule',
+      },
+      {
+        label: 'Appointments',
+        description: 'Review requests and run your schedule.',
+        route: '/dashboard/doctor/appointments',
+        icon: 'event_note',
+      },
     ],
-    comingSoon: ['Manage availability', 'Consultation requests', 'Patient history'],
+    comingSoon: ['Patient medical history', 'Prescriptions'],
   },
   Hospital: {
     accent: '#0277bd',
@@ -91,6 +116,12 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         description: 'Manage the doctors on your medical team.',
         route: '/dashboard/hospital/doctors',
         icon: 'groups',
+      },
+      {
+        label: 'Appointments',
+        description: 'A read-only view of every scheduled visit.',
+        route: '/dashboard/hospital/appointments',
+        icon: 'event_note',
       },
     ],
     comingSoon: ['Departments & staff', 'Bed availability', 'Blood bank'],
@@ -144,8 +175,9 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
   styleUrl: './role-dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class RoleDashboard {
+export class RoleDashboard implements OnInit {
   private readonly auth = inject(AuthService);
+  private readonly appointments = inject(AppointmentService);
 
   /** Set from the route data, so one component serves all four role dashboards. */
   readonly role = input.required<UserRole>();
@@ -154,4 +186,57 @@ export class RoleDashboard {
 
   protected readonly config = computed(() => DASHBOARDS[this.role()]);
   protected readonly roleLabel = computed(() => ROLE_LABELS[this.role()]);
+
+  protected readonly stats = signal<StatTile[] | null>(null);
+
+  ngOnInit(): void {
+    // Scoped to the signed-in profile server-side; this just decides which call to make.
+    switch (this.role()) {
+      case 'Patient':
+        this.appointments.getPatientDashboardStats().subscribe({
+          next: (s) =>
+            this.stats.set([
+              {
+                label: 'Next appointment',
+                value: s.nextAppointment
+                  ? `${s.nextAppointment.appointmentDate} ${s.nextAppointment.startTime.slice(0, 5)}`
+                  : 'None scheduled',
+                icon: 'event_upcoming',
+              },
+              { label: 'Upcoming appointments', value: s.upcomingCount, icon: 'event_available' },
+              { label: 'Pending requests', value: s.pendingCount, icon: 'hourglass_top' },
+            ]),
+          error: () => this.stats.set([]),
+        });
+        break;
+
+      case 'Doctor':
+        this.appointments.getDoctorDashboardStats().subscribe({
+          next: (s) =>
+            this.stats.set([
+              { label: "Today's appointments", value: s.todayCount, icon: 'today' },
+              { label: 'Pending requests', value: s.pendingCount, icon: 'hourglass_top' },
+              { label: 'Confirmed', value: s.confirmedCount, icon: 'event_available' },
+              { label: 'Completed this month', value: s.completedThisMonthCount, icon: 'task_alt' },
+            ]),
+          error: () => this.stats.set([]),
+        });
+        break;
+
+      case 'Hospital':
+        this.appointments.getHospitalDashboardStats().subscribe({
+          next: (s) =>
+            this.stats.set([
+              { label: "Today's appointments", value: s.todayCount, icon: 'today' },
+              { label: 'Pending appointments', value: s.pendingCount, icon: 'hourglass_top' },
+              { label: 'Active approved doctors', value: s.activeApprovedDoctorsCount, icon: 'groups' },
+            ]),
+          error: () => this.stats.set([]),
+        });
+        break;
+
+      default:
+        this.stats.set([]);
+    }
+  }
 }

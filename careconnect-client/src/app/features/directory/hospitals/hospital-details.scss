@@ -161,8 +161,11 @@ a.hero__pill:hover {
   color: var(--mat-sys-on-surface-variant);
 }
 
-.doctors__item a {
+.doctors__actions {
+  display: flex;
+  gap: 6px;
   margin-inline-start: auto;
+  flex-shrink: 0;
 }
 
 .future-button {

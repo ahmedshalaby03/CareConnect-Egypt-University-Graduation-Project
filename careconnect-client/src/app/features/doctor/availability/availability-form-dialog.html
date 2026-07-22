@@ -1,0 +1,85 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit availability' : 'Add availability' }}</h2>
+
+<mat-dialog-content>
+  @if (serverError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+      @if (serverErrorList().length) {
+        <ul>
+          @for (item of serverErrorList(); track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  @if (data.hospitals.length === 0) {
+    <div class="cc-error-summary" role="alert">
+      <span>
+        You need an approved hospital affiliation before you can set availability. Visit
+        "Find hospitals" to send a request first.
+      </span>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Hospital</mat-label>
+      <mat-select formControlName="hospitalProfileId">
+        @for (hospital of data.hospitals; track hospital.id) {
+          <mat-option [value]="hospital.id">{{ hospital.hospitalName }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.hospitalProfileId.hasError('required') && form.controls.hospitalProfileId.touched) {
+        <mat-error>Please select a hospital.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Day of week</mat-label>
+      <mat-select formControlName="dayOfWeek">
+        @for (day of days; track day; let i = $index) {
+          <mat-option [value]="i">{{ day }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <div class="cc-form-grid">
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Start time</mat-label>
+        <input matInput type="time" formControlName="startTime" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>End time</mat-label>
+        <input matInput type="time" formControlName="endTime" />
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Slot duration (minutes)</mat-label>
+      <input matInput type="number" formControlName="slotDurationMinutes" min="10" max="180" step="5" />
+      @if (form.controls.slotDurationMinutes.hasError('min') || form.controls.slotDurationMinutes.hasError('max')) {
+        <mat-error>Slot duration must be between 10 and 180 minutes.</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button (click)="dialogRef.close()">Cancel</button>
+  <button
+    type="button"
+    mat-flat-button
+    color="primary"
+    [disabled]="saving() || data.hospitals.length === 0"
+    (click)="submit()"
+  >
+    @if (saving()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      <span>{{ isEdit ? 'Save changes' : 'Add availability' }}</span>
+    }
+  </button>
+</mat-dialog-actions>

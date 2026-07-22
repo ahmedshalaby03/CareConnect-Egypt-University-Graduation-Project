@@ -25,6 +25,10 @@ public class ApplicationDbContext
     public DbSet<DoctorHospitalAffiliation> DoctorHospitalAffiliations =>
         Set<DoctorHospitalAffiliation>();
 
+    public DbSet<DoctorAvailability> DoctorAvailabilities => Set<DoctorAvailability>();
+    public DbSet<DoctorUnavailablePeriod> DoctorUnavailablePeriods => Set<DoctorUnavailablePeriod>();
+    public DbSet<Appointment> Appointments => Set<Appointment>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

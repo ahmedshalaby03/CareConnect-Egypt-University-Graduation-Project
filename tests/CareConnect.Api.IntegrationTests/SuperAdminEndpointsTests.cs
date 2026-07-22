@@ -22,7 +22,13 @@ public class SuperAdminEndpointsTests
         Assert.Equal(AppRoles.SuperAdmin, auth.User.Role);
 
         client.UseBearer(auth.AccessToken);
-        var response = await client.GetAsync("/api/super-admin/users");
+
+        // Searched by email rather than relying on default (unpaged, newest-first) ordering:
+        // the suite creates hundreds of accounts across other test classes, so the seeded
+        // SuperAdmin - created once, before anything else - would otherwise fall off the
+        // first page.
+        var response = await client.GetAsync(
+            $"/api/super-admin/users?search={Uri.EscapeDataString(CareConnectApiFactory.SuperAdminEmail)}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 

@@ -10,4 +10,6 @@ public class PatientProfile
     public DateOnly? DateOfBirth { get; set; }
     public string? Gender { get; set; }
     public string? Address { get; set; }
+
+    public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

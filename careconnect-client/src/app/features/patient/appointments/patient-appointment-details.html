@@ -1,0 +1,74 @@
+<div class="cc-page">
+  <a routerLink="/dashboard/patient/appointments" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All appointments
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading appointment…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Appointment unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (appointment(); as a) {
+    <header class="cc-page-header details-head">
+      <div>
+        <h1>{{ a.doctorName }}</h1>
+        <p>{{ a.appointmentDate | date: 'fullDate' }} · {{ a.startTime.slice(0, 5) }} - {{ a.endTime.slice(0, 5) }}</p>
+      </div>
+      <span class="cc-status-chip" [class]="statusClass(a.statusName)">{{ a.statusName }}</span>
+    </header>
+
+    <section class="cc-card">
+      <h2>Visit details</h2>
+      <dl class="facts">
+        @if (a.doctorSpecialty) {
+          <div>
+            <dt>Specialty</dt>
+            <dd>{{ a.doctorSpecialty }}</dd>
+          </div>
+        }
+        <div>
+          <dt>Hospital</dt>
+          <dd>{{ a.hospitalName }}</dd>
+        </div>
+        @if (a.hospitalAddress) {
+          <div class="facts__full">
+            <dt>Address</dt>
+            <dd>{{ a.hospitalAddress }}</dd>
+          </div>
+        }
+        <div class="facts__full">
+          <dt>Reason for visit</dt>
+          <dd>{{ a.reason ?? '—' }}</dd>
+        </div>
+        @if (a.patientNotes) {
+          <div class="facts__full">
+            <dt>Your notes</dt>
+            <dd>{{ a.patientNotes }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (a.statusName === 'Rejected' && a.rejectionReason) {
+        <p class="note">Rejection reason: {{ a.rejectionReason }}</p>
+      }
+      @if (a.statusName === 'Cancelled' && a.cancellationReason) {
+        <p class="note">Cancellation reason: {{ a.cancellationReason }}</p>
+      }
+
+      @if (canCancel(a)) {
+        <div class="actions">
+          <button type="button" mat-stroked-button color="warn" [disabled]="busy()" (click)="cancel()">
+            Cancel appointment
+          </button>
+        </div>
+      }
+    </section>
+  }
+</div>
