@@ -1,0 +1,150 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>My hospital requests</h1>
+    <p>Track your applications and choose which hospital is your primary workplace.</p>
+  </header>
+
+  @if (approvedHospitals().length) {
+    <section class="cc-card approved">
+      <h2>Where you work</h2>
+      <p class="approved__lead">
+        You can mark one hospital as primary. Setting a new one clears the previous choice.
+      </p>
+
+      <ul class="approved__list">
+        @for (hospital of approvedHospitals(); track hospital.id) {
+          <li class="approved__item" [class.approved__item--primary]="hospital.isPrimary">
+            <div class="approved__info">
+              <span class="approved__name">
+                {{ hospital.hospitalName }}
+                @if (hospital.isPrimary) {
+                  <span class="cc-status-chip cc-status-chip--active">
+                    <mat-icon>star</mat-icon> Primary
+                  </span>
+                }
+              </span>
+              <span class="approved__meta">
+                {{ hospital.city }}{{ hospital.city && hospital.governorate ? ', ' : '' }}{{ hospital.governorate }}
+                @if (hospital.phoneNumber) {
+                  · {{ hospital.phoneNumber }}
+                }
+              </span>
+            </div>
+
+            <div class="approved__actions">
+              <a [routerLink]="['/hospitals', hospital.id]" mat-button>View</a>
+              @if (!hospital.isPrimary) {
+                <button
+                  type="button"
+                  mat-stroked-button
+                  [disabled]="busyId() === hospital.id"
+                  (click)="setPrimary(hospital.id)"
+                >
+                  Set as primary
+                </button>
+              }
+            </div>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onStatusChange()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && requests().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>inbox</mat-icon>
+      <h2>No requests yet</h2>
+      <p>Browse hospitals and send your first affiliation request.</p>
+      <a routerLink="/dashboard/doctor/hospitals" mat-flat-button color="primary">Find hospitals</a>
+    </div>
+  } @else {
+    <div class="requests">
+      @for (request of requests(); track request.id) {
+        <article class="cc-card request-card">
+          <div class="request-card__main">
+            <h2>{{ request.hospitalName }}</h2>
+            <p class="request-card__meta">
+              <mat-icon>place</mat-icon>
+              <span>{{ request.city }}{{ request.city && request.governorate ? ', ' : '' }}{{ request.governorate }}</span>
+            </p>
+            <p class="request-card__meta">
+              <mat-icon>schedule</mat-icon>
+              <span>Requested {{ request.requestedAt | date: 'mediumDate' }}</span>
+              @if (request.reviewedAt) {
+                <span>· Reviewed {{ request.reviewedAt | date: 'mediumDate' }}</span>
+              }
+            </p>
+
+            @if (request.statusName === 'Rejected' && request.rejectionReason) {
+              <div class="rejection">
+                <mat-icon>info</mat-icon>
+                <div>
+                  <strong>Reason given</strong>
+                  <p>{{ request.rejectionReason }}</p>
+                </div>
+              </div>
+            }
+          </div>
+
+          <div class="request-card__side">
+            <span class="cc-status-chip" [class]="statusClass(request.statusName)">
+              {{ request.statusName }}
+            </span>
+
+            @if (request.isPrimary) {
+              <span class="cc-role-chip">Primary</span>
+            }
+
+            @if (request.statusName === 'Pending') {
+              <button
+                type="button"
+                mat-stroked-button
+                color="warn"
+                [disabled]="busyId() === request.id"
+                (click)="cancel(request)"
+              >
+                Cancel request
+              </button>
+            }
+
+            @if (request.statusName === 'Approved' && !request.isPrimary) {
+              <button
+                type="button"
+                mat-stroked-button
+                [disabled]="busyId() === request.hospitalProfileId"
+                (click)="setPrimary(request.hospitalProfileId)"
+              >
+                Set as primary
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

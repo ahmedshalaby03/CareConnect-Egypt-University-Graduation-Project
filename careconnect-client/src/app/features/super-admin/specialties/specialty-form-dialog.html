@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit specialty' : 'Add specialty' }}</h2>
+
+<mat-dialog-content>
+  @if (serverError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+      @if (serverErrorList().length) {
+        <ul>
+          @for (item of serverErrorList(); track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>English name</mat-label>
+      <input matInput formControlName="name" placeholder="e.g. Cardiology" />
+      @if (form.controls.name.hasError('required') && form.controls.name.touched) {
+        <mat-error>Specialty name is required.</mat-error>
+      }
+      @if (form.controls.name.hasError('minlength')) {
+        <mat-error>Name must be at least 2 characters.</mat-error>
+      }
+      @if (form.controls.name.hasError('maxlength')) {
+        <mat-error>Name must not exceed 120 characters.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Arabic name (optional)</mat-label>
+      <input matInput formControlName="arabicName" dir="rtl" placeholder="أمراض القلب" />
+      @if (form.controls.arabicName.hasError('maxlength')) {
+        <mat-error>Arabic name must not exceed 120 characters.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Description (optional)</mat-label>
+      <textarea matInput formControlName="description" rows="3"></textarea>
+      @if (form.controls.description.hasError('maxlength')) {
+        <mat-error>Description must not exceed 500 characters.</mat-error>
+      }
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    @if (saving()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      <span>{{ isEdit ? 'Save changes' : 'Add specialty' }}</span>
+    }
+  </button>
+</mat-dialog-actions>

@@ -1,0 +1,150 @@
+<section class="auth-card">
+  <header class="auth-card__head">
+    <h2>Create your account</h2>
+    <p>Join CareConnect Egypt in a few steps.</p>
+  </header>
+
+  @if (serverError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+      @if (serverErrorList().length) {
+        <ul>
+          @for (item of serverErrorList(); track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="cc-form-grid">
+      <mat-form-field appearance="outline" class="cc-form-field cc-form-grid--full">
+        <mat-label>Full name</mat-label>
+        <input matInput formControlName="fullName" autocomplete="name" />
+        @if (form.controls.fullName.hasError('required') && form.controls.fullName.touched) {
+          <mat-error>Full name is required.</mat-error>
+        }
+        @if (form.controls.fullName.hasError('minlength')) {
+          <mat-error>Full name must be at least 3 characters.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Email</mat-label>
+        <input matInput type="email" formControlName="email" autocomplete="email" />
+        @if (form.controls.email.hasError('required') && form.controls.email.touched) {
+          <mat-error>Email is required.</mat-error>
+        }
+        @if (form.controls.email.hasError('email')) {
+          <mat-error>Enter a valid email address.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Phone number (optional)</mat-label>
+        <input matInput formControlName="phoneNumber" autocomplete="tel" placeholder="+20 100 000 0000" />
+        @if (form.controls.phoneNumber.hasError('pattern')) {
+          <mat-error>Enter a valid phone number.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    <fieldset class="role-picker" [class.role-picker--invalid]="form.controls.role.touched && form.controls.role.invalid">
+      <legend>I am registering as</legend>
+
+      <div class="role-grid" role="radiogroup" aria-label="Account role">
+        @for (option of roleOptions; track option.value) {
+          <button
+            type="button"
+            class="role-option"
+            role="radio"
+            [class.role-option--selected]="form.controls.role.value === option.value"
+            [attr.aria-checked]="form.controls.role.value === option.value"
+            (click)="selectRole(option.value)"
+          >
+            <mat-icon>{{ option.icon }}</mat-icon>
+            <span class="role-option__label">{{ option.label }}</span>
+            <span class="role-option__desc">{{ option.description }}</span>
+          </button>
+        }
+      </div>
+
+      @if (form.controls.role.touched && form.controls.role.invalid) {
+        <p class="role-picker__error">Please choose a role.</p>
+      }
+    </fieldset>
+
+    <div class="cc-form-grid">
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Password</mat-label>
+        <input
+          matInput
+          [type]="hidePassword() ? 'password' : 'text'"
+          formControlName="password"
+          autocomplete="new-password"
+        />
+        <button
+          type="button"
+          mat-icon-button
+          matSuffix
+          (click)="hidePassword.set(!hidePassword())"
+          [attr.aria-label]="hidePassword() ? 'Show password' : 'Hide password'"
+        >
+          <mat-icon>{{ hidePassword() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+        @if (form.controls.password.hasError('required') && form.controls.password.touched) {
+          <mat-error>Password is required.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Confirm password</mat-label>
+        <input
+          matInput
+          [type]="hideConfirm() ? 'password' : 'text'"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+        />
+        <button
+          type="button"
+          mat-icon-button
+          matSuffix
+          (click)="hideConfirm.set(!hideConfirm())"
+          [attr.aria-label]="hideConfirm() ? 'Show password' : 'Hide password'"
+        >
+          <mat-icon>{{ hideConfirm() ? 'visibility' : 'visibility_off' }}</mat-icon>
+        </button>
+        @if (form.controls.confirmPassword.hasError('required') && form.controls.confirmPassword.touched) {
+          <mat-error>Please confirm your password.</mat-error>
+        }
+        @if (form.controls.confirmPassword.hasError('fieldsMismatch')) {
+          <mat-error>Passwords do not match.</mat-error>
+        }
+      </mat-form-field>
+    </div>
+
+    @if (form.controls.password.touched && passwordRequirements().length) {
+      <p class="password-hint">Password still needs: {{ passwordRequirements().join(', ') }}.</p>
+    }
+
+    <button
+      type="submit"
+      mat-flat-button
+      color="primary"
+      class="auth-card__submit"
+      [disabled]="submitting()"
+    >
+      @if (submitting()) {
+        <mat-spinner diameter="20" />
+      } @else {
+        <span>Create account</span>
+      }
+    </button>
+  </form>
+
+  <p class="auth-card__foot">
+    Already have an account?
+    <a routerLink="/login">Sign in</a>
+  </p>
+</section>

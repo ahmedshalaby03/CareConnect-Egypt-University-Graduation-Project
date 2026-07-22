@@ -1,0 +1,181 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>My doctor profile</h1>
+    <p>A complete profile is required before you can apply to work at a hospital.</p>
+  </header>
+
+  @if (loading()) {
+    <div class="loading">
+      <mat-spinner diameter="36" />
+      <p>Loading your profile…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+    </div>
+  } @else if (profile(); as current) {
+    <app-profile-completion
+      [completed]="current.isProfileCompleted"
+      [missingFields]="current.missingFields"
+      [totalRequiredFields]="6"
+      hint="Specialty, license number, experience, governorate and city are required."
+    />
+
+    @if (current.isProfileCompleted) {
+      <div class="next-step">
+        <mat-icon>task_alt</mat-icon>
+        <span>Your profile is complete.</span>
+        <a routerLink="/dashboard/doctor/hospitals" mat-button color="primary">Find hospitals</a>
+      </div>
+    }
+
+    @if (serverError(); as error) {
+      <div class="cc-error-summary" role="alert">
+        <span>{{ error }}</span>
+        @if (serverErrorList().length) {
+          <ul>
+            @for (item of serverErrorList(); track item) {
+              <li>{{ item }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <section class="cc-card">
+        <h2>Account</h2>
+        <div class="cc-form-grid">
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Full name</mat-label>
+            <input matInput formControlName="fullName" autocomplete="name" />
+            @if (form.controls.fullName.hasError('required') && form.controls.fullName.touched) {
+              <mat-error>Full name is required.</mat-error>
+            }
+            @if (form.controls.fullName.hasError('minlength')) {
+              <mat-error>Full name must be at least 3 characters.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Phone number</mat-label>
+            <input matInput formControlName="phoneNumber" autocomplete="tel" placeholder="+20 100 000 0000" />
+            @if (form.controls.phoneNumber.hasError('pattern')) {
+              <mat-error>Enter a valid phone number.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field cc-form-grid--full">
+            <mat-label>Email</mat-label>
+            <input matInput [value]="current.email" disabled />
+            <mat-hint>Your sign-in email cannot be changed here.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="cc-card">
+        <h2>Professional details</h2>
+        <div class="cc-form-grid">
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Specialty</mat-label>
+            <mat-select formControlName="specialtyId">
+              @for (specialty of specialties(); track specialty.id) {
+                <mat-option [value]="specialty.id">
+                  {{ specialty.name }}
+                  @if (specialty.arabicName) {
+                    <span class="arabic-hint">— {{ specialty.arabicName }}</span>
+                  }
+                </mat-option>
+              }
+            </mat-select>
+            @if (form.controls.specialtyId.hasError('required') && form.controls.specialtyId.touched) {
+              <mat-error>Please select your specialty.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>License number</mat-label>
+            <input matInput formControlName="licenseNumber" />
+            @if (form.controls.licenseNumber.hasError('required') && form.controls.licenseNumber.touched) {
+              <mat-error>License number is required.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Years of experience</mat-label>
+            <input matInput type="number" formControlName="yearsOfExperience" min="0" max="70" />
+            @if (form.controls.yearsOfExperience.hasError('required') && form.controls.yearsOfExperience.touched) {
+              <mat-error>Years of experience is required.</mat-error>
+            }
+            @if (form.controls.yearsOfExperience.hasError('min')) {
+              <mat-error>Experience cannot be negative.</mat-error>
+            }
+            @if (form.controls.yearsOfExperience.hasError('max')) {
+              <mat-error>Please enter 70 years or fewer.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Consultation price (EGP)</mat-label>
+            <input matInput type="number" formControlName="consultationPrice" min="0" />
+            @if (form.controls.consultationPrice.hasError('min')) {
+              <mat-error>Price cannot be negative.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field cc-form-grid--full">
+            <mat-label>Biography</mat-label>
+            <textarea matInput formControlName="biography" rows="4"></textarea>
+            <mat-hint align="end">{{ form.controls.biography.value.length }} / 2000</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <section class="cc-card">
+        <h2>Location and image</h2>
+        <div class="cc-form-grid">
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>Governorate</mat-label>
+            <mat-select formControlName="governorate">
+              @for (governorate of governorates; track governorate) {
+                <mat-option [value]="governorate">{{ governorate }}</mat-option>
+              }
+            </mat-select>
+            @if (form.controls.governorate.hasError('required') && form.controls.governorate.touched) {
+              <mat-error>Governorate is required.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field">
+            <mat-label>City</mat-label>
+            <input matInput formControlName="city" />
+            @if (form.controls.city.hasError('required') && form.controls.city.touched) {
+              <mat-error>City is required.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field cc-form-grid--full">
+            <mat-label>Clinic address</mat-label>
+            <input matInput formControlName="address" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="cc-form-field cc-form-grid--full">
+            <mat-label>Profile image URL</mat-label>
+            <input matInput formControlName="profileImageUrl" placeholder="https://…" />
+            <mat-hint>Paste a link to a photo. File uploads arrive in a later step.</mat-hint>
+          </mat-form-field>
+        </div>
+      </section>
+
+      <div class="actions">
+        <button type="submit" mat-flat-button color="primary" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="20" />
+          } @else {
+            <span>Save profile</span>
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

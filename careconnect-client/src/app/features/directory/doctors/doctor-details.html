@@ -1,0 +1,129 @@
+<div class="cc-page">
+  <a routerLink="/doctors" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All doctors
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading doctor…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Doctor unavailable</h2>
+      <p>{{ error }}</p>
+      <a routerLink="/doctors" mat-flat-button color="primary">Back to doctors</a>
+    </div>
+  } @else if (doctor(); as d) {
+    <section class="hero">
+      @if (d.profileImageUrl) {
+        <img [src]="d.profileImageUrl" [alt]="d.fullName" class="hero__avatar" />
+      } @else {
+        <span class="hero__avatar" aria-hidden="true">{{ initials(d.fullName) }}</span>
+      }
+
+      <div class="hero__body">
+        <h1>{{ d.fullName }}</h1>
+        @if (d.specialty) {
+          <p class="hero__specialty">
+            {{ d.specialty.name }}
+            @if (d.specialty.arabicName) {
+              <span dir="rtl">— {{ d.specialty.arabicName }}</span>
+            }
+          </p>
+        }
+
+        <div class="hero__meta">
+          @if (d.yearsOfExperience !== null) {
+            <span class="hero__pill">
+              <mat-icon>workspace_premium</mat-icon> {{ d.yearsOfExperience }} yrs experience
+            </span>
+          }
+          @if (d.consultationPrice !== null) {
+            <span class="hero__pill">
+              <mat-icon>payments</mat-icon> {{ d.consultationPrice }} EGP
+            </span>
+          }
+          <span class="hero__pill">
+            <mat-icon>place</mat-icon>
+            {{ d.city }}{{ d.city && d.governorate ? ', ' : '' }}{{ d.governorate }}
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="layout__main">
+        @if (d.biography) {
+          <section class="cc-card">
+            <h2>About</h2>
+            <p class="about">{{ d.biography }}</p>
+          </section>
+        }
+
+        <section class="cc-card">
+          <h2>Practice details</h2>
+          <dl class="facts">
+            <div>
+              <dt>License number</dt>
+              <dd>{{ d.licenseNumber ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Clinic address</dt>
+              <dd>{{ d.address ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>Governorate</dt>
+              <dd>{{ d.governorate ?? '—' }}</dd>
+            </div>
+            <div>
+              <dt>City</dt>
+              <dd>{{ d.city ?? '—' }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <aside class="layout__side">
+        <section class="cc-card">
+          <h2>Works at</h2>
+          @if (d.hospitals.length === 0) {
+            <p class="muted">Not currently affiliated with a hospital.</p>
+          } @else {
+            <ul class="hospitals">
+              @for (hospital of d.hospitals; track hospital.id) {
+                <li>
+                  <a [routerLink]="['/hospitals', hospital.id]" class="hospitals__link">
+                    <mat-icon>local_hospital</mat-icon>
+                    <span class="hospitals__info">
+                      <span class="hospitals__name">
+                        {{ hospital.hospitalName }}
+                        @if (hospital.isPrimary) {
+                          <span class="cc-status-chip cc-status-chip--active">Primary</span>
+                        }
+                      </span>
+                      <span class="hospitals__meta">
+                        {{ hospital.city }}{{ hospital.city && hospital.governorate ? ', ' : '' }}{{ hospital.governorate }}
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <section class="cc-card">
+          <h2>Appointments</h2>
+          <p class="muted">Online booking is not available yet.</p>
+          <button type="button" mat-flat-button color="primary" disabled class="future-button">
+            Book appointment
+          </button>
+          <p class="future-note">Coming in a future release.</p>
+        </section>
+      </aside>
+    </div>
+  }
+</div>

@@ -1,0 +1,8 @@
+{
+  "//": "Optional: run `ng serve --proxy-config proxy.conf.json` and set apiBaseUrl to '/api' to route API calls through the dev server. By default the app talks to http://localhost:5290 directly and the API's CORS policy allows http://localhost:4200.",
+  "/api": {
+    "target": "http://localhost:5290",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

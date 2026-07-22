@@ -1,0 +1,87 @@
+@if (user(); as currentUser) {
+  <!-- The role accent is set once here so the hero and the quick links can both read it. -->
+  <div class="cc-page" [style.--accent]="config().accent">
+    <section class="hero">
+      <div class="hero__icon" aria-hidden="true">
+        <mat-icon>{{ config().icon }}</mat-icon>
+      </div>
+      <div class="hero__text">
+        <span class="hero__role">{{ roleLabel() }} dashboard</span>
+        <h1>Welcome, {{ currentUser.fullName }}</h1>
+        <p>{{ config().intro }}</p>
+      </div>
+    </section>
+
+    @if (config().quickLinks.length) {
+      <nav class="quick-links" aria-label="Quick actions">
+        @for (link of config().quickLinks; track link.route) {
+          <a class="quick-link" [routerLink]="link.route">
+            <span class="quick-link__icon" aria-hidden="true">
+              <mat-icon>{{ link.icon }}</mat-icon>
+            </span>
+            <span class="quick-link__text">
+              <span class="quick-link__label">{{ link.label }}</span>
+              <span class="quick-link__desc">{{ link.description }}</span>
+            </span>
+            <mat-icon class="quick-link__chevron">chevron_right</mat-icon>
+          </a>
+        }
+      </nav>
+    }
+
+    <div class="grid">
+      <article class="cc-card info">
+        <h2>Your account</h2>
+        <dl>
+          <div>
+            <dt>Full name</dt>
+            <dd>{{ currentUser.fullName }}</dd>
+          </div>
+          <div>
+            <dt>Email</dt>
+            <dd>{{ currentUser.email }}</dd>
+          </div>
+          <div>
+            <dt>Role</dt>
+            <dd><span class="cc-role-chip">{{ roleLabel() }}</span></dd>
+          </div>
+          @if (currentUser.phoneNumber) {
+            <div>
+              <dt>Phone</dt>
+              <dd>{{ currentUser.phoneNumber }}</dd>
+            </div>
+          }
+          <div>
+            <dt>Status</dt>
+            <dd>
+              <span
+                class="cc-status-chip"
+                [class.cc-status-chip--active]="currentUser.isActive"
+                [class.cc-status-chip--inactive]="!currentUser.isActive"
+              >
+                {{ currentUser.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Member since</dt>
+            <dd>{{ currentUser.createdAt | date: 'mediumDate' }}</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="cc-card soon">
+        <h2>Coming soon</h2>
+        <p class="soon__lead">These features arrive in later steps of the project.</p>
+        <ul>
+          @for (feature of config().comingSoon; track feature) {
+            <li>
+              <mat-icon>schedule</mat-icon>
+              <span>{{ feature }}</span>
+            </li>
+          }
+        </ul>
+      </article>
+    </div>
+  </div>
+}

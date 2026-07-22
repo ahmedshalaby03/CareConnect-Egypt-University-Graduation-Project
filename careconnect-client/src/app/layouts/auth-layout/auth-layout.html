@@ -1,0 +1,29 @@
+<div class="auth-shell">
+  <aside class="auth-brand">
+    <div class="auth-brand__inner">
+      <div class="auth-brand__logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="34" height="34" fill="currentColor">
+          <path
+            d="M13.5 2h-3v4.5H6v3h4.5V14h3V9.5H18v-3h-4.5V2Zm-9 15h15v2h-15v-2Zm2 3h11v2h-11v-2Z"
+          />
+        </svg>
+      </div>
+
+      <h1>CareConnect <span>Egypt</span></h1>
+      <p class="auth-brand__tagline">
+        A single platform connecting patients, doctors, hospitals and medical service
+        providers across Egypt.
+      </p>
+
+      <ul class="auth-brand__list">
+        @for (item of highlights; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    </div>
+  </aside>
+
+  <main class="auth-content">
+    <router-outlet />
+  </main>
+</div>

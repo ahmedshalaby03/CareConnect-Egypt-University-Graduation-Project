@@ -1,0 +1,115 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>User management</h1>
+    <p>Search, filter and activate or deactivate CareConnect accounts.</p>
+  </header>
+
+  <section class="cc-card filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search by name or email</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="e.g. Sara or sara@..." />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filters__role">
+      <mat-label>Role</mat-label>
+      <mat-select [formControl]="roleControl" (selectionChange)="onRoleChange()">
+        <mat-option value="">All roles</mat-option>
+        @for (role of roleOptions; track role) {
+          <mat-option [value]="role">{{ roleLabels[role] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filters__status">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onStatusChange()">
+        @for (option of statusFilters; track option.label) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  <section class="cc-card table-card">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+
+    <div class="table-scroll">
+      <table mat-table [dataSource]="users()" class="users-table">
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef>User</th>
+          <td mat-cell *matCellDef="let user">
+            <div class="user-cell">
+              <span class="user-cell__name">{{ user.fullName }}</span>
+              <span class="user-cell__email">{{ user.email }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="role">
+          <th mat-header-cell *matHeaderCellDef>Role</th>
+          <td mat-cell *matCellDef="let user">
+            <span class="cc-role-chip">{{ roleLabel(user.role) }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let user">
+            <span
+              class="cc-status-chip"
+              [class.cc-status-chip--active]="user.isActive"
+              [class.cc-status-chip--inactive]="!user.isActive"
+            >
+              {{ user.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="created">
+          <th mat-header-cell *matHeaderCellDef>Joined</th>
+          <td mat-cell *matCellDef="let user">{{ user.createdAt | date: 'mediumDate' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="col-actions">Active</th>
+          <td mat-cell *matCellDef="let user" class="col-actions">
+            <mat-slide-toggle
+              [checked]="user.isActive"
+              [disabled]="user.id === currentUserId || togglingId() === user.id"
+              (change)="toggleStatus(user)"
+              [matTooltip]="
+                user.id === currentUserId
+                  ? 'You cannot change your own status'
+                  : user.isActive
+                    ? 'Deactivate this user'
+                    : 'Activate this user'
+              "
+            />
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    @if (!loading() && users().length === 0) {
+      <div class="empty-state">
+        <mat-icon>person_search</mat-icon>
+        <p>No users match the current filters.</p>
+      </div>
+    }
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  </section>
+</div>

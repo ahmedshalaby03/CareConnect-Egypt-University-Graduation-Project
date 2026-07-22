@@ -1,0 +1,66 @@
+<div class="app-shell">
+  <mat-toolbar class="app-bar">
+    <div class="app-bar__brand">
+      <span class="app-bar__mark" aria-hidden="true">
+        <mat-icon>health_and_safety</mat-icon>
+      </span>
+      <span class="app-bar__title">CareConnect <strong>Egypt</strong></span>
+    </div>
+
+    <nav class="app-nav" aria-label="Main navigation">
+      @for (link of navLinks(); track link.route) {
+        <a
+          class="app-nav__link"
+          [routerLink]="link.route"
+          routerLinkActive="app-nav__link--active"
+          [routerLinkActiveOptions]="{ exact: link.exact ?? false }"
+        >
+          <mat-icon>{{ link.icon }}</mat-icon>
+          <span>{{ link.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <span class="app-bar__spacer"></span>
+
+    @if (user(); as currentUser) {
+      <button
+        type="button"
+        mat-button
+        class="app-bar__account"
+        [matMenuTriggerFor]="accountMenu"
+      >
+        <span class="app-bar__avatar" aria-hidden="true">{{ initials() }}</span>
+        <span class="app-bar__account-text">
+          <span class="app-bar__name">{{ currentUser.fullName }}</span>
+          <span class="app-bar__role">{{ roleLabel() }}</span>
+        </span>
+        <mat-icon>arrow_drop_down</mat-icon>
+      </button>
+
+      <mat-menu #accountMenu="matMenu" xPosition="before">
+        <div class="app-menu-head" mat-menu-item disabled>
+          <div class="app-menu-head__name">{{ currentUser.fullName }}</div>
+          <div class="app-menu-head__email">{{ currentUser.email }}</div>
+        </div>
+
+        <!-- Repeated in the menu so navigation stays reachable on narrow screens. -->
+        @for (link of navLinks(); track link.route) {
+          <a mat-menu-item [routerLink]="link.route" class="app-menu__mobile-link">
+            <mat-icon>{{ link.icon }}</mat-icon>
+            <span>{{ link.label }}</span>
+          </a>
+        }
+
+        <button type="button" mat-menu-item (click)="logout()">
+          <mat-icon>logout</mat-icon>
+          <span>Sign out</span>
+        </button>
+      </mat-menu>
+    }
+  </mat-toolbar>
+
+  <main class="app-content">
+    <router-outlet />
+  </main>
+</div>

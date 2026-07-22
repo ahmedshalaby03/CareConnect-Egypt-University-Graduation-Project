@@ -1,0 +1,161 @@
+:host {
+  display: block;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: var(--mat-sys-surface-container-low, #f4f7f7);
+}
+
+.app-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(90deg, var(--cc-brand-dark), var(--cc-brand));
+  color: #fff;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 12%);
+  padding-inline: clamp(12px, 4vw, 32px);
+}
+
+.app-bar__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.app-bar__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 18%);
+}
+
+.app-bar__title {
+  font-size: 1.1rem;
+  font-weight: 400;
+
+  strong {
+    font-weight: 600;
+  }
+}
+
+.app-bar__spacer {
+  flex: 1 1 auto;
+}
+
+.app-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: 24px;
+}
+
+.app-nav__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 10px;
+  color: rgb(255 255 255 / 82%);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background 0.15s ease, color 0.15s ease;
+
+  mat-icon {
+    font-size: 19px;
+    width: 19px;
+    height: 19px;
+  }
+
+  &:hover {
+    background: rgb(255 255 255 / 12%);
+    color: #fff;
+  }
+
+  &--active {
+    background: rgb(255 255 255 / 20%);
+    color: #fff;
+  }
+}
+
+/* The menu doubles as the mobile navigation, so these links hide on wide screens. */
+.app-menu__mobile-link {
+  display: none;
+}
+
+.app-bar__account {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  height: 48px;
+}
+
+.app-bar__avatar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 22%);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.app-bar__account-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.2;
+}
+
+.app-bar__name {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.app-bar__role {
+  font-size: 0.72rem;
+  opacity: 0.85;
+}
+
+.app-content {
+  flex: 1 1 auto;
+}
+
+.app-menu-head {
+  opacity: 1 !important;
+
+  &__name {
+    font-weight: 600;
+  }
+
+  &__email {
+    font-size: 0.8rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+/* Below this width the inline nav would wrap and crowd the brand, so it moves into the
+   account menu instead. */
+@media (max-width: 1080px) {
+  .app-nav {
+    display: none;
+  }
+
+  .app-menu__mobile-link {
+    display: flex;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-bar__account-text {
+    display: none;
+  }
+}

@@ -1,0 +1,23 @@
+# .NET
+bin/
+obj/
+*.user
+[Ll]ogs/
+logs/
+
+# Rider / VS
+.idea/
+.vs/
+
+# Node / Angular
+node_modules/
+careconnect-client/dist/
+careconnect-client/.angular/
+
+# Environment / secrets — never commit real secrets
+*.local.json
+appsettings.*.local.json
+
+# OS
+Thumbs.db
+.DS_Store

@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CareConnect.Api/CareConnect.Api.csproj" />
+    <Project Path="src/CareConnect.Application/CareConnect.Application.csproj" />
+    <Project Path="src/CareConnect.Domain/CareConnect.Domain.csproj" />
+    <Project Path="src/CareConnect.Infrastructure/CareConnect.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/CareConnect.Api.IntegrationTests/CareConnect.Api.IntegrationTests.csproj" />
+  </Folder>
+</Solution>

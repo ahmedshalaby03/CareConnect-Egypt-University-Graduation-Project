@@ -1,0 +1,132 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Doctors</h1>
+    <p>Find doctors by specialty and location across the CareConnect network.</p>
+  </header>
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search doctors</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="Name or biography" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Specialty</mat-label>
+      <mat-select [formControl]="specialtyControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All specialties</mat-option>
+        @for (specialty of specialties(); track specialty.id) {
+          <mat-option [value]="specialty.id">{{ specialty.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Governorate</mat-label>
+      <mat-select [formControl]="governorateControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All governorates</mat-option>
+        @for (governorate of governorates; track governorate) {
+          <mat-option [value]="governorate">{{ governorate }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>City</mat-label>
+      <input matInput [formControl]="cityControl" placeholder="e.g. Nasr City" />
+    </mat-form-field>
+
+    <button type="button" mat-button class="filters__clear" (click)="clearFilters()">
+      <mat-icon>filter_alt_off</mat-icon>
+      Clear
+    </button>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (loadError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+    </div>
+  }
+
+  @if (!loading() && !loadError() && doctors().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>person_search</mat-icon>
+      <h2>No doctors found</h2>
+      <p>No doctor matches these filters. Try a different specialty or location.</p>
+      <button type="button" mat-stroked-button (click)="clearFilters()">Clear filters</button>
+    </div>
+  } @else if (!loadError()) {
+    <div class="cc-card-grid">
+      @for (doctor of doctors(); track doctor.doctorProfileId) {
+        <article class="cc-card doctor-card">
+          <header class="doctor-card__head">
+            @if (doctor.profileImageUrl) {
+              <img [src]="doctor.profileImageUrl" [alt]="doctor.fullName" class="doctor-card__avatar" />
+            } @else {
+              <span class="doctor-card__avatar" aria-hidden="true">{{ initials(doctor.fullName) }}</span>
+            }
+            <div>
+              <h2>{{ doctor.fullName }}</h2>
+              @if (doctor.specialty) {
+                <p class="doctor-card__location">
+                  <mat-icon>medical_information</mat-icon>
+                  <span>{{ doctor.specialty.name }}</span>
+                </p>
+              }
+            </div>
+          </header>
+
+          @if (doctor.biography) {
+            <p class="doctor-card__desc">{{ doctor.biography }}</p>
+          }
+
+          <p class="doctor-card__meta">
+            <mat-icon>place</mat-icon>
+            <span>{{ doctor.city }}{{ doctor.city && doctor.governorate ? ', ' : '' }}{{ doctor.governorate }}</span>
+          </p>
+
+          <p class="doctor-card__meta">
+            @if (doctor.yearsOfExperience !== null) {
+              <mat-icon>workspace_premium</mat-icon>
+              <span>{{ doctor.yearsOfExperience }} yrs experience</span>
+            }
+            @if (doctor.consultationPrice !== null) {
+              <span class="dot">·</span>
+              <span>{{ doctor.consultationPrice }} EGP</span>
+            }
+          </p>
+
+          @if (doctor.hospitals.length) {
+            <div class="cc-chips">
+              @for (hospital of doctor.hospitals.slice(0, 2); track hospital.id) {
+                <span class="cc-role-chip">{{ hospital.hospitalName }}</span>
+              }
+              @if (doctor.hospitals.length > 2) {
+                <span class="cc-role-chip">+{{ doctor.hospitals.length - 2 }} more</span>
+              }
+            </div>
+          }
+
+          <footer class="doctor-card__actions">
+            <a [routerLink]="['/doctors', doctor.doctorProfileId]" mat-flat-button color="primary">
+              View profile
+            </a>
+          </footer>
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[9, 18, 36]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>
