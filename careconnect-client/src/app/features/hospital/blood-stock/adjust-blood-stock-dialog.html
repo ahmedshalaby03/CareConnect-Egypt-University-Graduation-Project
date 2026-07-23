@@ -1,0 +1,60 @@
+<h2 mat-dialog-title>
+  {{ isDecrease ? 'Remove' : 'Add' }} {{ data.stock.bloodGroupDisplayName }} units
+</h2>
+
+<mat-dialog-content>
+  <p class="lead">
+    Currently {{ data.stock.availableUnits }} units available.
+    @if (isDecrease) {
+      This will reduce the available count - confirm the amount before submitting.
+    }
+  </p>
+
+  @if (serverError()) {
+    <div class="cc-notice cc-notice--danger">
+      <p>{{ serverError() }}</p>
+      @if (serverErrorList().length > 0) {
+        <ul>
+          @for (message of serverErrorList(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Units to {{ isDecrease ? 'remove' : 'add' }}</mat-label>
+      <input matInput type="number" min="1" formControlName="units" />
+      @if (form.controls.units.hasError('min')) {
+        <mat-error>Enter at least 1 unit.</mat-error>
+      }
+      @if (form.controls.units.hasError('max')) {
+        <mat-error>Cannot remove more than the {{ data.stock.availableUnits }} available units.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Notes (optional)</mat-label>
+      <textarea matInput formControlName="notes" rows="2" maxlength="1000"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button [disabled]="saving()" (click)="dialogRef.close()">Cancel</button>
+  <button
+    type="button"
+    mat-flat-button
+    [color]="isDecrease ? 'warn' : 'primary'"
+    [disabled]="saving()"
+    (click)="submit()"
+  >
+    @if (saving()) {
+      <mat-progress-spinner mode="indeterminate" diameter="18" />
+    } @else {
+      {{ isDecrease ? 'Remove units' : 'Add units' }}
+    }
+  </button>
+</mat-dialog-actions>

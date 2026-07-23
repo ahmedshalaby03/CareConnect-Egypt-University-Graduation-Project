@@ -1,0 +1,119 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Blood requests</h1>
+    <p>Review and act on blood requests submitted by patients.</p>
+  </header>
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Search by patient name</mat-label>
+      <input matInput [formControl]="patientSearchControl" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Search by beneficiary name</mat-label>
+      <input matInput [formControl]="beneficiarySearchControl" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Blood group</mat-label>
+      <mat-select [formControl]="bloodGroupControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">Any blood group</mat-option>
+        @for (bloodGroup of bloodGroups; track bloodGroup) {
+          <mat-option [value]="bloodGroup">{{ bloodGroup }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Urgency</mat-label>
+      <mat-select [formControl]="urgencyControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">Any urgency</mat-option>
+        @for (urgency of urgencies; track urgency) {
+          <mat-option [value]="urgency">{{ urgency }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  <section class="cc-card table-card">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+
+    <div class="table-scroll">
+      <table mat-table [dataSource]="requests()" class="requests-table">
+        <ng-container matColumnDef="patient">
+          <th mat-header-cell *matHeaderCellDef>Patient</th>
+          <td mat-cell *matCellDef="let row">{{ row.patientName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="beneficiary">
+          <th mat-header-cell *matHeaderCellDef>Beneficiary</th>
+          <td mat-cell *matCellDef="let row">{{ row.beneficiaryName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="bloodGroup">
+          <th mat-header-cell *matHeaderCellDef>Blood group</th>
+          <td mat-cell *matCellDef="let row">{{ row.bloodGroupDisplayName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="units">
+          <th mat-header-cell *matHeaderCellDef>Units</th>
+          <td mat-cell *matCellDef="let row">{{ row.unitsRequested }} / {{ row.currentAvailableUnits }} avail.</td>
+        </ng-container>
+
+        <ng-container matColumnDef="urgency">
+          <th mat-header-cell *matHeaderCellDef>Urgency</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="cc-status-chip" [class]="urgencyClass(row.urgencyName)">{{ row.urgencyName }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="cc-status-chip" [class]="statusClass(row.statusName)">{{ row.statusName }}</span>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr
+          mat-row
+          *matRowDef="let row; columns: displayedColumns"
+          class="clickable-row"
+          (click)="viewDetails(row)"
+        ></tr>
+      </table>
+    </div>
+
+    @if (!loading() && requests().length === 0) {
+      <div class="cc-empty-state">
+        <mat-icon>bloodtype</mat-icon>
+        <h2>No blood requests found</h2>
+        <p>No request matches the current filters.</p>
+      </div>
+    }
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[15, 30, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  </section>
+</div>

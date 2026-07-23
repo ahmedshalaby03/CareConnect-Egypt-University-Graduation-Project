@@ -1,0 +1,59 @@
+<h2 mat-dialog-title>Approve blood request</h2>
+
+<mat-dialog-content>
+  <dl class="allocation">
+    <div>
+      <dt>Blood group</dt>
+      <dd>{{ data.bloodGroupDisplayName }}</dd>
+    </div>
+    <div>
+      <dt>Units to allocate</dt>
+      <dd>{{ data.unitsRequested }}</dd>
+    </div>
+    <div>
+      <dt>Currently available</dt>
+      <dd>{{ data.currentAvailableUnits }}</dd>
+    </div>
+    <div>
+      <dt>Remaining after approval</dt>
+      <dd [class.allocation__negative]="insufficientStock">{{ remainingUnits }}</dd>
+    </div>
+  </dl>
+
+  @if (insufficientStock) {
+    <div class="cc-notice cc-notice--danger">
+      Not enough units are currently available. Approving may fail until stock is updated.
+    </div>
+  }
+
+  @if (serverError()) {
+    <div class="cc-notice cc-notice--danger">
+      <p>{{ serverError() }}</p>
+      @if (serverErrorList().length > 0) {
+        <ul>
+          @for (message of serverErrorList(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Hospital notes (optional)</mat-label>
+      <textarea matInput formControlName="hospitalNotes" rows="3" maxlength="1000"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button [disabled]="saving()" (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    @if (saving()) {
+      <mat-progress-spinner mode="indeterminate" diameter="18" />
+    } @else {
+      Approve
+    }
+  </button>
+</mat-dialog-actions>

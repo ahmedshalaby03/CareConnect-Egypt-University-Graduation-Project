@@ -1,0 +1,121 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Blood bank</h1>
+    <p>Search hospitals across the CareConnect network for the blood group you need.</p>
+  </header>
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Blood group</mat-label>
+      <mat-select [formControl]="bloodGroupControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">Any blood group</mat-option>
+        @for (bloodGroup of bloodGroups; track bloodGroup) {
+          <mat-option [value]="bloodGroup">{{ bloodGroup }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Governorate</mat-label>
+      <mat-select [formControl]="governorateControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All governorates</mat-option>
+        @for (governorate of governorates; track governorate) {
+          <mat-option [value]="governorate">{{ governorate }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>City</mat-label>
+      <input matInput [formControl]="cityControl" placeholder="e.g. Maadi" (change)="onFilterChange()" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search hospitals</mat-label>
+      <input matInput [formControl]="hospitalNameControl" (change)="onFilterChange()" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-checkbox [formControl]="availableOnlyControl" (change)="onFilterChange()">
+      Available only
+    </mat-checkbox>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && results().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>bloodtype</mat-icon>
+      <h2>No matching blood stock found</h2>
+      <p>Try a different blood group, location, or turn off "Available only".</p>
+    </div>
+  } @else {
+    <div class="cc-card-grid results-grid">
+      @for (result of results(); track result.hospitalProfileId + result.bloodGroup) {
+        <article class="cc-card result-card">
+          <header class="result-card__head">
+            @if (result.hospitalLogoUrl) {
+              <img [src]="result.hospitalLogoUrl" [alt]="result.hospitalName" class="result-card__logo" />
+            } @else {
+              <span class="result-card__logo" aria-hidden="true">
+                <mat-icon>local_hospital</mat-icon>
+              </span>
+            }
+            <div>
+              <h2>{{ result.hospitalName }}</h2>
+              <p class="result-card__location">
+                <mat-icon>place</mat-icon>
+                <span>{{ result.city }}{{ result.city && result.governorate ? ', ' : '' }}{{ result.governorate }}</span>
+              </p>
+            </div>
+          </header>
+
+          <div class="result-card__blood">
+            <span class="result-card__group">{{ result.bloodGroupDisplayName }}</span>
+            <span class="cc-status-chip" [class]="result.isAvailable ? 'cc-status-chip--active' : 'cc-status-chip--inactive'">
+              {{ result.isAvailable ? result.availableUnits + ' units available' : 'Unavailable' }}
+            </span>
+          </div>
+
+          <p class="result-card__meta">
+            @if (result.phoneNumber) {
+              <mat-icon>call</mat-icon>
+              <span>{{ result.phoneNumber }}</span>
+            }
+          </p>
+          <p class="result-card__meta">
+            <mat-icon>schedule</mat-icon>
+            <span>Updated {{ result.lastUpdatedAt | date: 'medium' }}</span>
+          </p>
+
+          <footer class="result-card__actions">
+            <a [routerLink]="['/blood-bank/hospitals', result.hospitalProfileId]" mat-stroked-button>
+              View blood bank
+            </a>
+            @if (isPatient()) {
+              <a
+                [routerLink]="['/dashboard/patient/blood-requests/new']"
+                [queryParams]="{ hospitalProfileId: result.hospitalProfileId, bloodGroup: result.bloodGroup }"
+                mat-flat-button
+                color="primary"
+              >
+                Request blood
+              </a>
+            }
+          </footer>
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[12, 24, 48]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

@@ -23,6 +23,8 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Hospitals', route: '/hospitals', icon: 'local_hospital' },
     { label: 'My appointments', route: '/dashboard/patient/appointments', icon: 'event_note' },
     { label: 'Insurance requests', route: '/dashboard/patient/insurance-requests', icon: 'fact_check' },
+    { label: 'Blood bank', route: '/blood-bank', icon: 'bloodtype' },
+    { label: 'Blood requests', route: '/dashboard/patient/blood-requests', icon: 'water_drop' },
   ],
   Doctor: [
     { label: 'Dashboard', route: '/dashboard/doctor', icon: 'dashboard', exact: true },
@@ -30,6 +32,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Find hospitals', route: '/dashboard/doctor/hospitals', icon: 'travel_explore' },
     { label: 'My requests', route: '/dashboard/doctor/hospital-requests', icon: 'assignment' },
     { label: 'Appointments', route: '/dashboard/doctor/appointments', icon: 'event_note' },
+    { label: 'Blood bank', route: '/blood-bank', icon: 'bloodtype' },
   ],
   Hospital: [
     { label: 'Dashboard', route: '/dashboard/hospital', icon: 'dashboard', exact: true },
@@ -38,11 +41,14 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Our doctors', route: '/dashboard/hospital/doctors', icon: 'groups' },
     { label: 'Appointments', route: '/dashboard/hospital/appointments', icon: 'event_note' },
     { label: 'Insurance requests', route: '/dashboard/hospital/insurance-requests', icon: 'fact_check' },
+    { label: 'Blood stock', route: '/dashboard/hospital/blood-stock', icon: 'bloodtype' },
+    { label: 'Blood requests', route: '/dashboard/hospital/blood-requests', icon: 'water_drop' },
   ],
   MedicalServiceProvider: [
     { label: 'Dashboard', route: '/dashboard/service-provider', icon: 'dashboard', exact: true },
     { label: 'Doctors', route: '/doctors', icon: 'medical_information' },
     { label: 'Hospitals', route: '/hospitals', icon: 'local_hospital' },
+    { label: 'Blood bank', route: '/blood-bank', icon: 'bloodtype' },
   ],
   SuperAdmin: [
     { label: 'Users', route: '/super-admin', icon: 'manage_accounts', exact: true },
@@ -50,6 +56,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Insurance companies', route: '/super-admin/insurance-companies', icon: 'fact_check' },
     { label: 'Doctors', route: '/doctors', icon: 'medical_information' },
     { label: 'Hospitals', route: '/hospitals', icon: 'local_hospital' },
+    { label: 'Blood bank', route: '/blood-bank', icon: 'bloodtype' },
   ],
 };
 

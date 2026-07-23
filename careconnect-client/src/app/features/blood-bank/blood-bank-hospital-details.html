@@ -1,0 +1,80 @@
+<div class="cc-page">
+  <a routerLink="/blood-bank" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All hospitals
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading blood bank…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Hospital unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (hospital(); as h) {
+    <header class="cc-page-header details-head">
+      <div class="details-head__title">
+        @if (h.hospitalLogoUrl) {
+          <img [src]="h.hospitalLogoUrl" [alt]="h.hospitalName" class="details-head__logo" />
+        }
+        <div>
+          <h1>{{ h.hospitalName }}</h1>
+          <p>{{ h.city }}{{ h.city && h.governorate ? ', ' : '' }}{{ h.governorate }}</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="cc-card">
+      <h2>Contact</h2>
+      <dl class="facts">
+        @if (h.address) {
+          <div class="facts__full">
+            <dt>Address</dt>
+            <dd>{{ h.address }}</dd>
+          </div>
+        }
+        @if (h.phoneNumber) {
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ h.phoneNumber }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <section class="cc-card">
+      <h2>Blood availability</h2>
+
+      @if (h.bloodGroups.length === 0) {
+        <p class="lead">This hospital has not recorded any blood stock yet.</p>
+      } @else {
+        <div class="groups-grid">
+          @for (group of h.bloodGroups; track group.bloodGroup) {
+            <article class="group-card">
+              <span class="group-card__label">{{ group.bloodGroupDisplayName }}</span>
+              <span class="cc-status-chip" [class]="group.isAvailable ? 'cc-status-chip--active' : 'cc-status-chip--inactive'">
+                {{ group.isAvailable ? group.availableUnits + ' units' : 'Unavailable' }}
+              </span>
+              <span class="group-card__meta">Updated {{ group.lastUpdatedAt | date: 'medium' }}</span>
+
+              @if (isPatient() && group.isAvailable) {
+                <a
+                  [routerLink]="['/dashboard/patient/blood-requests/new']"
+                  [queryParams]="{ hospitalProfileId: h.hospitalProfileId, bloodGroup: group.bloodGroup }"
+                  mat-flat-button
+                  color="primary"
+                >
+                  Request
+                </a>
+              }
+            </article>
+          }
+        </div>
+      }
+    </section>
+  }
+</div>
