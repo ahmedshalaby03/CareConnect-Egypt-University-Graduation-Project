@@ -68,6 +68,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 await app.SeedDatabaseAsync();
+await app.SeedDemoDataAsync();
 
 app.Run();
 

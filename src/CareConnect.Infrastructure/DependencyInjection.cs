@@ -19,6 +19,7 @@ public static class DependencyInjection
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<SuperAdminSettings>(configuration.GetSection(SuperAdminSettings.SectionName));
+        services.Configure<DemoDataOptions>(configuration.GetSection(DemoDataOptions.SectionName));
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException(
@@ -55,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<IBloodRequestService, BloodRequestService>();
 
         services.AddScoped<DatabaseSeeder>();
+        services.AddScoped<IDemoDataSeeder, DemoDataSeeder>();
 
         return services;
     }
