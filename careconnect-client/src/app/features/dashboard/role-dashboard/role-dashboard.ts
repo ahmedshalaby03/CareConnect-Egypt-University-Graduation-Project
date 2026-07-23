@@ -6,6 +6,8 @@ import { forkJoin } from 'rxjs';
 import { ROLE_LABELS, UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
+import { BloodRequestService } from '../../../core/services/blood-request.service';
+import { BloodStockService } from '../../../core/services/blood-stock.service';
 import { InsuranceRequestService } from '../../../core/services/insurance-request.service';
 
 interface StatTile {
@@ -61,8 +63,20 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/patient/insurance-requests',
         icon: 'fact_check',
       },
+      {
+        label: 'Blood bank',
+        description: 'Search hospitals for the blood group you need.',
+        route: '/blood-bank',
+        icon: 'bloodtype',
+      },
+      {
+        label: 'Blood requests',
+        description: 'Track the blood requests you have submitted.',
+        route: '/dashboard/patient/blood-requests',
+        icon: 'water_drop',
+      },
     ],
-    comingSoon: ['View medical records', 'Blood bank'],
+    comingSoon: ['View medical records'],
   },
   Doctor: {
     accent: '#00695c',
@@ -137,8 +151,20 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/hospital/insurance-requests',
         icon: 'fact_check',
       },
+      {
+        label: 'Blood stock',
+        description: 'Keep your available blood units up to date.',
+        route: '/dashboard/hospital/blood-stock',
+        icon: 'bloodtype',
+      },
+      {
+        label: 'Blood requests',
+        description: 'Review and act on patient blood requests.',
+        route: '/dashboard/hospital/blood-requests',
+        icon: 'water_drop',
+      },
     ],
-    comingSoon: ['Departments & staff', 'Bed availability', 'Blood bank'],
+    comingSoon: ['Departments & staff', 'Bed availability'],
   },
   MedicalServiceProvider: {
     accent: '#5e35b1',
@@ -156,6 +182,12 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         description: 'Explore hospitals across Egypt.',
         route: '/hospitals',
         icon: 'local_hospital',
+      },
+      {
+        label: 'Blood bank',
+        description: 'Search hospitals for available blood groups.',
+        route: '/blood-bank',
+        icon: 'bloodtype',
       },
     ],
     comingSoon: ['Service catalogue', 'Incoming requests', 'Coverage map'],
@@ -199,6 +231,8 @@ export class RoleDashboard implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly appointments = inject(AppointmentService);
   private readonly insuranceRequests = inject(InsuranceRequestService);
+  private readonly bloodRequests = inject(BloodRequestService);
+  private readonly bloodStock = inject(BloodStockService);
 
   /** Set from the route data, so one component serves all four role dashboards. */
   readonly role = input.required<UserRole>();
@@ -217,8 +251,9 @@ export class RoleDashboard implements OnInit {
         forkJoin({
           appointments: this.appointments.getPatientDashboardStats(),
           insurance: this.insuranceRequests.getPatientDashboardStats(),
+          blood: this.bloodRequests.getPatientDashboardStats(),
         }).subscribe({
-          next: ({ appointments: s, insurance: i }) =>
+          next: ({ appointments: s, insurance: i, blood: b }) =>
             this.stats.set([
               {
                 label: 'Next appointment',
@@ -231,6 +266,8 @@ export class RoleDashboard implements OnInit {
               { label: 'Pending requests', value: s.pendingCount, icon: 'hourglass_top' },
               { label: 'Pending insurance requests', value: i.pendingCount, icon: 'fact_check' },
               { label: 'Approved insurance requests', value: i.approvedCount, icon: 'verified' },
+              { label: 'Pending blood requests', value: b.pendingCount, icon: 'bloodtype' },
+              { label: 'Approved blood requests', value: b.approvedCount, icon: 'water_drop' },
             ]),
           error: () => this.stats.set([]),
         });
@@ -253,8 +290,9 @@ export class RoleDashboard implements OnInit {
         forkJoin({
           appointments: this.appointments.getHospitalDashboardStats(),
           insurance: this.insuranceRequests.getHospitalDashboardStats(),
+          blood: this.bloodRequests.getHospitalDashboardStats(),
         }).subscribe({
-          next: ({ appointments: s, insurance: i }) =>
+          next: ({ appointments: s, insurance: i, blood: b }) =>
             this.stats.set([
               { label: "Today's appointments", value: s.todayCount, icon: 'today' },
               { label: 'Pending appointments', value: s.pendingCount, icon: 'hourglass_top' },
@@ -263,6 +301,22 @@ export class RoleDashboard implements OnInit {
               { label: 'Insurance under review', value: i.underReviewCount, icon: 'pending_actions' },
               { label: 'Approved this month', value: i.approvedThisMonthCount, icon: 'task_alt' },
               { label: 'Rejected this month', value: i.rejectedThisMonthCount, icon: 'block' },
+              { label: 'Total blood units available', value: b.totalAvailableUnits, icon: 'bloodtype' },
+              { label: 'Blood groups below minimum', value: b.bloodGroupsBelowMinimumCount, icon: 'warning' },
+              { label: 'Pending blood requests', value: b.pendingRequestsCount, icon: 'water_drop' },
+              { label: 'Emergency blood requests', value: b.emergencyRequestsCount, icon: 'emergency' },
+              { label: 'Approved, awaiting fulfillment', value: b.approvedAwaitingFulfillmentCount, icon: 'inventory' },
+            ]),
+          error: () => this.stats.set([]),
+        });
+        break;
+
+      case 'SuperAdmin':
+        this.bloodStock.getSuperAdminDashboardStats().subscribe({
+          next: (b) =>
+            this.stats.set([
+              { label: 'Hospitals with blood stock', value: b.hospitalsWithStockCount, icon: 'local_hospital' },
+              { label: 'Active blood stock records', value: b.activeBloodStockRecordsCount, icon: 'bloodtype' },
             ]),
           error: () => this.stats.set([]),
         });

@@ -1,0 +1,45 @@
+<h2 mat-dialog-title>Reject blood request</h2>
+
+<mat-dialog-content>
+  @if (serverError()) {
+    <div class="cc-notice cc-notice--danger">
+      <p>{{ serverError() }}</p>
+      @if (serverErrorList().length > 0) {
+        <ul>
+          @for (message of serverErrorList(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Rejection reason</mat-label>
+      <textarea matInput formControlName="rejectionReason" rows="4"></textarea>
+      @if (form.controls.rejectionReason.hasError('required') && form.controls.rejectionReason.touched) {
+        <mat-error>A rejection reason is required.</mat-error>
+      }
+      @if (form.controls.rejectionReason.hasError('minlength')) {
+        <mat-error>Please give at least 5 characters.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Hospital notes (optional)</mat-label>
+      <textarea matInput formControlName="hospitalNotes" rows="3" maxlength="1000"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button [disabled]="saving()" (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-flat-button color="warn" [disabled]="saving()" (click)="submit()">
+    @if (saving()) {
+      <mat-progress-spinner mode="indeterminate" diameter="18" />
+    } @else {
+      Reject
+    }
+  </button>
+</mat-dialog-actions>

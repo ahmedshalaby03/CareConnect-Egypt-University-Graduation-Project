@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>
+  {{ isEdit ? 'Edit' : 'Add' }} {{ data.bloodGroupDisplayName }} stock
+</h2>
+
+<mat-dialog-content>
+  @if (serverError()) {
+    <div class="cc-notice cc-notice--danger">
+      <p>{{ serverError() }}</p>
+      @if (serverErrorList().length > 0) {
+        <ul>
+          @for (message of serverErrorList(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Available units</mat-label>
+      <input matInput type="number" min="0" formControlName="availableUnits" />
+      @if (form.controls.availableUnits.hasError('min')) {
+        <mat-error>Available units cannot be negative.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Minimum required units</mat-label>
+      <input matInput type="number" min="0" formControlName="minimumRequiredUnits" />
+      @if (form.controls.minimumRequiredUnits.hasError('min')) {
+        <mat-error>Minimum required units cannot be negative.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Notes (optional)</mat-label>
+      <textarea matInput formControlName="notes" rows="3" maxlength="1000"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button [disabled]="saving()" (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    @if (saving()) {
+      <mat-progress-spinner mode="indeterminate" diameter="18" />
+    } @else {
+      {{ isEdit ? 'Save changes' : 'Add record' }}
+    }
+  </button>
+</mat-dialog-actions>

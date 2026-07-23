@@ -48,6 +48,10 @@ public static class DependencyInjection
         services.AddScoped<IInsuranceCompanyService, InsuranceCompanyService>();
         services.AddScoped<IInsuranceRequestService, InsuranceRequestService>();
 
+        services.AddScoped<IBloodStockService, BloodStockService>();
+        services.AddScoped<IBloodAvailabilityService, BloodAvailabilityService>();
+        services.AddScoped<IBloodRequestService, BloodRequestService>();
+
         services.AddScoped<DatabaseSeeder>();
 
         return services;

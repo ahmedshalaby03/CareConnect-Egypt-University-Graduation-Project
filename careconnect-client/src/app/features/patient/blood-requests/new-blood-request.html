@@ -1,0 +1,133 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <div>
+      <h1>New blood request</h1>
+      <p>Search hospitals that stock the blood group you need, then submit a request.</p>
+    </div>
+    <a routerLink="/dashboard/patient/blood-requests" mat-button>Back to list</a>
+  </header>
+
+  <section class="cc-card selection">
+    <mat-form-field appearance="outline">
+      <mat-label>Blood group</mat-label>
+      <mat-select [formControl]="bloodGroupControl" (selectionChange)="onBloodGroupChange()">
+        @for (bloodGroup of bloodGroups; track bloodGroup) {
+          <mat-option [value]="bloodGroup">{{ bloodGroup }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Hospital</mat-label>
+      <mat-select [formControl]="hospitalControl" [disabled]="!bloodGroupControl.value || hospitals().length === 0">
+        @for (hospital of hospitals(); track hospital.hospitalProfileId) {
+          <mat-option [value]="hospital.hospitalProfileId">
+            {{ hospital.hospitalName }} ({{ hospital.availableUnits }} units available)
+          </mat-option>
+        }
+      </mat-select>
+      @if (bloodGroupControl.value && !searchingHospitals() && hospitals().length === 0) {
+        <mat-hint>No hospital currently has this blood group available.</mat-hint>
+      }
+    </mat-form-field>
+  </section>
+
+  @if (selectedHospital(); as hospital) {
+    <div class="cc-card availability-summary">
+      <p>
+        <mat-icon>local_hospital</mat-icon>
+        {{ hospital.hospitalName }}
+      </p>
+      <p>
+        <mat-icon>bloodtype</mat-icon>
+        {{ hospital.bloodGroupDisplayName }} · {{ hospital.availableUnits }} units currently available
+      </p>
+    </div>
+
+    <form class="cc-card form" [formGroup]="form" (ngSubmit)="submit()">
+      @if (serverError()) {
+        <div class="cc-notice cc-notice--danger">
+          <p>{{ serverError() }}</p>
+          @if (serverErrorList().length > 0) {
+            <ul>
+              @for (message of serverErrorList(); track message) {
+                <li>{{ message }}</li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Units requested</mat-label>
+        <input matInput type="number" min="1" max="20" formControlName="unitsRequested" />
+        @if (form.controls.unitsRequested.touched && form.controls.unitsRequested.invalid) {
+          <mat-error>Units requested must be between 1 and 20.</mat-error>
+        }
+      </mat-form-field>
+
+      @if (exceedsAvailable()) {
+        <div class="cc-notice cc-notice--warning">
+          You are requesting more units than are currently available ({{ hospital.availableUnits }}).
+          The hospital will review this and decide whether it can be fulfilled.
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Beneficiary name</mat-label>
+        <input matInput formControlName="beneficiaryName" maxlength="150" />
+        @if (form.controls.beneficiaryName.touched && form.controls.beneficiaryName.invalid) {
+          <mat-error>Beneficiary name is required.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Beneficiary age (optional)</mat-label>
+        <input matInput type="number" min="0" max="120" formControlName="beneficiaryAge" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Contact phone number</mat-label>
+        <input matInput formControlName="contactPhoneNumber" maxlength="30" />
+        @if (form.controls.contactPhoneNumber.touched && form.controls.contactPhoneNumber.invalid) {
+          <mat-error>A contact phone number is required.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Urgency</mat-label>
+        <mat-select formControlName="urgency">
+          @for (urgency of urgencies; track urgency) {
+            <mat-option [value]="urgency">{{ urgency }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Medical condition (optional)</mat-label>
+        <textarea matInput formControlName="medicalCondition" rows="2" maxlength="500"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Hospital or facility name (optional)</mat-label>
+        <input matInput formControlName="hospitalOrFacilityName" maxlength="200" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Additional notes (optional)</mat-label>
+        <textarea matInput formControlName="requestNotes" rows="2" maxlength="1000"></textarea>
+      </mat-form-field>
+
+      <div class="form-actions">
+        <a routerLink="/dashboard/patient/blood-requests" mat-button [disabled]="submitting()">Cancel</a>
+        <button type="submit" mat-flat-button color="primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-progress-spinner mode="indeterminate" diameter="18" />
+          } @else {
+            Submit request
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

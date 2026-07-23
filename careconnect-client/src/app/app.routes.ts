@@ -92,6 +92,33 @@ export const routes: Routes = [
             (m) => m.InsuranceRequestDetails,
           ),
       },
+      {
+        path: 'dashboard/patient/blood-requests',
+        title: 'My blood requests - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/blood-requests/blood-requests').then(
+            (m) => m.PatientBloodRequests,
+          ),
+      },
+      {
+        path: 'dashboard/patient/blood-requests/new',
+        title: 'New blood request - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/blood-requests/new-blood-request').then(
+            (m) => m.NewBloodRequest,
+          ),
+      },
+      {
+        path: 'dashboard/patient/blood-requests/:id',
+        title: 'Blood request - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/blood-requests/blood-request-details').then(
+            (m) => m.BloodRequestDetails,
+          ),
+      },
 
       // ------------------------------------------------------------- Doctor
       {
@@ -219,6 +246,31 @@ export const routes: Routes = [
             (m) => m.HospitalInsuranceRequestDetails,
           ),
       },
+      {
+        path: 'dashboard/hospital/blood-stock',
+        title: 'Blood stock - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/hospital/blood-stock/blood-stock').then((m) => m.HospitalBloodStock),
+      },
+      {
+        path: 'dashboard/hospital/blood-requests',
+        title: 'Blood requests - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/hospital/blood-requests/hospital-blood-requests').then(
+            (m) => m.HospitalBloodRequests,
+          ),
+      },
+      {
+        path: 'dashboard/hospital/blood-requests/:id',
+        title: 'Blood request - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/hospital/blood-requests/hospital-blood-request-details').then(
+            (m) => m.HospitalBloodRequestDetails,
+          ),
+      },
 
       {
         path: 'dashboard/service-provider',
@@ -289,6 +341,19 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/booking/book-appointment/book-appointment').then(
             (m) => m.BookAppointment,
+          ),
+      },
+      {
+        path: 'blood-bank',
+        title: 'Blood bank - CareConnect Egypt',
+        loadComponent: () => import('./features/blood-bank/blood-bank').then((m) => m.BloodBank),
+      },
+      {
+        path: 'blood-bank/hospitals/:id',
+        title: 'Hospital blood bank - CareConnect Egypt',
+        loadComponent: () =>
+          import('./features/blood-bank/blood-bank-hospital-details').then(
+            (m) => m.BloodBankHospitalDetails,
           ),
       },
     ],

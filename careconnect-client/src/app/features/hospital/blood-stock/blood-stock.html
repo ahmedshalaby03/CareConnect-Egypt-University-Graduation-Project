@@ -1,0 +1,91 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Blood stock</h1>
+    <p>Keep your available blood units up to date so patients can find and request them.</p>
+  </header>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  } @else {
+    <div class="cc-card-grid stock-grid">
+      @for (bloodGroup of bloodGroups; track bloodGroup) {
+        @let stock = stockFor(bloodGroup);
+
+        <article class="cc-card stock-card" [class.stock-card--below-minimum]="stock?.isBelowMinimum">
+          <header class="stock-card__head">
+            <span class="stock-card__label">{{ labels[bloodGroup] }}</span>
+            @if (stock) {
+              <span class="cc-status-chip" [class]="stock.isAvailable ? 'cc-status-chip--active' : 'cc-status-chip--inactive'">
+                {{ stock.isAvailable ? 'Available' : 'Unavailable' }}
+              </span>
+            }
+          </header>
+
+          @if (!stock) {
+            <div class="stock-card__empty">
+              <p>No stock record yet.</p>
+              <button type="button" mat-stroked-button color="primary" (click)="addRecord(bloodGroup)">
+                <mat-icon>add</mat-icon>
+                Add record
+              </button>
+            </div>
+          } @else {
+            @if (stock.isBelowMinimum) {
+              <p class="stock-card__warning">
+                <mat-icon>warning</mat-icon>
+                Below minimum required units
+              </p>
+            }
+
+            <div class="stock-card__units">
+              <div>
+                <span class="stock-card__value">{{ stock.availableUnits }}</span>
+                <span class="stock-card__unit-label">available</span>
+              </div>
+              <div>
+                <span class="stock-card__value stock-card__value--muted">{{ stock.minimumRequiredUnits }}</span>
+                <span class="stock-card__unit-label">minimum</span>
+              </div>
+            </div>
+
+            @if (stock.notes) {
+              <p class="stock-card__notes">{{ stock.notes }}</p>
+            }
+
+            <p class="stock-card__meta">
+              @if (stock.updatedAt) {
+                Updated {{ stock.updatedAt | date: 'medium' }}
+              } @else {
+                Added {{ stock.createdAt | date: 'medium' }}
+              }
+              @if (stock.lastUpdatedByName) {
+                · {{ stock.lastUpdatedByName }}
+              }
+            </p>
+
+            <div class="stock-card__actions">
+              <button type="button" mat-stroked-button (click)="adjust(stock, 'increase')">
+                <mat-icon>add</mat-icon>
+                Increase
+              </button>
+              <button
+                type="button"
+                mat-stroked-button
+                color="warn"
+                [disabled]="stock.availableUnits === 0"
+                (click)="adjust(stock, 'decrease')"
+              >
+                <mat-icon>remove</mat-icon>
+                Decrease
+              </button>
+              <button type="button" mat-button (click)="edit(stock)">
+                <mat-icon>edit</mat-icon>
+                Edit
+              </button>
+            </div>
+          }
+        </article>
+      }
+    </div>
+  }
+</div>

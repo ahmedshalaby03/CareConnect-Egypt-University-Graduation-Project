@@ -1,0 +1,153 @@
+<div class="cc-page">
+  <a routerLink="/dashboard/hospital/blood-requests" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All blood requests
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading blood request…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Blood request unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (request(); as r) {
+    <header class="cc-page-header details-head">
+      <div>
+        <h1>{{ r.patientName }}</h1>
+        <p>{{ r.bloodGroupDisplayName }} · {{ r.unitsRequested }} units · Submitted {{ r.submittedAt | date: 'medium' }}</p>
+      </div>
+      <div class="details-head__chips">
+        <span class="cc-status-chip" [class]="statusClass(r.statusName)">{{ r.statusName }}</span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <div class="layout__main">
+        <section class="cc-card">
+          <h2>Patient &amp; beneficiary</h2>
+          <dl class="facts">
+            <div>
+              <dt>Patient</dt>
+              <dd>{{ r.patientName }}</dd>
+            </div>
+            @if (r.patientPhoneNumber) {
+              <div>
+                <dt>Patient phone</dt>
+                <dd>{{ r.patientPhoneNumber }}</dd>
+              </div>
+            }
+            <div>
+              <dt>Beneficiary</dt>
+              <dd>{{ r.beneficiaryName }}@if (r.beneficiaryAge !== null) { , age {{ r.beneficiaryAge }} }</dd>
+            </div>
+            <div>
+              <dt>Contact phone</dt>
+              <dd>{{ r.contactPhoneNumber }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="cc-card">
+          <h2>Request details</h2>
+          <dl class="facts">
+            <div>
+              <dt>Blood group</dt>
+              <dd>{{ r.bloodGroupDisplayName }}</dd>
+            </div>
+            <div>
+              <dt>Units requested</dt>
+              <dd>{{ r.unitsRequested }}</dd>
+            </div>
+            <div>
+              <dt>Currently available</dt>
+              <dd>{{ r.currentAvailableUnits }}</dd>
+            </div>
+            <div>
+              <dt>Urgency</dt>
+              <dd>{{ r.urgencyName }}</dd>
+            </div>
+            @if (r.medicalCondition) {
+              <div class="facts__full">
+                <dt>Medical condition</dt>
+                <dd>{{ r.medicalCondition }}</dd>
+              </div>
+            }
+            @if (r.hospitalOrFacilityName) {
+              <div class="facts__full">
+                <dt>Hospital or facility name</dt>
+                <dd>{{ r.hospitalOrFacilityName }}</dd>
+              </div>
+            }
+            @if (r.requestNotes) {
+              <div class="facts__full">
+                <dt>Patient notes</dt>
+                <dd>{{ r.requestNotes }}</dd>
+              </div>
+            }
+          </dl>
+
+          @if (r.statusName === 'Rejected' && r.rejectionReason) {
+            <p class="note">Rejection reason: {{ r.rejectionReason }}</p>
+          }
+        </section>
+
+        <section class="cc-card">
+          <h2>Hospital notes</h2>
+          @if (canEditNotes(r)) {
+            <p class="lead">Only your hospital staff can see these notes.</p>
+
+            <form [formGroup]="notesForm" (ngSubmit)="saveNotes()" novalidate>
+              <mat-form-field appearance="outline" class="cc-form-field">
+                <mat-label>Hospital notes</mat-label>
+                <textarea matInput formControlName="hospitalNotes" rows="4"></textarea>
+                <mat-hint align="end">{{ notesForm.controls.hospitalNotes.value.length }} / 1000</mat-hint>
+              </mat-form-field>
+
+              <div class="actions">
+                <button type="submit" mat-flat-button color="primary" [disabled]="savingNotes()">
+                  @if (savingNotes()) {
+                    <mat-spinner diameter="20" />
+                  } @else {
+                    <span>Save notes</span>
+                  }
+                </button>
+              </div>
+            </form>
+          } @else {
+            <p class="lead">{{ r.hospitalNotes || 'No notes were recorded.' }}</p>
+          }
+        </section>
+      </div>
+
+      <aside class="layout__side">
+        <section class="cc-card">
+          <h2>Actions</h2>
+
+          @if (r.statusName === 'Pending') {
+            <div class="action-buttons">
+              <button type="button" mat-flat-button color="primary" [disabled]="busy()" (click)="approve()">
+                Approve
+              </button>
+              <button type="button" mat-stroked-button color="warn" [disabled]="busy()" (click)="reject()">
+                Reject
+              </button>
+            </div>
+          } @else if (r.statusName === 'Approved') {
+            <div class="action-buttons">
+              <button type="button" mat-flat-button color="primary" [disabled]="busy()" (click)="fulfill()">
+                Mark fulfilled
+              </button>
+            </div>
+          } @else {
+            <p class="lead">No further actions are available for a {{ r.statusName }} request.</p>
+          }
+        </section>
+      </aside>
+    </div>
+  }
+</div>

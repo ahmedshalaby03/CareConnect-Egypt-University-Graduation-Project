@@ -1,0 +1,118 @@
+<div class="cc-page">
+  <a routerLink="/dashboard/patient/blood-requests" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All blood requests
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading blood request…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Blood request unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (request(); as r) {
+    <header class="cc-page-header details-head">
+      <div>
+        <h1>{{ r.bloodGroupDisplayName }} · {{ r.unitsRequested }} units</h1>
+        <p>Submitted {{ r.submittedAt | date: 'medium' }}</p>
+      </div>
+      <div class="details-head__chips">
+        <span class="cc-status-chip" [class]="statusClass(r.statusName)">{{ r.statusName }}</span>
+      </div>
+    </header>
+
+    <section class="cc-card">
+      <h2>Hospital</h2>
+      <dl class="facts">
+        <div>
+          <dt>Hospital</dt>
+          <dd>{{ r.hospitalName }}</dd>
+        </div>
+        @if (r.hospitalAddress) {
+          <div class="facts__full">
+            <dt>Address</dt>
+            <dd>{{ r.hospitalAddress }}</dd>
+          </div>
+        }
+        @if (r.hospitalPhoneNumber) {
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ r.hospitalPhoneNumber }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+
+    <section class="cc-card">
+      <h2>Request details</h2>
+      <dl class="facts">
+        <div>
+          <dt>Beneficiary</dt>
+          <dd>{{ r.beneficiaryName }}</dd>
+        </div>
+        <div>
+          <dt>Contact phone</dt>
+          <dd>{{ r.contactPhoneNumber }}</dd>
+        </div>
+        <div>
+          <dt>Urgency</dt>
+          <dd>{{ r.urgencyName }}</dd>
+        </div>
+      </dl>
+
+      @if (r.statusName === 'Rejected' && r.rejectionReason) {
+        <p class="note note--danger">Rejection reason: {{ r.rejectionReason }}</p>
+      }
+      @if (r.hospitalNotes) {
+        <p class="note note--info">Hospital notes: {{ r.hospitalNotes }}</p>
+      }
+
+      @if (canCancel(r)) {
+        <div class="actions">
+          <button type="button" mat-stroked-button color="warn" [disabled]="busy()" (click)="cancel()">
+            Cancel request
+          </button>
+        </div>
+      }
+    </section>
+
+    <section class="cc-card">
+      <h2>Timeline</h2>
+      <dl class="facts">
+        <div>
+          <dt>Submitted</dt>
+          <dd>{{ r.submittedAt | date: 'medium' }}</dd>
+        </div>
+        @if (r.approvedAt) {
+          <div>
+            <dt>Approved</dt>
+            <dd>{{ r.approvedAt | date: 'medium' }}</dd>
+          </div>
+        }
+        @if (r.rejectedAt) {
+          <div>
+            <dt>Rejected</dt>
+            <dd>{{ r.rejectedAt | date: 'medium' }}</dd>
+          </div>
+        }
+        @if (r.fulfilledAt) {
+          <div>
+            <dt>Fulfilled</dt>
+            <dd>{{ r.fulfilledAt | date: 'medium' }}</dd>
+          </div>
+        }
+        @if (r.cancelledAt) {
+          <div>
+            <dt>Cancelled</dt>
+            <dd>{{ r.cancelledAt | date: 'medium' }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+  }
+</div>

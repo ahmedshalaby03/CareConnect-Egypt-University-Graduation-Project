@@ -32,6 +32,9 @@ public class ApplicationDbContext
     public DbSet<InsuranceCompany> InsuranceCompanies => Set<InsuranceCompany>();
     public DbSet<InsuranceRequest> InsuranceRequests => Set<InsuranceRequest>();
 
+    public DbSet<BloodStock> BloodStocks => Set<BloodStock>();
+    public DbSet<BloodRequest> BloodRequests => Set<BloodRequest>();
+
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
