@@ -247,6 +247,29 @@ dotnet test
 
 ---
 
+## 📸 Screenshots
+
+> *(Add screenshots of the platform here)*
+
+| Dashboard | Appointment Booking | Blood Bank |
+|---|---|---|
+| ![Dashboard](screenshots/dashboard.png) | ![Booking](screenshots/booking.png) | ![Blood Bank](screenshots/blood-bank.png) |
+
+---
+
+## 👥 Team
+
+| Name | Role |
+|---|---|
+| Ahmed Saeed Shalaby | Full-Stack Developer |
+| Eslam Salem | Full-Stack Developer |
+| Abdelrahman Rabea | Full-Stack Developer |
+| Abdelrahman Siam | Flutter Developer |
+| Alaa Naser | Flutter Developer |
+| Saif Omran | Cloud Architect |
+
+---
+
 ## 📄 License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
