@@ -22,6 +22,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Doctors', route: '/doctors', icon: 'medical_information' },
     { label: 'Hospitals', route: '/hospitals', icon: 'local_hospital' },
     { label: 'My appointments', route: '/dashboard/patient/appointments', icon: 'event_note' },
+    { label: 'Insurance requests', route: '/dashboard/patient/insurance-requests', icon: 'fact_check' },
   ],
   Doctor: [
     { label: 'Dashboard', route: '/dashboard/doctor', icon: 'dashboard', exact: true },
@@ -36,6 +37,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Requests', route: '/dashboard/hospital/doctor-requests', icon: 'how_to_reg' },
     { label: 'Our doctors', route: '/dashboard/hospital/doctors', icon: 'groups' },
     { label: 'Appointments', route: '/dashboard/hospital/appointments', icon: 'event_note' },
+    { label: 'Insurance requests', route: '/dashboard/hospital/insurance-requests', icon: 'fact_check' },
   ],
   MedicalServiceProvider: [
     { label: 'Dashboard', route: '/dashboard/service-provider', icon: 'dashboard', exact: true },
@@ -45,6 +47,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
   SuperAdmin: [
     { label: 'Users', route: '/super-admin', icon: 'manage_accounts', exact: true },
     { label: 'Specialties', route: '/super-admin/specialties', icon: 'category' },
+    { label: 'Insurance companies', route: '/super-admin/insurance-companies', icon: 'fact_check' },
     { label: 'Doctors', route: '/doctors', icon: 'medical_information' },
     { label: 'Hospitals', route: '/hospitals', icon: 'local_hospital' },
   ],

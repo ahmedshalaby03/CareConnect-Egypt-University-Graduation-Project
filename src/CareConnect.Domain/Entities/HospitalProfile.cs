@@ -47,6 +47,7 @@ public class HospitalProfile
         new List<DoctorAvailability>();
 
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    public ICollection<InsuranceRequest> InsuranceRequests { get; set; } = new List<InsuranceRequest>();
 
     public bool HasRequiredProfileFields() =>
         !string.IsNullOrWhiteSpace(HospitalName)

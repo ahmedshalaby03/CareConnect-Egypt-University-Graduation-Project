@@ -2,9 +2,11 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, si
 import { DatePipe } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
+import { forkJoin } from 'rxjs';
 import { ROLE_LABELS, UserRole } from '../../../core/models/user.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
+import { InsuranceRequestService } from '../../../core/services/insurance-request.service';
 
 interface StatTile {
   label: string;
@@ -53,8 +55,14 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/patient/appointments',
         icon: 'event_note',
       },
+      {
+        label: 'Insurance requests',
+        description: 'Submit and track digital insurance requests.',
+        route: '/dashboard/patient/insurance-requests',
+        icon: 'fact_check',
+      },
     ],
-    comingSoon: ['View medical records', 'Insurance requests', 'Blood bank'],
+    comingSoon: ['View medical records', 'Blood bank'],
   },
   Doctor: {
     accent: '#00695c',
@@ -123,6 +131,12 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/hospital/appointments',
         icon: 'event_note',
       },
+      {
+        label: 'Insurance requests',
+        description: 'Review and act on patient insurance requests.',
+        route: '/dashboard/hospital/insurance-requests',
+        icon: 'fact_check',
+      },
     ],
     comingSoon: ['Departments & staff', 'Bed availability', 'Blood bank'],
   },
@@ -163,6 +177,12 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/super-admin/specialties',
         icon: 'category',
       },
+      {
+        label: 'Insurance companies',
+        description: 'Manage the insurance company list.',
+        route: '/super-admin/insurance-companies',
+        icon: 'fact_check',
+      },
     ],
     comingSoon: [],
   },
@@ -178,6 +198,7 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
 export class RoleDashboard implements OnInit {
   private readonly auth = inject(AuthService);
   private readonly appointments = inject(AppointmentService);
+  private readonly insuranceRequests = inject(InsuranceRequestService);
 
   /** Set from the route data, so one component serves all four role dashboards. */
   readonly role = input.required<UserRole>();
@@ -193,8 +214,11 @@ export class RoleDashboard implements OnInit {
     // Scoped to the signed-in profile server-side; this just decides which call to make.
     switch (this.role()) {
       case 'Patient':
-        this.appointments.getPatientDashboardStats().subscribe({
-          next: (s) =>
+        forkJoin({
+          appointments: this.appointments.getPatientDashboardStats(),
+          insurance: this.insuranceRequests.getPatientDashboardStats(),
+        }).subscribe({
+          next: ({ appointments: s, insurance: i }) =>
             this.stats.set([
               {
                 label: 'Next appointment',
@@ -205,6 +229,8 @@ export class RoleDashboard implements OnInit {
               },
               { label: 'Upcoming appointments', value: s.upcomingCount, icon: 'event_available' },
               { label: 'Pending requests', value: s.pendingCount, icon: 'hourglass_top' },
+              { label: 'Pending insurance requests', value: i.pendingCount, icon: 'fact_check' },
+              { label: 'Approved insurance requests', value: i.approvedCount, icon: 'verified' },
             ]),
           error: () => this.stats.set([]),
         });
@@ -224,12 +250,19 @@ export class RoleDashboard implements OnInit {
         break;
 
       case 'Hospital':
-        this.appointments.getHospitalDashboardStats().subscribe({
-          next: (s) =>
+        forkJoin({
+          appointments: this.appointments.getHospitalDashboardStats(),
+          insurance: this.insuranceRequests.getHospitalDashboardStats(),
+        }).subscribe({
+          next: ({ appointments: s, insurance: i }) =>
             this.stats.set([
               { label: "Today's appointments", value: s.todayCount, icon: 'today' },
               { label: 'Pending appointments', value: s.pendingCount, icon: 'hourglass_top' },
               { label: 'Active approved doctors', value: s.activeApprovedDoctorsCount, icon: 'groups' },
+              { label: 'New insurance requests', value: i.pendingCount, icon: 'fact_check' },
+              { label: 'Insurance under review', value: i.underReviewCount, icon: 'pending_actions' },
+              { label: 'Approved this month', value: i.approvedThisMonthCount, icon: 'task_alt' },
+              { label: 'Rejected this month', value: i.rejectedThisMonthCount, icon: 'block' },
             ]),
           error: () => this.stats.set([]),
         });

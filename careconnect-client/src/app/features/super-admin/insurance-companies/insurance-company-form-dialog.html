@@ -1,0 +1,70 @@
+<h2 mat-dialog-title>{{ isEdit ? 'Edit insurance company' : 'Add insurance company' }}</h2>
+
+<mat-dialog-content>
+  @if (serverError(); as error) {
+    <div class="cc-error-summary" role="alert">
+      <span>{{ error }}</span>
+      @if (serverErrorList().length) {
+        <ul>
+          @for (item of serverErrorList(); track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+    <div class="cc-form-grid">
+      <mat-form-field appearance="outline" class="cc-form-field cc-form-grid--full">
+        <mat-label>English name</mat-label>
+        <input matInput formControlName="name" placeholder="e.g. Misr Insurance" />
+        @if (form.controls.name.hasError('required') && form.controls.name.touched) {
+          <mat-error>Company name is required.</mat-error>
+        }
+        @if (form.controls.name.hasError('minlength')) {
+          <mat-error>Name must be at least 2 characters.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Arabic name (optional)</mat-label>
+        <input matInput formControlName="arabicName" dir="rtl" placeholder="مصر للتأمين" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Phone number (optional)</mat-label>
+        <input matInput formControlName="phoneNumber" placeholder="+20 2 0000 0000" />
+        @if (form.controls.phoneNumber.hasError('pattern')) {
+          <mat-error>Enter a valid phone number.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Website (optional)</mat-label>
+        <input matInput formControlName="websiteUrl" placeholder="https://…" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field">
+        <mat-label>Logo URL (optional)</mat-label>
+        <input matInput formControlName="logoUrl" placeholder="https://…" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="cc-form-field cc-form-grid--full">
+        <mat-label>Description (optional)</mat-label>
+        <textarea matInput formControlName="description" rows="3"></textarea>
+      </mat-form-field>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    @if (saving()) {
+      <mat-spinner diameter="20" />
+    } @else {
+      <span>{{ isEdit ? 'Save changes' : 'Add company' }}</span>
+    }
+  </button>
+</mat-dialog-actions>

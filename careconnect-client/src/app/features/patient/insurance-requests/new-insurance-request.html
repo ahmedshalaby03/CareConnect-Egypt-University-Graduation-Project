@@ -1,0 +1,141 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <div>
+      <h1>New insurance request</h1>
+      <p>Submit a digital insurance request for one of your appointments.</p>
+    </div>
+    <a routerLink="/dashboard/patient/insurance-requests" mat-button>Back to list</a>
+  </header>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-progress-spinner mode="indeterminate" diameter="36" />
+    </div>
+  } @else if (loadError()) {
+    <div class="cc-card cc-notice cc-notice--danger">{{ loadError() }}</div>
+  } @else if (eligibleAppointments().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>event_busy</mat-icon>
+      <h2>No eligible appointments</h2>
+      <p>
+        You need a Pending or Confirmed appointment without an active insurance request to
+        submit a new one.
+      </p>
+      <a routerLink="/dashboard/patient/appointments" mat-flat-button color="primary">
+        View my appointments
+      </a>
+    </div>
+  } @else {
+    <form class="cc-card form" [formGroup]="form" (ngSubmit)="submit()">
+      @if (serverError()) {
+        <div class="cc-notice cc-notice--danger">
+          <p>{{ serverError() }}</p>
+          @if (serverErrorList().length > 0) {
+            <ul>
+              @for (message of serverErrorList(); track message) {
+                <li>{{ message }}</li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Appointment</mat-label>
+        <mat-select formControlName="appointmentId">
+          @for (appointment of eligibleAppointments(); track appointment.appointmentId) {
+            <mat-option [value]="appointment.appointmentId">
+              {{ appointment.appointmentDate | date: 'mediumDate' }} · {{ appointment.doctorName }} ·
+              {{ appointment.hospitalName }}
+            </mat-option>
+          }
+        </mat-select>
+        @if (form.controls.appointmentId.touched && form.controls.appointmentId.invalid) {
+          <mat-error>Select an appointment.</mat-error>
+        }
+      </mat-form-field>
+
+      @if (selectedAppointment(); as appointment) {
+        <div class="appointment-summary">
+          <p><mat-icon>medical_information</mat-icon> {{ appointment.doctorName }}
+            @if (appointment.doctorSpecialty) { · {{ appointment.doctorSpecialty }} }
+          </p>
+          <p><mat-icon>local_hospital</mat-icon> {{ appointment.hospitalName }}</p>
+          <p>
+            <mat-icon>event</mat-icon>
+            {{ appointment.appointmentDate | date: 'mediumDate' }} at {{ appointment.startTime }}
+          </p>
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Insurance company</mat-label>
+        <mat-select formControlName="insuranceCompanyId">
+          @for (company of companies(); track company.id) {
+            <mat-option [value]="company.id">{{ company.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.insuranceCompanyId.touched && form.controls.insuranceCompanyId.invalid) {
+          <mat-error>Select an insurance company.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Member number</mat-label>
+        <input matInput formControlName="memberNumber" maxlength="100" />
+        @if (form.controls.memberNumber.touched && form.controls.memberNumber.invalid) {
+          <mat-error>Member number is required.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Policy number (optional)</mat-label>
+        <input matInput formControlName="policyNumber" maxlength="100" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Service description</mat-label>
+        <textarea matInput formControlName="serviceDescription" rows="3" maxlength="1000"></textarea>
+        @if (form.controls.serviceDescription.touched && form.controls.serviceDescription.invalid) {
+          <mat-error>Describe the service this request covers.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Requested amount, EGP (optional)</mat-label>
+        <input matInput type="number" min="0" formControlName="requestedAmount" />
+        @if (form.controls.requestedAmount.touched && form.controls.requestedAmount.invalid) {
+          <mat-error>Amount cannot be negative.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Notes for the hospital (optional)</mat-label>
+        <textarea matInput formControlName="patientNotes" rows="2" maxlength="2000"></textarea>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Insurance card image URL (optional)</mat-label>
+        <input matInput formControlName="insuranceCardImageUrl" maxlength="500" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Supporting document URL (optional)</mat-label>
+        <input matInput formControlName="supportingDocumentUrl" maxlength="500" />
+      </mat-form-field>
+
+      <div class="form-actions">
+        <a routerLink="/dashboard/patient/insurance-requests" mat-button [disabled]="submitting()">
+          Cancel
+        </a>
+        <button type="submit" mat-flat-button color="primary" [disabled]="submitting()">
+          @if (submitting()) {
+            <mat-progress-spinner mode="indeterminate" diameter="18" />
+          } @else {
+            Submit request
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

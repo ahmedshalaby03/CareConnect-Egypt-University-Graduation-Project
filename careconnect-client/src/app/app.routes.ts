@@ -65,6 +65,33 @@ export const routes: Routes = [
             (m) => m.PatientAppointmentDetails,
           ),
       },
+      {
+        path: 'dashboard/patient/insurance-requests',
+        title: 'My insurance requests - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/insurance-requests/insurance-requests').then(
+            (m) => m.PatientInsuranceRequests,
+          ),
+      },
+      {
+        path: 'dashboard/patient/insurance-requests/new',
+        title: 'New insurance request - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/insurance-requests/new-insurance-request').then(
+            (m) => m.NewInsuranceRequest,
+          ),
+      },
+      {
+        path: 'dashboard/patient/insurance-requests/:id',
+        title: 'Insurance request - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/insurance-requests/insurance-request-details').then(
+            (m) => m.InsuranceRequestDetails,
+          ),
+      },
 
       // ------------------------------------------------------------- Doctor
       {
@@ -174,6 +201,24 @@ export const routes: Routes = [
             (m) => m.HospitalAppointments,
           ),
       },
+      {
+        path: 'dashboard/hospital/insurance-requests',
+        title: 'Insurance requests - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/hospital/insurance-requests/hospital-insurance-requests').then(
+            (m) => m.HospitalInsuranceRequests,
+          ),
+      },
+      {
+        path: 'dashboard/hospital/insurance-requests/:id',
+        title: 'Insurance request - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/hospital/insurance-requests/hospital-insurance-request-details').then(
+            (m) => m.HospitalInsuranceRequestDetails,
+          ),
+      },
 
       {
         path: 'dashboard/service-provider',
@@ -199,6 +244,15 @@ export const routes: Routes = [
         loadComponent: () =>
           import('./features/super-admin/specialties/specialties').then(
             (m) => m.SuperAdminSpecialties,
+          ),
+      },
+      {
+        path: 'super-admin/insurance-companies',
+        title: 'Insurance companies - CareConnect Egypt',
+        canActivate: [roleGuard('SuperAdmin')],
+        loadComponent: () =>
+          import('./features/super-admin/insurance-companies/insurance-companies').then(
+            (m) => m.SuperAdminInsuranceCompanies,
           ),
       },
 

@@ -1,0 +1,87 @@
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 8px 16px;
+  margin-bottom: 20px;
+  padding-bottom: 4px;
+}
+
+.table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.companies-table {
+  width: 100%;
+  background: transparent;
+}
+
+.name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  &__logo {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    object-fit: contain;
+    background: var(--mat-sys-surface-container-low, #f4f7f7);
+  }
+
+  &__name {
+    font-weight: 600;
+  }
+}
+
+.arabic {
+  font-size: 0.95rem;
+}
+
+.muted {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.col-actions {
+  text-align: end;
+  white-space: nowrap;
+  width: 180px;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 16px;
+  color: var(--mat-sys-on-surface-variant);
+
+  mat-icon {
+    font-size: 40px;
+    width: 40px;
+    height: 40px;
+    opacity: 0.6;
+  }
+
+  p {
+    margin: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

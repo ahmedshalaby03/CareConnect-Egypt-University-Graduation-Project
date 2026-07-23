@@ -49,6 +49,9 @@ public class Appointment
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
 
+    /// <summary>An appointment may accumulate more than one insurance request over time (e.g. after a rejection).</summary>
+    public ICollection<InsuranceRequest> InsuranceRequests { get; set; } = new List<InsuranceRequest>();
+
     /// <summary>
     /// True for Pending and Confirmed appointments, the two statuses that hold a slot -
     /// see booking rules 15 and 16. Not mapped; queries inline this condition so it stays

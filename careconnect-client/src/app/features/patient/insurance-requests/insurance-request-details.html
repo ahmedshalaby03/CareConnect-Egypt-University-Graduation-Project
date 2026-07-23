@@ -1,0 +1,118 @@
+<div class="cc-page">
+  <a routerLink="/dashboard/patient/insurance-requests" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    All insurance requests
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading insurance request…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Insurance request unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (request(); as r) {
+    <header class="cc-page-header details-head">
+      <div>
+        <h1>{{ r.insuranceCompanyName }}</h1>
+        <p>Submitted {{ r.submittedAt | date: 'medium' }}</p>
+      </div>
+      <span class="cc-status-chip" [class]="statusClass(r.statusName)">{{ r.statusName }}</span>
+    </header>
+
+    <section class="cc-card">
+      <h2>Appointment</h2>
+      <dl class="facts">
+        <div>
+          <dt>Doctor</dt>
+          <dd>{{ r.doctorName }}@if (r.doctorSpecialty) { · {{ r.doctorSpecialty }} }</dd>
+        </div>
+        <div>
+          <dt>Hospital</dt>
+          <dd>{{ r.hospitalName }}</dd>
+        </div>
+        <div>
+          <dt>Appointment date</dt>
+          <dd>{{ r.appointmentDate | date: 'fullDate' }} · {{ r.appointmentStartTime.slice(0, 5) }}</dd>
+        </div>
+      </dl>
+    </section>
+
+    <section class="cc-card">
+      <h2>Request details</h2>
+      <dl class="facts">
+        <div>
+          <dt>Member number</dt>
+          <dd>{{ r.memberNumber }}</dd>
+        </div>
+        <div class="facts__full">
+          <dt>Service description</dt>
+          <dd>{{ r.serviceDescription }}</dd>
+        </div>
+        <div>
+          <dt>Requested amount</dt>
+          <dd>{{ r.requestedAmount !== null ? (r.requestedAmount + ' EGP') : 'Not specified' }}</dd>
+        </div>
+        @if (r.approvedAmount !== null) {
+          <div>
+            <dt>Approved amount</dt>
+            <dd>{{ r.approvedAmount }} EGP</dd>
+          </div>
+        }
+      </dl>
+
+      @if (r.statusName === 'Rejected' && r.rejectionReason) {
+        <p class="note note--danger">Rejection reason: {{ r.rejectionReason }}</p>
+      }
+      @if (r.statusName === 'Approved' && r.approvalReferenceNumber) {
+        <p class="note note--success">Approval reference: {{ r.approvalReferenceNumber }}</p>
+      }
+
+      @if (canCancel(r)) {
+        <div class="actions">
+          <button type="button" mat-stroked-button color="warn" [disabled]="busy()" (click)="cancel()">
+            Cancel request
+          </button>
+        </div>
+      }
+    </section>
+
+    <section class="cc-card">
+      <h2>Timeline</h2>
+      <dl class="facts">
+        <div>
+          <dt>Submitted</dt>
+          <dd>{{ r.submittedAt | date: 'medium' }}</dd>
+        </div>
+        @if (r.reviewedAt) {
+          <div>
+            <dt>Reviewed</dt>
+            <dd>{{ r.reviewedAt | date: 'medium' }}</dd>
+          </div>
+        }
+        @if (r.approvedAt) {
+          <div>
+            <dt>Approved</dt>
+            <dd>{{ r.approvedAt | date: 'medium' }}</dd>
+          </div>
+        }
+        @if (r.rejectedAt) {
+          <div>
+            <dt>Rejected</dt>
+            <dd>{{ r.rejectedAt | date: 'medium' }}</dd>
+          </div>
+        }
+        @if (r.cancelledAt) {
+          <div>
+            <dt>Cancelled</dt>
+            <dd>{{ r.cancelledAt | date: 'medium' }}</dd>
+          </div>
+        }
+      </dl>
+    </section>
+  }
+</div>

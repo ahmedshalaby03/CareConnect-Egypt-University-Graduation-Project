@@ -1,0 +1,47 @@
+.filters {
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+}
+
+.table-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.requests-table {
+  width: 100%;
+  background: transparent;
+}
+
+.clickable-row {
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--cc-brand) 4%, transparent);
+  }
+}
+
+.doctor-cell {
+  display: flex;
+  flex-direction: column;
+
+  &__specialty {
+    font-size: 0.78rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+@media (max-width: 900px) {
+  .filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .filters {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

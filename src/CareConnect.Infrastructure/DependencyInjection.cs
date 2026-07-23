@@ -45,6 +45,9 @@ public static class DependencyInjection
         services.AddScoped<IAvailableSlotService, AvailableSlotService>();
         services.AddScoped<IAppointmentService, AppointmentService>();
 
+        services.AddScoped<IInsuranceCompanyService, InsuranceCompanyService>();
+        services.AddScoped<IInsuranceRequestService, InsuranceRequestService>();
+
         services.AddScoped<DatabaseSeeder>();
 
         return services;
