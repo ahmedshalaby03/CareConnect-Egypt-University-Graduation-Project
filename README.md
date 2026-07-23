@@ -1,27 +1,30 @@
 <div align="center">
 
 ```
- ██╗  ██╗███████╗ █████╗ ██╗  ████████╗██╗  ██╗ ██████╗ █████╗ ██████╗ ███████╗
- ██║  ██║██╔════╝██╔══██╗██║  ╚══██╔══╝██║  ██║██╔════╝██╔══██╗██╔══██╗██╔════╝
- ███████║█████╗  ███████║██║     ██║   ███████║██║     ███████║██████╔╝█████╗  
- ██╔══██║██╔══╝  ██╔══██║██║     ██║   ██╔══██║██║     ██╔══██║██╔══██╗██╔══╝  
- ██║  ██║███████╗██║  ██║███████╗██║   ██║  ██║╚██████╗██║  ██║██║  ██║███████╗
- ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
+ ██████╗ █████╗ ██████╗ ███████╗ ██████╗ ██████╗ ███╗   ██╗███╗   ██╗███████╗ ██████╗████████╗
+██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝██╔═══██╗████╗  ██║████╗  ██║██╔════╝██╔════╝╚══██╔══╝
+██║     ███████║██████╔╝█████╗  ██║     ██║   ██║██╔██╗ ██║██╔██╗ ██║█████╗  ██║        ██║   
+██║     ██╔══██║██╔══██╗██╔══╝  ██║     ██║   ██║██║╚██╗██║██║╚██╗██║██╔══╝  ██║        ██║   
+╚██████╗██║  ██║██║  ██║███████╗╚██████╗╚██████╔╝██║ ╚████║██║ ╚████║███████╗╚██████╗   ██║   
+ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═══╝╚══════╝ ╚═════╝   ╚═╝   
+                                    E G Y P T
 ```
 
-### **Smart Healthcare Platform**
-*One platform. Every patient. Every doctor. Every service.*
+### **Smart Healthcare Platform — Egypt**
+*One platform. Every patient. Every doctor. Every hospital.*
 
-🎓 **Graduation Project** — Faculty of Computer Science
+🎓 **University Graduation Project**
 
 <br/>
 
-![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core_MVC-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![.NET 10](https://img.shields.io/badge/.NET_10-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![ASP.NET Core Web API](https://img.shields.io/badge/ASP.NET_Core_Web_API-5C2D91?style=for-the-badge&logo=dotnet&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular_21-DD0031?style=for-the-badge&logo=angular&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![SQL Server](https://img.shields.io/badge/SQL_Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI_GPT-412991?style=for-the-badge&logo=openai&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
-![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)
-![Entity Framework](https://img.shields.io/badge/Entity_Framework_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![Entity Framework Core](https://img.shields.io/badge/EF_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT_Auth-000000?style=for-the-badge&logo=jsonwebtokens&logoColor=white)
+![Clean Architecture](https://img.shields.io/badge/Clean_Architecture-2E8B57?style=for-the-badge&logo=archlinux&logoColor=white)
 
 </div>
 
@@ -29,33 +32,34 @@
 
 ## 📌 Overview
 
-**Smart Healthcare Platform** is a comprehensive, AI-powered healthcare management system built as a graduation project. The platform bridges the gap between **patients**, **doctors**, **hospitals**, and **medical services** — all within a single unified system.
+**CareConnect Egypt** is a full-stack, role-based healthcare management platform connecting **patients**, **doctors**, **hospitals**, **medical service providers**, and platform **administrators** in one system.
 
-From booking appointments and managing health insurance digitally, to discovering nearby hospitals and getting AI-driven medical guidance — this platform reimagines how healthcare services are accessed and delivered.
+It handles the real, everyday friction of accessing healthcare in Egypt: finding a doctor by specialty, booking an appointment, tracking a digital insurance claim, checking whether a nearby hospital has the blood type you need — all through a modern API-driven backend and an Angular single-page frontend.
+
+The platform is built on **Clean Architecture** principles on the backend and a fully **standalone-component Angular** frontend — no legacy NgModules, no third-party map billing, no shortcuts.
 
 ---
 
 ## 🏗️ System Architecture
 
 ```
-Smart-Healthcare-Platform/
-├── Controllers/          # MVC Controllers (Patient, Doctor, Hospital, Admin, AI)
-├── Models/               # Domain Models & ViewModels
-├── Views/                # Razor Pages (MVC Views)
-│   ├── Patient/
-│   ├── Doctor/
-│   ├── Hospital/
-│   ├── BloodBank/
-│   ├── Insurance/
-│   └── Admin/
-├── Services/             # Business Logic & External Integrations
-│   ├── OpenAIService.cs  # GPT Integration
-│   ├── LocationService.cs
-│   └── NotificationService.cs
-├── Data/                 # EF Core DbContext & Migrations
-├── wwwroot/              # Static Files (CSS, JS, Images)
-└── appsettings.json
+CareConnectEgypt/
+├── src/
+│   ├── CareConnect.Domain/           # Entities, Enums, Constants
+│   ├── CareConnect.Application/      # DTOs, Interfaces, Validators, Common
+│   ├── CareConnect.Infrastructure/   # EF Core, Services, Migrations, Seed
+│   └── CareConnect.Api/              # Controllers, Program.cs, appsettings
+├── tests/
+│   └── CareConnect.Api.IntegrationTests/
+└── careconnect-client/               # Angular app
+    └── src/app/
+        ├── core/                     # models, services, guards, interceptors
+        ├── features/                 # per-role pages (patient, doctor, hospital, super-admin, blood-bank, directory...)
+        ├── layouts/
+        └── shared/                   # dialogs, shared components
 ```
+
+The backend follows **Clean Architecture**: `Domain` has zero external dependencies, `Application` defines the use cases and contracts, `Infrastructure` implements persistence and external services, and `Api` wires everything together and exposes it over HTTP.
 
 ---
 
@@ -63,111 +67,21 @@ Smart-Healthcare-Platform/
 
 | Layer | Technology |
 |---|---|
-| **Framework** | ASP.NET Core MVC (.NET 8) |
-| **Frontend** | Razor Pages, Bootstrap 5, HTML/CSS/JS |
-| **Database** | Microsoft SQL Server |
+| **Backend Framework** | ASP.NET Core Web API (.NET 10) |
+| **Architecture** | Clean Architecture (4-project separation) |
 | **ORM** | Entity Framework Core |
-| **AI Integration** | OpenAI GPT API (ChatGPT) |
-| **Authentication** | ASP.NET Identity + Role-based Auth |
-| **Maps & Location** | Location-based Hospital Discovery |
-| **Architecture** | MVC Pattern + Service Layer |
+| **Database** | Microsoft SQL Server |
+| **Auth** | ASP.NET Core Identity + JWT + Refresh Tokens |
+| **Validation** | FluentValidation |
+| **Logging** | Serilog |
+| **API Docs** | Swagger / OpenAPI |
+| **Frontend Framework** | Angular 21 (standalone components) |
+| **UI Library** | Angular Material |
+| **Forms** | Reactive Forms |
+| **State** | Angular Signals |
+| **Language** | TypeScript |
 
----
-
-## ✨ Features
-
-### 👤 Patient Portal
-- 🔐 Secure registration, login, and profile management
-- 📅 **Appointment Booking** — search and book doctors by specialty
-- 🏥 **Hospital Discovery** — find nearby hospitals based on location
-- 🩸 **Blood Bank** — request blood units by type and location
-- 📋 **Digital Health Insurance** — submit and track insurance requests online
-- ⭐ **Reviews & Ratings** — rate doctors and hospital services
-- 🤖 **AI Medical Assistant** — get instant medical guidance powered by OpenAI GPT
-
-### 👨‍⚕️ Doctor Portal
-- 📆 Manage availability and appointment schedule
-- 👁️ View patient appointment history
-- ✅ Accept / Cancel appointment requests
-- ⭐ Receive patient reviews and ratings
-
-### 🏥 Hospital Portal
-- 🗂️ Manage hospital profile and listed services
-- 🩸 Manage blood bank inventory (available blood types & quantities)
-- 📊 View incoming appointment and service requests
-
-### 🛡️ Admin Dashboard
-- 👥 Full user management (Patients, Doctors, Hospitals)
-- ✅ Approve / Reject doctor and hospital registrations
-- 📊 Platform-wide analytics and statistics
-- 🗂️ Manage categories, specialties, and system settings
-
-### 🤖 AI-Powered Medical Assistant
-- Integrated with **OpenAI GPT API**
-- Answers patient medical questions in natural language
-- Suggests relevant specialties based on symptoms
-- Available 24/7 within the platform
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [SQL Server](https://www.microsoft.com/en-us/sql-server) (or LocalDB)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) or VS Code
-- OpenAI API Key → [platform.openai.com](https://platform.openai.com)
-
----
-
-### ⚙️ Setup & Run
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/Smart-Healthcare-Platform.git
-cd Smart-Healthcare-Platform
-
-# 2. Restore packages
-dotnet restore
-
-# 3. Configure your settings (see Configuration section below)
-
-# 4. Apply database migrations
-dotnet ef database update
-
-# 5. Run the application
-dotnet run
-```
-
-✅ App will be running at: **`https://localhost:7000`**
-
----
-
-## ⚙️ Configuration
-
-Update `appsettings.json` with your credentials:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=.;Database=SmartHealthcareDb;Trusted_Connection=True;TrustServerCertificate=True"
-  },
-  "OpenAI": {
-    "ApiKey": "YOUR_OPENAI_API_KEY_HERE",
-    "Model": "gpt-4o"
-  }
-}
-```
-
-> ⚠️ **Never commit your API key to GitHub.** Use environment variables or [.NET User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) in development.
-
-### Using .NET User Secrets (Recommended)
-
-```bash
-dotnet user-secrets set "OpenAI:ApiKey" "your-api-key-here"
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-string"
-```
+> No OpenAI, no Bootstrap, no paid maps API — geolocation search runs on the Haversine formula, computed entirely server-side.
 
 ---
 
@@ -175,10 +89,128 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-s
 
 | Role | Access |
 |---|---|
-| **Patient** | Book appointments, insurance, blood requests, AI assistant, reviews |
-| **Doctor** | Manage schedule, view patients, respond to bookings |
-| **Hospital** | Manage profile, blood bank, services |
-| **Admin** | Full platform control, approvals, analytics |
+| **SuperAdmin** | Full platform control: specialties, insurance companies, approvals, analytics |
+| **Patient** | Search directory, book appointments, request insurance, request blood, view profile |
+| **Doctor** | Manage weekly availability, respond to appointments, manage hospital affiliations |
+| **Hospital** | Manage profile, specialties, blood bank inventory, location, incoming requests |
+| **MedicalServiceProvider** | Manage service listings and profile |
+
+---
+
+## ✨ Features (Implemented & Working)
+
+### 🔑 Authentication & Profiles
+- Registration & login with **JWT + Refresh Tokens**
+- Multi-role authorization across 5 roles
+- Dedicated profiles: `PatientProfile`, `DoctorProfile`, `HospitalProfile`, `MedicalServiceProviderProfile`
+
+### 🩺 Specialties & Directories
+- Bilingual (Arabic / English) medical specialties, managed by SuperAdmin
+- Hospital ↔ Specialty linking (`HospitalSpecialties`)
+- Doctor ↔ Hospital affiliations with request / approve / reject workflow
+- Searchable directories for doctors and hospitals
+
+### 📅 Appointments
+- Weekly doctor availability schedules (`DoctorAvailability`)
+- Doctor unavailability periods (`DoctorUnavailablePeriods`)
+- Full appointment lifecycle: **Pending → Confirmed → Rejected → Cancelled → Completed → NoShow**
+
+### 🛡️ Digital Health Insurance
+- Insurance requests linked to insurance companies
+- Status workflow: **Pending → UnderReview → Approved → Rejected → Cancelled**
+- Insurance company management from the SuperAdmin dashboard
+
+### 🩸 Blood Bank
+- Per-hospital blood inventory across all 8 blood types
+- Patient blood requests with status workflow: **Pending → Approved → Rejected → Fulfilled → Cancelled**
+- Search for blood availability at nearby hospitals
+
+### 📍 Hospital Location & Nearby Discovery
+- Each hospital stores latitude/longitude and address
+- "Nearest hospital" search using the **Haversine formula** — no paid maps API
+- Filter by specialty, blood availability, and appointment availability
+
+### 📊 Dashboards
+- Role-specific dashboards with relevant statistics for every role
+
+### 🌱 Demo Data Seeder
+- Idempotent seeder generating realistic demo data (hospitals, doctors, appointments, insurance, blood bank)
+- Development-only, toggled via configuration
+
+---
+
+## 🚧 Not Yet Implemented
+
+These are acknowledged next steps — not present in the current codebase:
+
+- 🤖 AI Medical Assistant
+- 📍 Real-time / ambulance tracking
+- 💳 Payments
+- 💬 Chat / video consultations
+- 🔔 Notifications (SMS / Email / WhatsApp)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [.NET 10 SDK](https://dotnet.microsoft.com/download)
+- [SQL Server](https://www.microsoft.com/en-us/sql-server) (or LocalDB)
+- [Node.js](https://nodejs.org/) + npm
+- [Angular CLI](https://angular.dev/tools/cli) (`npm install -g @angular/cli`)
+
+---
+
+### ⚙️ Backend Setup
+
+```bash
+cd src/CareConnect.Api
+dotnet restore
+dotnet ef database update -p ../CareConnect.Infrastructure -s .
+dotnet run
+```
+
+✅ API running at: **`http://localhost:5290`**
+✅ Swagger UI at: **`http://localhost:5290/swagger`**
+
+---
+
+### 🎨 Frontend Setup
+
+```bash
+cd careconnect-client
+npm install
+ng serve
+```
+
+✅ App running at: **`http://localhost:4200`**
+
+---
+
+## 🌱 Demo Data
+
+In **Development**, set `DemoData:Enabled` to `true` in `appsettings.json` to automatically seed realistic demo data — hospitals, doctors, patients, appointments, insurance requests, and blood bank inventory.
+
+```json
+{
+  "DemoData": {
+    "Enabled": true
+  }
+}
+```
+
+### Demo Credentials
+
+> ⚠️ For local development only — not for production use.
+
+| Role | Email | Password |
+|---|---|---|
+| SuperAdmin | `admin@gmail.com` | `Admin@123` |
+| Patient | `ahmed@gmail.com` | `Ahmed@123` |
+| Doctor | `doctor.cardiology@careconnect.local` | `CareConnect@123` |
+| Hospital | `cairohospital@careconnect.local` | `CareConnect@123` |
+| MedicalServiceProvider | `provider1@careconnect.local` | `CareConnect@123` |
 
 ---
 
@@ -186,74 +218,32 @@ dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-s
 
 ```
 Users (ASP.NET Identity)
-    ├── Patients          → Appointments, InsuranceRequests, Reviews
-    ├── Doctors           → Specialties, Schedules, Reviews
-    └── Hospitals         → Services, BloodBank, Location
+    ├── PatientProfile           → Appointments, InsuranceRequests, BloodRequests
+    ├── DoctorProfile            → Specialties, DoctorAvailability, DoctorHospitalAffiliations
+    ├── HospitalProfile          → HospitalSpecialties, BloodBank, Location
+    └── MedicalServiceProviderProfile
 
-Appointments              → Patient ↔ Doctor
-BloodBank                 → Hospital ↔ BloodRequests
-HealthInsurance           → Patient → InsuranceRequest
-Reviews                   → Patient → Doctor / Hospital
+Appointments                     → Patient ↔ Doctor
+DoctorAvailability                DoctorUnavailablePeriods
+DoctorHospitalAffiliations        → Doctor ↔ Hospital
+HospitalSpecialties               → Hospital ↔ Specialty
+BloodBank                         → Hospital blood-type inventory
+BloodRequests                     → Patient → Hospital
+InsuranceRequests                 → Patient → InsuranceCompany
+InsuranceCompanies                 (managed by SuperAdmin)
+Specialties                        (bilingual, managed by SuperAdmin)
 ```
 
 ---
 
-## 🤖 AI Integration — How It Works
+## 🧪 Testing
 
+Integration tests live under `tests/CareConnect.Api.IntegrationTests`.
+
+```bash
+cd tests/CareConnect.Api.IntegrationTests
+dotnet test
 ```
-[Patient types a medical question]
-            │
-            ▼
-   [OpenAI GPT API Call]
-   System Prompt: "You are a helpful medical assistant..."
-   User Message: Patient's question
-            │
-            ▼
-   [GPT Response received]
-            │
-            ▼
-   [Displayed to patient in real-time]
-   + Suggested specialty if applicable
-```
-
-The AI assistant is context-aware and always recommends consulting a real doctor for diagnosis.
-
----
-
-## 📸 Screenshots
-
-> *(Add screenshots of your platform here)*
-
-| Dashboard | Appointment Booking | AI Assistant |
-|---|---|---|
-| ![Dashboard](screenshots/dashboard.png) | ![Booking](screenshots/booking.png) | ![AI](screenshots/ai.png) |
-
----
-
-## 🧪 Seeded Test Accounts
-
-After running migrations, use these to explore the platform:
-
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@healthcare.com` | `Admin@123` |
-| Doctor | `doctor@healthcare.com` | `Doctor@123` |
-| Patient | `patient@healthcare.com` | `Patient@123` |
-
-> *(Update these with your actual seeded credentials)*
-
----
-
-## 👥 Team
-
-| Name | Role |
-|---|---|
-| Ahmed Saeed Shalaby | Full-Stack Developer |
-| Eslam Salem | Full-Stack Developer |
-| Abdelrahman Rabea | Full-Stack Developer |
-| Abdelrahman Siam | Flutter Developer |
-| Alaa Naser | Flutter Developer |
-| Saif Omran | Cloud Architect |
 
 ---
 
@@ -265,9 +255,9 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <div align="center">
 
-**🎓 Graduation Project — Built with passion, purpose, and a lot of coffee ☕**
+**🎓 University Graduation Project — Clean Architecture on the backend, standalone Angular on the front.**
 
-*Smart Healthcare Platform — Because healthcare should be accessible to everyone.*
+*CareConnect Egypt — Because healthcare should be easy to find, book, and trust.*
 
 ⭐ If you found this project interesting, please give it a star!
 
