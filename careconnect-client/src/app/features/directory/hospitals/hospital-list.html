@@ -4,6 +4,37 @@
     <p>Browse hospitals and clinics across Egypt on the CareConnect network.</p>
   </header>
 
+  <section class="cc-card mode-bar">
+    <mat-button-toggle-group [value]="mode()" (change)="$event.value === 'nearby' ? findNearMe() : backToAllHospitals()">
+      <mat-button-toggle value="all">All hospitals</mat-button-toggle>
+      <mat-button-toggle value="nearby">Nearby hospitals</mat-button-toggle>
+    </mat-button-toggle-group>
+
+    @if (mode() === 'all') {
+      <button type="button" mat-flat-button color="primary" [disabled]="locatingDevice()" (click)="findNearMe()">
+        <mat-icon>near_me</mat-icon>
+        {{ locatingDevice() ? 'Locating…' : 'Find hospitals near me' }}
+      </button>
+    }
+  </section>
+
+  @if (mode() === 'nearby') {
+    <div class="cc-notice">
+      <mat-icon>info</mat-icon>
+      <span>
+        Your location is used only for this search and is never saved. Results are sorted by
+        approximate straight-line distance.
+      </span>
+    </div>
+  }
+
+  @if (locationDeniedMessage(); as message) {
+    <div class="cc-notice cc-notice--danger">
+      <mat-icon>location_off</mat-icon>
+      <span>{{ message }}</span>
+    </div>
+  }
+
   <section class="cc-card cc-filters filters">
     <mat-form-field appearance="outline" class="filters__search">
       <mat-label>Search hospitals</mat-label>
@@ -11,20 +42,31 @@
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>Governorate</mat-label>
-      <mat-select [formControl]="governorateControl" (selectionChange)="onFilterChange()">
-        <mat-option value="">All governorates</mat-option>
-        @for (governorate of governorates; track governorate) {
-          <mat-option [value]="governorate">{{ governorate }}</mat-option>
-        }
-      </mat-select>
-    </mat-form-field>
+    @if (mode() === 'nearby') {
+      <mat-form-field appearance="outline">
+        <mat-label>Radius</mat-label>
+        <mat-select [formControl]="radiusControl" (selectionChange)="onFilterChange()">
+          @for (radius of radiusOptions; track radius) {
+            <mat-option [value]="radius">{{ radius }} km</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    } @else {
+      <mat-form-field appearance="outline">
+        <mat-label>Governorate</mat-label>
+        <mat-select [formControl]="governorateControl" (selectionChange)="onFilterChange()">
+          <mat-option value="">All governorates</mat-option>
+          @for (governorate of governorates; track governorate) {
+            <mat-option [value]="governorate">{{ governorate }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
 
-    <mat-form-field appearance="outline">
-      <mat-label>City</mat-label>
-      <input matInput [formControl]="cityControl" placeholder="e.g. Maadi" />
-    </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>City</mat-label>
+        <input matInput [formControl]="cityControl" placeholder="e.g. Maadi" />
+      </mat-form-field>
+    }
 
     <mat-form-field appearance="outline">
       <mat-label>Specialty</mat-label>
@@ -36,10 +78,27 @@
       </mat-select>
     </mat-form-field>
 
+    <mat-form-field appearance="outline">
+      <mat-label>Blood group</mat-label>
+      <mat-select [formControl]="bloodGroupControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">Any blood group</mat-option>
+        @for (bloodGroup of bloodGroups; track bloodGroup) {
+          <mat-option [value]="bloodGroup">{{ bloodGroup }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
     <button type="button" mat-button class="filters__clear" (click)="clearFilters()">
       <mat-icon>filter_alt_off</mat-icon>
       Clear
     </button>
+
+    <mat-checkbox [formControl]="hasAvailableAppointmentsControl" (change)="onFilterChange()">
+      Has available appointments
+    </mat-checkbox>
+    <mat-checkbox [formControl]="hasAvailableBloodControl" (change)="onFilterChange()">
+      Has available blood
+    </mat-checkbox>
   </section>
 
   @if (loading()) {
@@ -77,6 +136,9 @@
                 <mat-icon>place</mat-icon>
                 <span>{{ hospital.city }}{{ hospital.city && hospital.governorate ? ', ' : '' }}{{ hospital.governorate }}</span>
               </p>
+              @if (hospital.distanceKm !== null) {
+                <p class="hospital-card__distance">{{ hospital.distanceKm }} km away</p>
+              }
             </div>
           </header>
 
@@ -90,6 +152,19 @@
             }
             @if (hospital.specialties.length > 4) {
               <span class="cc-role-chip">+{{ hospital.specialties.length - 4 }} more</span>
+            }
+          </div>
+
+          <div class="hospital-card__indicators">
+            @if (hospital.hasAvailableAppointments) {
+              <span class="cc-status-chip cc-status-chip--active">
+                <mat-icon>event_available</mat-icon> Appointments available
+              </span>
+            }
+            @if (hospital.isBloodAvailable) {
+              <span class="cc-status-chip cc-status-chip--active">
+                <mat-icon>bloodtype</mat-icon> Blood available
+              </span>
             }
           </div>
 
@@ -109,6 +184,23 @@
             <a [routerLink]="['/hospitals', hospital.id]" mat-flat-button color="primary">
               View hospital
             </a>
+            <a [routerLink]="['/hospitals', hospital.id, 'location']" mat-stroked-button>
+              Location
+            </a>
+            @if (hospital.directionsUrl) {
+              <a [href]="hospital.directionsUrl" target="_blank" rel="noopener" mat-stroked-button>
+                Directions
+              </a>
+            }
+            @if (isPatient() && hospital.isBloodAvailable) {
+              <a
+                [routerLink]="['/dashboard/patient/blood-requests/new']"
+                [queryParams]="{ hospitalProfileId: hospital.id }"
+                mat-stroked-button
+              >
+                Request blood
+              </a>
+            }
           </footer>
         </article>
       }

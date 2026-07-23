@@ -12,10 +12,14 @@ public class HospitalProfile
     public string? Governorate { get; set; }
     public string? City { get; set; }
 
-    // Captured now so the map feature planned for a later step has somewhere to write.
-    // Nothing in this step reads them.
     public decimal? Latitude { get; set; }
     public decimal? Longitude { get; set; }
+
+    /// <summary>Free-text hint shown alongside the address on the location page, e.g. "3rd floor, block B".</summary>
+    public string? LocationDescription { get; set; }
+
+    /// <summary>A well-known nearby landmark to help patients orient themselves, e.g. "Next to City Mall".</summary>
+    public string? NearbyLandmark { get; set; }
 
     /// <summary>Public switchboard number, which is not necessarily the account's login phone.</summary>
     public string? PhoneNumber { get; set; }
@@ -57,4 +61,16 @@ public class HospitalProfile
         && !string.IsNullOrWhiteSpace(Governorate)
         && !string.IsNullOrWhiteSpace(City)
         && !string.IsNullOrWhiteSpace(PhoneNumber);
+
+    /// <summary>
+    /// Distinct from <see cref="HasRequiredProfileFields"/>: a hospital can have a complete
+    /// public profile without ever having supplied map coordinates. Nearby/distance search
+    /// requires this to be true; the plain directory does not.
+    /// </summary>
+    public bool HasCompletedLocation() =>
+        !string.IsNullOrWhiteSpace(Address)
+        && !string.IsNullOrWhiteSpace(Governorate)
+        && !string.IsNullOrWhiteSpace(City)
+        && Latitude.HasValue
+        && Longitude.HasValue;
 }

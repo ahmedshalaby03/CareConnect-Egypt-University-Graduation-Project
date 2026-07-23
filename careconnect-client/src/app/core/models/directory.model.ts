@@ -1,4 +1,8 @@
+import { BloodGroup } from './blood-group.model';
 import { SpecialtyOption } from './specialty.model';
+
+/** Mirrors CareConnect.Application.DTOs.HospitalDiscovery.HospitalSortBy. */
+export type HospitalSortBy = 'Name' | 'Newest' | 'City' | 'Governorate' | 'Distance';
 
 // ------------------------------------------------------------------- Hospitals
 
@@ -13,8 +17,18 @@ export interface HospitalDirectoryItem {
   logoUrl: string | null;
   latitude: number | null;
   longitude: number | null;
+  locationDescription: string | null;
+  nearbyLandmark: string | null;
+  isLocationCompleted: boolean;
+  /** Straight-line distance, only populated when the request supplied coordinates. */
+  distanceKm: number | null;
+  directionsUrl: string | null;
   specialties: SpecialtyOption[];
   numberOfApprovedDoctors: number;
+  hasAvailableAppointments: boolean;
+  nextAvailableAppointmentAt: string | null;
+  isBloodAvailable: boolean;
+  availableBloodGroups: string[];
 }
 
 export interface HospitalDirectoryDetails extends HospitalDirectoryItem {
@@ -39,6 +53,13 @@ export interface HospitalDirectoryQuery {
   governorate?: string | null;
   city?: string | null;
   specialtyId?: string | null;
+  hasLocation?: boolean | null;
+  hasAvailableAppointments?: boolean | null;
+  hasAvailableBlood?: boolean | null;
+  bloodGroup?: BloodGroup | null;
+  sortBy?: HospitalSortBy | null;
+  latitude?: number | null;
+  longitude?: number | null;
   page: number;
   pageSize: number;
 }

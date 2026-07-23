@@ -1,5 +1,40 @@
+.mode-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
 .filters {
   grid-template-columns: 2fr 1fr 1fr 1fr auto;
+  align-items: center;
+}
+
+.hospital-card__distance {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cc-accent);
+}
+
+.hospital-card__indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .cc-status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    mat-icon {
+      font-size: 15px;
+      width: 15px;
+      height: 15px;
+    }
+  }
 }
 
 .filters__clear {

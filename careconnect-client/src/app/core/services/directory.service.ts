@@ -31,6 +31,24 @@ export class DirectoryService {
     params = this.appendIfSet(params, 'governorate', query.governorate);
     params = this.appendIfSet(params, 'city', query.city);
     params = this.appendIfSet(params, 'specialtyId', query.specialtyId);
+    params = this.appendIfSet(params, 'bloodGroup', query.bloodGroup);
+    params = this.appendIfSet(params, 'sortBy', query.sortBy);
+
+    if (query.hasLocation !== null && query.hasLocation !== undefined) {
+      params = params.set('hasLocation', query.hasLocation);
+    }
+    if (query.hasAvailableAppointments !== null && query.hasAvailableAppointments !== undefined) {
+      params = params.set('hasAvailableAppointments', query.hasAvailableAppointments);
+    }
+    if (query.hasAvailableBlood !== null && query.hasAvailableBlood !== undefined) {
+      params = params.set('hasAvailableBlood', query.hasAvailableBlood);
+    }
+    if (query.latitude !== null && query.latitude !== undefined) {
+      params = params.set('latitude', query.latitude);
+    }
+    if (query.longitude !== null && query.longitude !== undefined) {
+      params = params.set('longitude', query.longitude);
+    }
 
     return this.http
       .get<ApiResponse<PagedResult<HospitalDirectoryItem>>>(this.hospitalsUrl, { params })

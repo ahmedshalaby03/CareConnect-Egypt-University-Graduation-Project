@@ -39,6 +39,8 @@ public static class DependencyInjection
         services.AddScoped<IHospitalProfileService, HospitalProfileService>();
         services.AddScoped<IDoctorHospitalAffiliationService, DoctorHospitalAffiliationService>();
         services.AddScoped<IHealthcareDirectoryService, HealthcareDirectoryService>();
+        services.AddScoped<IGeoDistanceService, GeoDistanceService>();
+        services.AddScoped<IHospitalDiscoveryService, HospitalDiscoveryService>();
 
         services.AddScoped<IDoctorAvailabilityService, DoctorAvailabilityService>();
         services.AddScoped<IDoctorUnavailablePeriodService, DoctorUnavailablePeriodService>();

@@ -56,6 +56,9 @@
             {{ h.numberOfApprovedDoctors }}
             {{ h.numberOfApprovedDoctors === 1 ? 'doctor' : 'doctors' }}
           </span>
+          <a [routerLink]="['/hospitals', id(), 'location']" class="hero__pill">
+            <mat-icon>near_me</mat-icon> View location
+          </a>
         </div>
       </div>
     </section>

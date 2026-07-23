@@ -84,6 +84,38 @@
         </dl>
       </article>
 
+      @if (role() === 'Patient') {
+        <article class="cc-card nearby">
+          <h2>Closest hospital</h2>
+          <p class="nearby__lead">
+            Check your location just for this - it is not saved anywhere.
+          </p>
+
+          @if (closestHospital(); as hospital) {
+            <div class="nearby__result">
+              <mat-icon>local_hospital</mat-icon>
+              <div>
+                <strong>{{ hospital.hospitalName }}</strong>
+                <span>{{ hospital.distanceKm }} km away</span>
+              </div>
+              <a [routerLink]="['/hospitals', hospital.id]" mat-button>View</a>
+            </div>
+          } @else if (closestHospitalMessage(); as message) {
+            <p class="nearby__message">{{ message }}</p>
+          }
+
+          <button
+            type="button"
+            mat-stroked-button
+            [disabled]="findingClosestHospital()"
+            (click)="findClosestHospital()"
+          >
+            <mat-icon>near_me</mat-icon>
+            {{ findingClosestHospital() ? 'Locating…' : 'Find my closest hospital' }}
+          </button>
+        </article>
+      }
+
       <article class="cc-card soon">
         <h2>Coming soon</h2>
         <p class="soon__lead">These features arrive in later steps of the project.</p>

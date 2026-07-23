@@ -1,13 +1,18 @@
 import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { ROLE_LABELS, UserRole } from '../../../core/models/user.model';
+import { HospitalDirectoryItem } from '../../../core/models/directory.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { BloodRequestService } from '../../../core/services/blood-request.service';
 import { BloodStockService } from '../../../core/services/blood-stock.service';
+import { GeolocationFailure, GeolocationService } from '../../../core/services/geolocation.service';
+import { HospitalDiscoveryService } from '../../../core/services/hospital-discovery.service';
+import { HospitalLocationService } from '../../../core/services/hospital-location.service';
 import { InsuranceRequestService } from '../../../core/services/insurance-request.service';
 
 interface StatTile {
@@ -74,6 +79,12 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         description: 'Track the blood requests you have submitted.',
         route: '/dashboard/patient/blood-requests',
         icon: 'water_drop',
+      },
+      {
+        label: 'Find nearby hospitals',
+        description: 'Search hospitals close to your current location.',
+        route: '/hospitals',
+        icon: 'near_me',
       },
     ],
     comingSoon: ['View medical records'],
@@ -163,6 +174,12 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/hospital/blood-requests',
         icon: 'water_drop',
       },
+      {
+        label: 'Location',
+        description: 'Set your address and map coordinates for nearby search.',
+        route: '/dashboard/hospital/location',
+        icon: 'near_me',
+      },
     ],
     comingSoon: ['Departments & staff', 'Bed availability'],
   },
@@ -222,7 +239,7 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
 
 @Component({
   selector: 'app-role-dashboard',
-  imports: [DatePipe, RouterLink, MatIconModule],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule],
   templateUrl: './role-dashboard.html',
   styleUrl: './role-dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -233,6 +250,9 @@ export class RoleDashboard implements OnInit {
   private readonly insuranceRequests = inject(InsuranceRequestService);
   private readonly bloodRequests = inject(BloodRequestService);
   private readonly bloodStock = inject(BloodStockService);
+  private readonly hospitalLocation = inject(HospitalLocationService);
+  private readonly hospitalDiscovery = inject(HospitalDiscoveryService);
+  private readonly geolocation = inject(GeolocationService);
 
   /** Set from the route data, so one component serves all four role dashboards. */
   readonly role = input.required<UserRole>();
@@ -243,6 +263,14 @@ export class RoleDashboard implements OnInit {
   protected readonly roleLabel = computed(() => ROLE_LABELS[this.role()]);
 
   protected readonly stats = signal<StatTile[] | null>(null);
+
+  /**
+   * Session-only: filled in solely when the Patient clicks the button below, never on load.
+   * The coordinates behind it are used for one search request and are not kept anywhere.
+   */
+  protected readonly closestHospital = signal<HospitalDirectoryItem | null>(null);
+  protected readonly findingClosestHospital = signal(false);
+  protected readonly closestHospitalMessage = signal<string | null>(null);
 
   ngOnInit(): void {
     // Scoped to the signed-in profile server-side; this just decides which call to make.
@@ -291,8 +319,9 @@ export class RoleDashboard implements OnInit {
           appointments: this.appointments.getHospitalDashboardStats(),
           insurance: this.insuranceRequests.getHospitalDashboardStats(),
           blood: this.bloodRequests.getHospitalDashboardStats(),
+          location: this.hospitalLocation.get(),
         }).subscribe({
-          next: ({ appointments: s, insurance: i, blood: b }) =>
+          next: ({ appointments: s, insurance: i, blood: b, location: loc }) =>
             this.stats.set([
               { label: "Today's appointments", value: s.todayCount, icon: 'today' },
               { label: 'Pending appointments', value: s.pendingCount, icon: 'hourglass_top' },
@@ -306,17 +335,41 @@ export class RoleDashboard implements OnInit {
               { label: 'Pending blood requests', value: b.pendingRequestsCount, icon: 'water_drop' },
               { label: 'Emergency blood requests', value: b.emergencyRequestsCount, icon: 'emergency' },
               { label: 'Approved, awaiting fulfillment', value: b.approvedAwaitingFulfillmentCount, icon: 'inventory' },
+              {
+                label: 'Location status',
+                value: loc.isLocationCompleted ? 'Complete' : 'Incomplete',
+                icon: loc.isLocationCompleted ? 'near_me' : 'location_off',
+              },
+              {
+                label: 'Coordinates',
+                value: loc.latitude !== null && loc.longitude !== null ? 'Set' : 'Missing',
+                icon: 'my_location',
+              },
             ]),
           error: () => this.stats.set([]),
         });
         break;
 
       case 'SuperAdmin':
-        this.bloodStock.getSuperAdminDashboardStats().subscribe({
-          next: (b) =>
+        forkJoin({
+          blood: this.bloodStock.getSuperAdminDashboardStats(),
+          location: this.hospitalDiscovery.getSuperAdminDashboardStats(),
+        }).subscribe({
+          next: ({ blood: b, location: loc }) =>
             this.stats.set([
               { label: 'Hospitals with blood stock', value: b.hospitalsWithStockCount, icon: 'local_hospital' },
               { label: 'Active blood stock records', value: b.activeBloodStockRecordsCount, icon: 'bloodtype' },
+              {
+                label: 'Hospitals with completed locations',
+                value: loc.activeHospitalsWithCompletedLocationCount,
+                icon: 'near_me',
+              },
+              {
+                label: 'Hospitals missing coordinates',
+                value: loc.activeHospitalsMissingCoordinatesCount,
+                icon: 'location_off',
+              },
+              { label: 'Governorates covered', value: loc.governoratesCovered.length, icon: 'map' },
             ]),
           error: () => this.stats.set([]),
         });
@@ -325,5 +378,56 @@ export class RoleDashboard implements OnInit {
       default:
         this.stats.set([]);
     }
+  }
+
+  /**
+   * Only ever called from the Patient's own button click below - never automatically. Finds
+   * the single nearest hospital for this session only; the coordinates are not stored.
+   */
+  protected findClosestHospital(): void {
+    this.closestHospitalMessage.set(null);
+    this.findingClosestHospital.set(true);
+
+    this.geolocation
+      .getCurrentPosition()
+      .then((coords) => {
+        this.hospitalDiscovery
+          .searchNearby({
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+            radiusKm: 100,
+            page: 1,
+            pageSize: 1,
+          })
+          .subscribe({
+            next: (result) => {
+              this.findingClosestHospital.set(false);
+              if (result.items.length === 0) {
+                this.closestHospitalMessage.set('No hospital with a set location was found within 100 km.');
+                return;
+              }
+              this.closestHospital.set(result.items[0]);
+            },
+            error: () => {
+              this.findingClosestHospital.set(false);
+              this.closestHospitalMessage.set('Could not search for nearby hospitals.');
+            },
+          });
+      })
+      .catch((error: unknown) => {
+        this.findingClosestHospital.set(false);
+
+        if (error instanceof GeolocationFailure) {
+          const messages: Record<typeof error.reason, string> = {
+            denied: 'Location permission was denied.',
+            unavailable: 'Your location could not be determined.',
+            timeout: 'Getting your location took too long.',
+          };
+          this.closestHospitalMessage.set(messages[error.reason]);
+          return;
+        }
+
+        this.closestHospitalMessage.set('Your location could not be determined.');
+      });
   }
 }

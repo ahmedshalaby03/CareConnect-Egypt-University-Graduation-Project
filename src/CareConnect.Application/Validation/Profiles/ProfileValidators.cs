@@ -89,6 +89,44 @@ public class UpdateHospitalProfileRequestValidator : AbstractValidator<UpdateHos
     }
 }
 
+public class UpdateHospitalLocationRequestValidator : AbstractValidator<UpdateHospitalLocationRequest>
+{
+    public UpdateHospitalLocationRequestValidator()
+    {
+        RuleFor(x => x.Address)
+            .NotEmpty().WithMessage("Address is required.")
+            .MaximumLength(400).WithMessage("Address must not exceed 400 characters.");
+
+        RuleFor(x => x.Governorate)
+            .NotEmpty().WithMessage("Governorate is required.")
+            .MaximumLength(100).WithMessage("Governorate must not exceed 100 characters.");
+
+        RuleFor(x => x.City)
+            .NotEmpty().WithMessage("City is required.")
+            .MaximumLength(100).WithMessage("City must not exceed 100 characters.");
+
+        RuleFor(x => x.LocationDescription)
+            .MaximumLength(500).WithMessage("Location description must not exceed 500 characters.");
+
+        RuleFor(x => x.NearbyLandmark)
+            .MaximumLength(200).WithMessage("Nearby landmark must not exceed 200 characters.");
+
+        RuleFor(x => x.Latitude)
+            .InclusiveBetween(-90m, 90m).WithMessage("Latitude must be between -90 and 90.")
+            .When(x => x.Latitude.HasValue);
+
+        RuleFor(x => x.Longitude)
+            .InclusiveBetween(-180m, 180m).WithMessage("Longitude must be between -180 and 180.")
+            .When(x => x.Longitude.HasValue);
+
+        // Coordinates only mean something as a pair - half a pin drops nowhere useful.
+        RuleFor(x => x)
+            .Must(x => x.Latitude.HasValue == x.Longitude.HasValue)
+            .WithMessage("Latitude and longitude must both be provided, or both left empty.")
+            .WithName("Coordinates");
+    }
+}
+
 public class UpdateHospitalSpecialtiesRequestValidator : AbstractValidator<UpdateHospitalSpecialtiesRequest>
 {
     public UpdateHospitalSpecialtiesRequestValidator()

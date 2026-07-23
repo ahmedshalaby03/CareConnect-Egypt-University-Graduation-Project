@@ -21,4 +21,12 @@ public interface IHospitalProfileService
         string userId,
         UpdateHospitalSpecialtiesRequest request,
         CancellationToken ct = default);
+
+    Task<Result<HospitalLocationDto>> GetOwnLocationAsync(string userId, CancellationToken ct = default);
+
+    /// <summary>Touches only the location fields - HospitalName, PhoneNumber etc. are left untouched.</summary>
+    Task<Result<HospitalLocationDto>> UpdateOwnLocationAsync(
+        string userId,
+        UpdateHospitalLocationRequest request,
+        CancellationToken ct = default);
 }

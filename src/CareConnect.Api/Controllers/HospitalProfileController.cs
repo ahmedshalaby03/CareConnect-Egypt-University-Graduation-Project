@@ -57,4 +57,28 @@ public class HospitalProfileController : ApiControllerBase
         var result = await _profiles.UpdateOwnSpecialtiesAsync(CurrentUserId, request, ct);
         return FromResult(result);
     }
+
+    [HttpGet("location")]
+    [ProducesResponseType(typeof(ApiResponse<HospitalLocationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetLocation(CancellationToken ct)
+    {
+        var result = await _profiles.GetOwnLocationAsync(CurrentUserId, ct);
+        return FromResult(result);
+    }
+
+    /// <summary>
+    /// Updates only the hospital's location fields. IsProfileCompleted (the general profile
+    /// flag) is recalculated since Address/Governorate/City live here too, but HospitalName,
+    /// PhoneNumber and everything else on the profile are left untouched.
+    /// </summary>
+    [HttpPut("location")]
+    [ProducesResponseType(typeof(ApiResponse<HospitalLocationDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateLocation(UpdateHospitalLocationRequest request, CancellationToken ct)
+    {
+        var result = await _profiles.UpdateOwnLocationAsync(CurrentUserId, request, ct);
+        return FromResult(result);
+    }
 }
