@@ -1,395 +1,708 @@
-<<<<<<< HEAD
-# CareConnect Egypt
-
-Academic healthcare platform. **Step 1 — foundation and authentication only.**
-
-Appointments, insurance, blood bank, maps and AI are intentionally out of scope in this step.
-
-## Solution layout
-
-```
-CareConnectEgypt/
-├── CareConnect.slnx
-├── src/
-│   ├── CareConnect.Domain          # Entities, role/claim constants (no dependencies)
-│   ├── CareConnect.Application      # Interfaces, DTOs, validation, Result/ApiResponse
-│   ├── CareConnect.Infrastructure   # EF Core, Identity, JWT, services, seeding
-│   └── CareConnect.Api              # Controllers, auth/authz wiring, Swagger, Serilog
-├── tests/
-│   └── CareConnect.Api.IntegrationTests   # 37 end-to-end tests over an in-memory SQLite DB
-└── careconnect-client               # Angular 21 standalone app
-```
-
-## Prerequisites
-
-- .NET 10 SDK
-- SQL Server (LocalDB is fine for development)
-- Node.js 20+ and npm
-- `dotnet-ef` global tool: `dotnet tool install --global dotnet-ef`
-
-## Backend configuration
-
-Secrets are **not** committed. For development, values are read from user secrets first,
-then `appsettings.Development.json`. The `Jwt:Key`, `SuperAdmin:Email` and
-`SuperAdmin:Password` used at runtime are set in user secrets (see below).
-
-Required keys:
-
-| Key | Purpose | Example (development) |
-| --- | --- | --- |
-| `ConnectionStrings:DefaultConnection` | SQL Server connection | `Server=(localdb)\MSSQLLocalDB;Database=CareConnectEgypt;Trusted_Connection=True;TrustServerCertificate=True` |
-| `Jwt:Key` | HMAC signing key, **≥ 32 chars** | a 64+ char random string |
-| `Jwt:Issuer` / `Jwt:Audience` | token issuer / audience | `CareConnectEgypt` / `CareConnectEgyptClient` |
-| `SuperAdmin:Email` | seeded admin login | `admin@careconnect.com` |
-| `SuperAdmin:Password` | seeded admin password | `ChangeThisPassword123!` |
-| `Cors:AllowedOrigins` | allowed browser origins | `["http://localhost:4200"]` |
-
-Set the sensitive ones as user secrets (run from the repo root):
-
-```bash
-dotnet user-secrets set "Jwt:Key" "<a-64-char-random-string>" --project src/CareConnect.Api
-dotnet user-secrets set "SuperAdmin:Email" "admin@careconnect.com" --project src/CareConnect.Api
-dotnet user-secrets set "SuperAdmin:Password" "ChangeThisPassword123!" --project src/CareConnect.Api
-```
-
-## Database — run migrations manually
-
-Migrations are **not** applied automatically. Create and apply the initial migration yourself:
-
-```bash
-dotnet ef migrations add InitialIdentityAndProfiles -p src/CareConnect.Infrastructure -s src/CareConnect.Api
-```
-
-```bash
-dotnet ef database update -p src/CareConnect.Infrastructure -s src/CareConnect.Api
-```
-
-Roles and the SuperAdmin account are seeded automatically on API start-up (idempotent). The
-schema is never touched by seeding — only the migration commands above change the database.
-
-## Run
-
-Backend (serves Swagger at the root in Development):
-
-```bash
-dotnet run --project src/CareConnect.Api
-```
-
-- HTTP: <http://localhost:5290>  ·  Swagger: <http://localhost:5290/swagger>
-- HTTPS: <https://localhost:7122>
-
-Frontend:
-
-```bash
-npm start --prefix careconnect-client
-```
-
-- App: <http://localhost:4200> (the API's CORS policy already allows this origin)
-
-## Tests
-
-```bash
-dotnet test
-```
-
-37 integration tests boot the real API over an in-memory SQLite database (no SQL Server and
-no migration needed) and cover registration for all four roles, login, `/me`, refresh-token
-rotation and reuse detection, inactive-user lockout, and SuperAdmin authorization.
-
-## Seeded SuperAdmin credentials (development)
-
-- Email: `admin@careconnect.com`
-- Password: `ChangeThisPassword123!`
-
-**Change this password before any non-local deployment.** Registration cannot create a
-SuperAdmin — the role is seed-only.
-
-## API surface
-
-```
-POST /api/auth/register
-POST /api/auth/login
-POST /api/auth/refresh-token
-POST /api/auth/revoke-token       (auth)
-POST /api/auth/change-password    (auth)
-POST /api/auth/logout             (auth)
-GET  /api/auth/me                 (auth)
-
-GET   /api/super-admin/users                         (SuperAdmin) — search, role/status filter, paging
-PATCH /api/super-admin/users/{userId}/toggle-status  (SuperAdmin)
-```
-=======
 <div align="center">
 
-```
- ██╗  ██╗███████╗ █████╗ ██╗  ████████╗██╗  ██╗ ██████╗ █████╗ ██████╗ ███████╗
- ██║  ██║██╔════╝██╔══██╗██║  ╚══██╔══╝██║  ██║██╔════╝██╔══██╗██╔══██╗██╔════╝
- ███████║█████╗  ███████║██║     ██║   ███████║██║     ███████║██████╔╝█████╗  
- ██╔══██║██╔══╝  ██╔══██║██║     ██║   ██╔══██║██║     ██╔══██║██╔══██╗██╔══╝  
- ██║  ██║███████╗██║  ██║███████╗██║   ██║  ██║╚██████╗██║  ██║██║  ██║███████╗
- ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝
-```
+🏥 CareConnect Egypt
 
-### **Smart Healthcare Platform**
-*One platform. Every patient. Every doctor. Every service.*
+A full-stack healthcare coordination platform for patients, doctors, hospitals, and administrators
 
-🎓 **Graduation Project** — Faculty of Computer Science
+Graduation Project · ASP.NET Core Web API · Angular · Clean Architecture
 
-<br/>
+<br>
 
-![ASP.NET Core](https://img.shields.io/badge/ASP.NET_Core_MVC-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
-![SQL Server](https://img.shields.io/badge/SQL_Server-CC2927?style=for-the-badge&logo=microsoftsqlserver&logoColor=white)
-![OpenAI](https://img.shields.io/badge/OpenAI_GPT-412991?style=for-the-badge&logo=openai&logoColor=white)
-![Bootstrap](https://img.shields.io/badge/Bootstrap-7952B3?style=for-the-badge&logo=bootstrap&logoColor=white)
-![C#](https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=csharp&logoColor=white)
-![Entity Framework](https://img.shields.io/badge/Entity_Framework_Core-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+
+
+<br>
+
+Connecting healthcare services through one secure, role-based platform.
 
 </div>
 
----
+Overview
 
-## 📌 Overview
+CareConnect Egypt is an academic healthcare platform designed to connect patients with doctors and hospitals through a unified digital experience.
 
-**Smart Healthcare Platform** is a comprehensive, AI-powered healthcare management system built as a graduation project. The platform bridges the gap between **patients**, **doctors**, **hospitals**, and **medical services** — all within a single unified system.
+The system supports the complete journey from discovering healthcare providers and booking appointments to submitting digital insurance requests, locating hospitals, and requesting blood units. Each role receives a dedicated dashboard and securely scoped workflows.
 
-From booking appointments and managing health insurance digitally, to discovering nearby hospitals and getting AI-driven medical guidance — this platform reimagines how healthcare services are accessed and delivered.
+The repository contains a .NET 10 ASP.NET Core Web API, an Angular 21 standalone frontend, a SQL Server database, and an integration-test project.
 
----
+Current Project Status
 
-## 🏗️ System Architecture
+Module
 
-```
-Smart-Healthcare-Platform/
-├── Controllers/          # MVC Controllers (Patient, Doctor, Hospital, Admin, AI)
-├── Models/               # Domain Models & ViewModels
-├── Views/                # Razor Pages (MVC Views)
-│   ├── Patient/
-│   ├── Doctor/
-│   ├── Hospital/
-│   ├── BloodBank/
-│   ├── Insurance/
-│   └── Admin/
-├── Services/             # Business Logic & External Integrations
-│   ├── OpenAIService.cs  # GPT Integration
-│   ├── LocationService.cs
-│   └── NotificationService.cs
-├── Data/                 # EF Core DbContext & Migrations
-├── wwwroot/              # Static Files (CSS, JS, Images)
-└── appsettings.json
-```
+Status
 
----
+Authentication, refresh tokens, and role-based access
 
-## ⚡ Tech Stack
+✅ Implemented
 
-| Layer | Technology |
-|---|---|
-| **Framework** | ASP.NET Core MVC (.NET 8) |
-| **Frontend** | Razor Pages, Bootstrap 5, HTML/CSS/JS |
-| **Database** | Microsoft SQL Server |
-| **ORM** | Entity Framework Core |
-| **AI Integration** | OpenAI GPT API (ChatGPT) |
-| **Authentication** | ASP.NET Identity + Role-based Auth |
-| **Maps & Location** | Location-based Hospital Discovery |
-| **Architecture** | MVC Pattern + Service Layer |
+Patient, doctor, and hospital profiles
 
----
+✅ Implemented
 
-## ✨ Features
+Medical specialties and hospital affiliations
 
-### 👤 Patient Portal
-- 🔐 Secure registration, login, and profile management
-- 📅 **Appointment Booking** — search and book doctors by specialty
-- 🏥 **Hospital Discovery** — find nearby hospitals based on location
-- 🩸 **Blood Bank** — request blood units by type and location
-- 📋 **Digital Health Insurance** — submit and track insurance requests online
-- ⭐ **Reviews & Ratings** — rate doctors and hospital services
-- 🤖 **AI Medical Assistant** — get instant medical guidance powered by OpenAI GPT
+✅ Implemented
 
-### 👨‍⚕️ Doctor Portal
-- 📆 Manage availability and appointment schedule
-- 👁️ View patient appointment history
-- ✅ Accept / Cancel appointment requests
-- ⭐ Receive patient reviews and ratings
+Doctor schedules and unavailable periods
 
-### 🏥 Hospital Portal
-- 🗂️ Manage hospital profile and listed services
-- 🩸 Manage blood bank inventory (available blood types & quantities)
-- 📊 View incoming appointment and service requests
+✅ Implemented
 
-### 🛡️ Admin Dashboard
-- 👥 Full user management (Patients, Doctors, Hospitals)
-- ✅ Approve / Reject doctor and hospital registrations
-- 📊 Platform-wide analytics and statistics
-- 🗂️ Manage categories, specialties, and system settings
+Appointment booking and management
 
-### 🤖 AI-Powered Medical Assistant
-- Integrated with **OpenAI GPT API**
-- Answers patient medical questions in natural language
-- Suggests relevant specialties based on symptoms
-- Available 24/7 within the platform
+✅ Implemented
 
----
+Digital insurance request workflow
 
-## 🚀 Getting Started
+✅ Implemented
 
-### Prerequisites
+Insurance company administration
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [SQL Server](https://www.microsoft.com/en-us/sql-server) (or LocalDB)
-- [Visual Studio 2022](https://visualstudio.microsoft.com/) or VS Code
-- OpenAI API Key → [platform.openai.com](https://platform.openai.com)
+✅ Implemented
 
----
+Hospital blood stock and patient blood requests
 
-### ⚙️ Setup & Run
+✅ Implemented
 
-```bash
-# 1. Clone the repository
-git clone https://github.com/YOUR_USERNAME/Smart-Healthcare-Platform.git
-cd Smart-Healthcare-Platform
+Hospital location and nearby discovery
 
-# 2. Restore packages
-dotnet restore
+✅ Implemented
 
-# 3. Configure your settings (see Configuration section below)
+SuperAdmin user management
 
-# 4. Apply database migrations
-dotnet ef database update
+✅ Implemented
 
-# 5. Run the application
-dotnet run
-```
+MedicalServiceProvider full business workflow
 
-✅ App will be running at: **`https://localhost:7000`**
+🟡 Planned
 
----
+AI medical assistant
 
-## ⚙️ Configuration
+🟡 Planned
 
-Update `appsettings.json` with your credentials:
+Reviews and ratings
 
-```json
+🟡 Planned
+
+The README distinguishes implemented functionality from planned modules so the repository accurately reflects the current codebase.
+
+Core Features
+
+👤 Patient Portal
+
+Secure registration, login, token refresh, and password management
+
+Browse doctors and hospitals
+
+Filter healthcare providers by specialty and location
+
+Book appointments from available doctor slots
+
+Track pending, confirmed, completed, rejected, cancelled, and no-show appointments
+
+Submit and track digital insurance requests
+
+Search blood availability across hospitals
+
+Submit and track blood requests
+
+Discover nearby hospitals using browser geolocation
+
+Open external directions to a hospital without requiring a paid Maps API
+
+👨‍⚕️ Doctor Portal
+
+Manage the doctor profile and professional information
+
+Request affiliation with hospitals
+
+Track hospital affiliation requests
+
+Configure recurring weekly availability
+
+Add temporary unavailable periods
+
+Review patient appointments
+
+Confirm, reject, complete, cancel, or mark appointments as no-show according to the allowed workflow
+
+🏥 Hospital Portal
+
+Manage hospital profile information
+
+Maintain address, governorate, city, latitude, and longitude
+
+Review doctor affiliation requests
+
+View affiliated doctors
+
+View appointments associated with the hospital
+
+Review, approve, or reject insurance requests
+
+Manage blood stock for supported blood groups
+
+Review, approve, reject, and fulfill patient blood requests
+
+🛡️ SuperAdmin Portal
+
+Search and manage platform users
+
+Activate or deactivate accounts
+
+Manage medical specialties
+
+Manage insurance companies
+
+Access role-scoped administrative dashboards
+
+🔎 Shared Directories
+
+Doctor directory and doctor details
+
+Hospital directory and hospital details
+
+Location-aware hospital discovery
+
+Hospital blood-bank availability
+
+Role-aware actions such as appointment booking and blood requests
+
+Roles and Access Control
+
+Role
+
+Main Responsibilities
+
+Patient
+
+Discover providers, book appointments, submit insurance requests, and request blood
+
+Doctor
+
+Manage profile, affiliations, availability, unavailable periods, and appointments
+
+Hospital
+
+Manage profile/location, doctors, appointments, insurance requests, and blood stock
+
+SuperAdmin
+
+Manage users, specialties, insurance companies, and platform access
+
+MedicalServiceProvider
+
+Role scaffolded for a future dedicated service-provider module
+
+Authorization is enforced by the API. Angular guards improve navigation and user experience but are not treated as the primary security boundary.
+
+Architecture
+
+flowchart LR
+    UI[Angular 21 Client] -->|HTTPS / JSON| API[ASP.NET Core Web API]
+    API --> AUTH[Identity + JWT + Refresh Tokens]
+    API --> APP[Application Layer]
+    APP --> DOMAIN[Domain Layer]
+    APP --> INFRA[Infrastructure Layer]
+    INFRA --> DB[(SQL Server)]
+    INFRA --> LOGS[Serilog]
+
+Clean Architecture Layers
+
+CareConnectEgypt/
+├── CareConnect.slnx
+├── src/
+│   ├── CareConnect.Domain/
+│   │   └── Entities, enums, domain constants, and core rules
+│   ├── CareConnect.Application/
+│   │   └── DTOs, interfaces, validation, filters, and service contracts
+│   ├── CareConnect.Infrastructure/
+│   │   └── EF Core, SQL Server, Identity, JWT, services, configurations, and seeding
+│   └── CareConnect.Api/
+│       └── Controllers, middleware, dependency injection, Swagger, and Serilog
+├── careconnect-client/
+│   └── Angular standalone application
+└── tests/
+    └── CareConnect.Api.IntegrationTests/
+
+Dependency Direction
+
+Domain
+  ↑
+Application
+  ↑
+Infrastructure
+  ↑
+API
+
+Angular Client → API only
+
+Technology Stack
+
+Area
+
+Technology
+
+Backend
+
+ASP.NET Core Web API on .NET 10
+
+Frontend
+
+Angular 21 standalone components
+
+UI
+
+Angular Material and Angular CDK
+
+Language
+
+C# and TypeScript
+
+Database
+
+Microsoft SQL Server
+
+ORM
+
+Entity Framework Core 10
+
+Authentication
+
+ASP.NET Core Identity
+
+API Security
+
+JWT access tokens and rotating refresh tokens
+
+Authorization
+
+Role-based and ownership-based authorization
+
+Logging
+
+Serilog console and rolling-file sinks
+
+API Documentation
+
+Swagger / OpenAPI
+
+Testing
+
+xUnit, ASP.NET Core TestServer, FluentAssertions, and SQLite
+
+Architecture
+
+Clean Architecture
+
+Important Domain Relationships
+
+erDiagram
+    APPLICATION_USER ||--o| PATIENT_PROFILE : owns
+    APPLICATION_USER ||--o| DOCTOR_PROFILE : owns
+    APPLICATION_USER ||--o| HOSPITAL_PROFILE : owns
+
+    DOCTOR_PROFILE }o--|| SPECIALTY : belongs_to
+    DOCTOR_PROFILE ||--o{ DOCTOR_HOSPITAL_AFFILIATION : requests
+    HOSPITAL_PROFILE ||--o{ DOCTOR_HOSPITAL_AFFILIATION : receives
+    HOSPITAL_PROFILE ||--o{ HOSPITAL_SPECIALTY : offers
+    SPECIALTY ||--o{ HOSPITAL_SPECIALTY : categorizes
+
+    PATIENT_PROFILE ||--o{ APPOINTMENT : books
+    DOCTOR_PROFILE ||--o{ APPOINTMENT : attends
+    HOSPITAL_PROFILE ||--o{ APPOINTMENT : hosts
+
+    PATIENT_PROFILE ||--o{ INSURANCE_REQUEST : submits
+    HOSPITAL_PROFILE ||--o{ INSURANCE_REQUEST : reviews
+    INSURANCE_COMPANY ||--o{ INSURANCE_REQUEST : covers
+
+    HOSPITAL_PROFILE ||--o{ BLOOD_STOCK : manages
+    PATIENT_PROFILE ||--o{ BLOOD_REQUEST : submits
+    HOSPITAL_PROFILE ||--o{ BLOOD_REQUEST : processes
+
+Main Workflows
+
+Appointment Booking
+
+Patient selects doctor
+        ↓
+API generates available slots
+        ↓
+Schedule, unavailable periods, and existing appointments are checked
+        ↓
+Patient submits booking
+        ↓
+Doctor confirms or rejects
+        ↓
+Appointment reaches its final status
+
+Digital Insurance
+
+Patient selects an eligible appointment
+        ↓
+Patient submits insurance information
+        ↓
+Hospital starts review
+        ↓
+Hospital approves or rejects
+        ↓
+Patient tracks the final decision
+
+Blood Bank
+
+Hospital maintains blood stock
+        ↓
+Patient searches availability
+        ↓
+Patient submits a blood request
+        ↓
+Hospital approves only when stock is sufficient
+        ↓
+Allocated units are deducted transactionally
+        ↓
+Hospital marks the request as fulfilled
+
+Hospital Discovery
+
+User explicitly shares browser location
+        ↓
+API applies a geographic bounding box
+        ↓
+Haversine distance is calculated
+        ↓
+Hospitals inside the selected radius are returned
+        ↓
+User opens destination directions
+
+The user's current search coordinates are used for the request and are not intended to be persisted as location history.
+
+Getting Started
+
+Prerequisites
+
+Install:
+
+.NET 10 SDK
+
+SQL Server or SQL Server Express/LocalDB
+
+Node.js 20 or later
+
+npm
+
+Visual Studio 2022, JetBrains Rider, or VS Code
+
+Entity Framework CLI when using terminal migration commands
+
+dotnet tool install --global dotnet-ef
+
+1. Clone the Repository
+
+git clone https://github.com/ahmedshalaby03/CareConnect-Egypt-University-Graduation-Project.git
+cd CareConnect-Egypt-University-Graduation-Project
+
+2. Restore Backend Dependencies
+
+dotnet restore CareConnect.slnx
+
+3. Install Frontend Dependencies
+
+npm install --prefix careconnect-client
+
+Development Configuration
+
+Keep secrets outside source control. Configure them through .NET User Secrets or environment variables.
+
+Run these commands from the repository root:
+
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Server=.;Database=CareConnectEgypt;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True" --project src/CareConnect.Api
+
+dotnet user-secrets set "Jwt:Key" "<use-a-long-random-secret-of-at-least-32-characters>" --project src/CareConnect.Api
+
+dotnet user-secrets set "SuperAdmin:Email" "admin@gmail.com" --project src/CareConnect.Api
+
+dotnet user-secrets set "SuperAdmin:Password" "Admin@123" --project src/CareConnect.Api
+
+Recommended development settings:
+
 {
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=.;Database=SmartHealthcareDb;Trusted_Connection=True;TrustServerCertificate=True"
+  "Jwt": {
+    "Issuer": "CareConnectEgypt",
+    "Audience": "CareConnectEgyptClient",
+    "AccessTokenMinutes": 60,
+    "RefreshTokenDays": 7,
+    "ClockSkewSeconds": 30
   },
-  "OpenAI": {
-    "ApiKey": "YOUR_OPENAI_API_KEY_HERE",
-    "Model": "gpt-4o"
+  "DemoData": {
+    "Enabled": true
+  },
+  "Cors": {
+    "AllowedOrigins": [
+      "http://localhost:4200",
+      "https://localhost:4200"
+    ]
   }
 }
-```
 
-> ⚠️ **Never commit your API key to GitHub.** Use environment variables or [.NET User Secrets](https://learn.microsoft.com/en-us/aspnet/core/security/app-secrets) in development.
+Never commit real connection strings, JWT signing keys, production credentials, reset tokens, or third-party API keys.
 
-### Using .NET User Secrets (Recommended)
+Database Setup
 
-```bash
-dotnet user-secrets set "OpenAI:ApiKey" "your-api-key-here"
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "your-connection-string"
-```
+The repository uses Entity Framework Core migrations.
 
----
+Terminal
 
-## 🔐 Roles & Access Control
+dotnet ef database update \
+  --project src/CareConnect.Infrastructure \
+  --startup-project src/CareConnect.Api
 
-| Role | Access |
-|---|---|
-| **Patient** | Book appointments, insurance, blood requests, AI assistant, reviews |
-| **Doctor** | Manage schedule, view patients, respond to bookings |
-| **Hospital** | Manage profile, blood bank, services |
-| **Admin** | Full platform control, approvals, analytics |
+Visual Studio Package Manager Console
 
----
+Default Project: CareConnect.Infrastructure
+Startup Project: CareConnect.Api
 
-## 🗄️ Database Schema (Key Entities)
+Update-Database
 
-```
-Users (ASP.NET Identity)
-    ├── Patients          → Appointments, InsuranceRequests, Reviews
-    ├── Doctors           → Specialties, Schedules, Reviews
-    └── Hospitals         → Services, BloodBank, Location
+Create a new migration only when the EF Core model or database schema actually changes:
 
-Appointments              → Patient ↔ Doctor
-BloodBank                 → Hospital ↔ BloodRequests
-HealthInsurance           → Patient → InsuranceRequest
-Reviews                   → Patient → Doctor / Hospital
-```
+dotnet ef migrations add MigrationName \
+  --project src/CareConnect.Infrastructure \
+  --startup-project src/CareConnect.Api
 
----
+Adding demo records, changing an Identity email, or resetting a password is a data change and does not require an empty migration.
 
-## 🤖 AI Integration — How It Works
+Run the Application
 
-```
-[Patient types a medical question]
-            │
-            ▼
-   [OpenAI GPT API Call]
-   System Prompt: "You are a helpful medical assistant..."
-   User Message: Patient's question
-            │
-            ▼
-   [GPT Response received]
-            │
-            ▼
-   [Displayed to patient in real-time]
-   + Suggested specialty if applicable
-```
+Backend API
 
-The AI assistant is context-aware and always recommends consulting a real doctor for diagnosis.
+dotnet run --project src/CareConnect.Api
 
----
+Development endpoints:
 
-## 📸 Screenshots
+API over HTTP: http://localhost:5290
 
-> *(Add screenshots of your platform here)*
+Swagger: http://localhost:5290/swagger
 
-| Dashboard | Appointment Booking | AI Assistant |
-|---|---|---|
-| ![Dashboard](screenshots/dashboard.png) | ![Booking](screenshots/booking.png) | ![AI](screenshots/ai.png) |
+API over HTTPS: https://localhost:7122
 
----
+Angular Client
 
-## 🧪 Seeded Test Accounts
+npm start --prefix careconnect-client
 
-After running migrations, use these to explore the platform:
+Frontend:
 
-| Role | Email | Password |
-|---|---|---|
-| Admin | `admin@healthcare.com` | `Admin@123` |
-| Doctor | `doctor@healthcare.com` | `Doctor@123` |
-| Patient | `patient@healthcare.com` | `Patient@123` |
+http://localhost:4200
 
-> *(Update these with your actual seeded credentials)*
+Development Demo Accounts
 
----
+These accounts are intended only for a local development database.
 
-## 👥 Team
+Role
 
-| Name | Role |
-|---|---|
-| Ahmed Saeed Shalaby | Full-Stack Developer |
-| Eslam Salem | Full-Stack Developer |
-| Abdelrahman Rabea | Full-Stack Developer |
-| Abdelrahman Siam | Flutter Developer |
-| Alaa Naser | Flutter Developer |
-| Saif Omran | Cloud Architect |
+Email
 
----
+Password
 
-## 📄 License
+SuperAdmin
 
-This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+admin@gmail.com
 
----
+Admin@123
+
+Patient
+
+ahmed@gmail.com
+
+Ahmed@123
+
+Doctor
+
+doctor.cardiology@careconnect.local
+
+CareConnect@123
+
+Hospital
+
+cairohospital@careconnect.local
+
+CareConnect@123
+
+Doctor and hospital accounts are available after the development demo-data process completes successfully.
+
+Change or remove all demo credentials before any public, shared, staging, or production deployment.
+
+Testing
+
+Run the complete backend test suite:
+
+dotnet test
+
+The integration-test project uses:
+
+xUnit
+
+ASP.NET Core MVC testing infrastructure
+
+FluentAssertions
+
+SQLite
+
+Coverlet
+
+Build the Angular application:
+
+npm run build --prefix careconnect-client
+
+Security Highlights
+
+ASP.NET Core Identity password hashing
+
+JWT access tokens with refresh-token rotation
+
+Role-based endpoint authorization
+
+Ownership checks for patient, doctor, and hospital resources
+
+Active-account enforcement
+
+Server-side status-transition validation
+
+Server-side duplicate-request protection
+
+Restricted or no-action delete behavior for historical healthcare records
+
+DTO-based responses instead of exposing EF Core entities
+
+Server-side validation of appointment, stock, insurance, and location rules
+
+No direct password-hash manipulation
+
+No browser-location history persistence
+
+Project Roadmap
+
+Next Priorities
+
+AI medical assistant with safe medical disclaimers and specialty guidance
+
+Dedicated MedicalServiceProvider module
+
+Reviews and ratings
+
+Notification center
+
+Profile-image and document-upload strategy
+
+Deployment configuration and CI/CD
+
+Expanded integration and authorization coverage
+
+Production observability and health checks
+
+Explicitly Outside the Current MVP
+
+Medical diagnosis by AI
+
+Emergency dispatch
+
+Ambulance tracking
+
+Real-time patient tracking
+
+Payment processing
+
+External insurance-provider integration
+
+National blood-bank integration
+
+Laboratory cross-matching
+
+Telemedicine video calls
+
+Git Workflow
+
+Feature development follows dedicated branches:
+
+feature/authentication-and-user-management
+feature/specialties-and-doctor-hospital-affiliations
+feature/doctor-schedules-and-appointments
+feature/digital-insurance-requests
+feature/blood-bank-module
+feature/hospital-location-discovery
+feature/development-demo-data
+
+Recommended workflow:
+
+git checkout main
+git pull origin main
+git checkout -b feature/feature-name
+
+# implement and verify
+
+git add .
+git commit -m "feat: describe the feature"
+git push -u origin feature/feature-name
+
+Merge through a Pull Request into main.
+
+Team
+
+Name
+
+Role
+
+Ahmed Saeed Shalaby
+
+Full-Stack .NET Developer
+
+Eslam Salem
+
+Full-Stack Developer
+
+Abdelrahman Rabea
+
+Full-Stack Developer
+
+Abdelrahman Siam
+
+Flutter Developer
+
+Alaa Naser
+
+Flutter Developer
+
+Saif Omran
+
+Cloud Architect
+
+Academic Purpose
+
+CareConnect Egypt was developed as a graduation project to demonstrate:
+
+Full-stack application design
+
+Clean Architecture
+
+REST API development
+
+Angular application development
+
+Relational database modeling
+
+Authentication and authorization
+
+Complex business workflows
+
+Entity Framework Core migrations
+
+Secure ownership validation
+
+Collaborative Git and GitHub practices
 
 <div align="center">
 
-**🎓 Graduation Project — Built with passion, purpose, and a lot of coffee ☕**
+Built to make healthcare access more connected, organized, and transparent.
 
-*Smart Healthcare Platform — Because healthcare should be accessible to everyone.*
+CareConnect Egypt
 
-⭐ If you found this project interesting, please give it a star!
+⭐ Star the repository if you find the project useful.
 
 </div>
