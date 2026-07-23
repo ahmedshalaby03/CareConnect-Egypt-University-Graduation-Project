@@ -1,0 +1,118 @@
+<div class="cc-page">
+  <header class="cc-page-header page-head">
+    <div>
+      <h1>My insurance requests</h1>
+      <p>Track the digital insurance requests you have submitted for your appointments.</p>
+    </div>
+    <a routerLink="/dashboard/patient/insurance-requests/new" mat-flat-button color="primary">
+      <mat-icon>add</mat-icon>
+      New request
+    </a>
+  </header>
+
+  <section class="cc-card cc-filters filters">
+    <mat-form-field appearance="outline">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All statuses</mat-option>
+        @for (status of statuses; track status) {
+          <mat-option [value]="status">{{ status }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>Insurance company</mat-label>
+      <mat-select [formControl]="companyControl" (selectionChange)="onFilterChange()">
+        <mat-option value="">All companies</mat-option>
+        @for (company of companies(); track company.id) {
+          <mat-option [value]="company.id">{{ company.name }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  }
+
+  @if (!loading() && requests().length === 0) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>fact_check</mat-icon>
+      <h2>No insurance requests yet</h2>
+      <p>Submit a request from one of your appointments to get started.</p>
+      <a routerLink="/dashboard/patient/insurance-requests/new" mat-flat-button color="primary">
+        New request
+      </a>
+    </div>
+  } @else {
+    <div class="requests">
+      @for (request of requests(); track request.insuranceRequestId) {
+        <article class="cc-card request-card">
+          <div class="request-card__main">
+            <div class="request-card__head">
+              <h2>{{ request.insuranceCompanyName }}</h2>
+              <span class="cc-status-chip" [class]="statusClass(request.statusName)">
+                {{ request.statusName }}
+              </span>
+            </div>
+
+            <p class="request-card__meta">
+              <mat-icon>medical_information</mat-icon>
+              {{ request.doctorName }}@if (request.doctorSpecialty) { · {{ request.doctorSpecialty }} }
+            </p>
+            <p class="request-card__meta">
+              <mat-icon>local_hospital</mat-icon>
+              {{ request.hospitalName }}
+            </p>
+            <p class="request-card__meta">
+              <mat-icon>event</mat-icon>
+              Appointment on {{ request.appointmentDate | date: 'mediumDate' }}
+            </p>
+            <p class="request-card__meta">
+              <mat-icon>payments</mat-icon>
+              Requested: {{ request.requestedAmount !== null ? (request.requestedAmount + ' EGP') : 'Not specified' }}
+              @if (request.approvedAmount !== null) {
+                · Approved: {{ request.approvedAmount }} EGP
+              }
+            </p>
+
+            @if (request.statusName === 'Rejected' && request.rejectionReason) {
+              <p class="request-card__note">Rejected: {{ request.rejectionReason }}</p>
+            }
+            @if (request.statusName === 'Approved' && request.approvalReferenceNumber) {
+              <p class="request-card__ref">Reference: {{ request.approvalReferenceNumber }}</p>
+            }
+          </div>
+
+          <div class="request-card__actions">
+            <a [routerLink]="['/dashboard/patient/insurance-requests', request.insuranceRequestId]" mat-button>
+              Details
+            </a>
+
+            @if (canCancel(request)) {
+              <button
+                type="button"
+                mat-stroked-button
+                color="warn"
+                [disabled]="busyId() === request.insuranceRequestId"
+                (click)="cancel(request)"
+              >
+                Cancel
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  }
+</div>

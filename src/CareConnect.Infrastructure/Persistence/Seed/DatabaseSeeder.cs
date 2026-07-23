@@ -47,6 +47,40 @@ public class DatabaseSeeder
         await SeedRolesAsync();
         await SeedSuperAdminAsync();
         await SeedSpecialtiesAsync(ct);
+        await SeedInsuranceCompaniesAsync(ct);
+    }
+
+    /// <summary>
+    /// Adds any seed insurance company that is not present yet, matching on name. Existing
+    /// rows are left exactly as they are, so an administrator's edits survive a restart.
+    /// </summary>
+    private async Task SeedInsuranceCompaniesAsync(CancellationToken ct)
+    {
+        var existingNames = await _context.InsuranceCompanies
+            .Select(c => c.Name)
+            .ToListAsync(ct);
+
+        var missing = InsuranceCompanySeedData.Items
+            .Where(seed => !existingNames.Contains(seed.Name, StringComparer.OrdinalIgnoreCase))
+            .Select(seed => new InsuranceCompany
+            {
+                Name = seed.Name,
+                ArabicName = seed.ArabicName,
+                Description = seed.Description,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            })
+            .ToList();
+
+        if (missing.Count == 0)
+        {
+            return;
+        }
+
+        _context.InsuranceCompanies.AddRange(missing);
+        await _context.SaveChangesAsync(ct);
+
+        _logger.LogInformation("Seeded {Count} insurance companies.", missing.Count);
     }
 
     /// <summary>

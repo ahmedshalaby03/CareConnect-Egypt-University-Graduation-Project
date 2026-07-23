@@ -8,8 +8,12 @@ import { RouterLink } from '@angular/router';
 import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor';
 import { AppointmentStatus, PatientAppointment } from '../../../core/models/appointment.model';
 import { AppointmentService } from '../../../core/services/appointment.service';
+import { InsuranceRequestService } from '../../../core/services/insurance-request.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ReasonDialog, ReasonDialogData } from '../../../shared/reason-dialog/reason-dialog';
+
+/** Statuses that block a second active insurance request for the same appointment. */
+const BLOCKING_INSURANCE_STATUSES = new Set(['Pending', 'UnderReview', 'Approved']);
 
 @Component({
   selector: 'app-patient-appointment-details',
@@ -20,6 +24,7 @@ import { ReasonDialog, ReasonDialogData } from '../../../shared/reason-dialog/re
 })
 export class PatientAppointmentDetails implements OnInit {
   private readonly appointments = inject(AppointmentService);
+  private readonly insuranceRequests = inject(InsuranceRequestService);
   private readonly notify = inject(NotificationService);
   private readonly dialog = inject(MatDialog);
 
@@ -30,6 +35,12 @@ export class PatientAppointmentDetails implements OnInit {
   protected readonly loading = signal(true);
   protected readonly loadError = signal<string | null>(null);
   protected readonly busy = signal(false);
+
+  /**
+   * Client-side hint only, used to show/hide the "Apply for insurance" button - the create
+   * endpoint independently re-checks eligibility server-side.
+   */
+  protected readonly hasActiveInsuranceRequest = signal(false);
 
   ngOnInit(): void {
     this.load();
@@ -49,6 +60,13 @@ export class PatientAppointmentDetails implements OnInit {
 
   protected canCancel(appointment: PatientAppointment): boolean {
     return appointment.statusName === 'Pending' || appointment.statusName === 'Confirmed';
+  }
+
+  protected canApplyForInsurance(appointment: PatientAppointment): boolean {
+    return (
+      (appointment.statusName === 'Pending' || appointment.statusName === 'Confirmed') &&
+      !this.hasActiveInsuranceRequest()
+    );
   }
 
   protected cancel(): void {
@@ -95,11 +113,26 @@ export class PatientAppointmentDetails implements OnInit {
       next: (appointment) => {
         this.loading.set(false);
         this.appointment.set(appointment);
+        this.loadInsuranceEligibility();
       },
       error: (error: unknown) => {
         this.loading.set(false);
         this.loadError.set(friendlyMessageOf(error, 'Could not load this appointment.'));
       },
+    });
+  }
+
+  private loadInsuranceEligibility(): void {
+    // A generous page size: this only checks for an existing request against this one
+    // appointment, not a paginated view.
+    this.insuranceRequests.getPatientRequests({ page: 1, pageSize: 100 }).subscribe({
+      next: (result) => {
+        const blocked = result.items.some(
+          (r) => r.appointmentId === this.id() && BLOCKING_INSURANCE_STATUSES.has(r.statusName),
+        );
+        this.hasActiveInsuranceRequest.set(blocked);
+      },
+      error: () => undefined,
     });
   }
 }

@@ -12,4 +12,5 @@ public class PatientProfile
     public string? Address { get; set; }
 
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    public ICollection<InsuranceRequest> InsuranceRequests { get; set; } = new List<InsuranceRequest>();
 }

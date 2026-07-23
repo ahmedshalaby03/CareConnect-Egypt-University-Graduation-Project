@@ -62,11 +62,22 @@
         <p class="note">Cancellation reason: {{ a.cancellationReason }}</p>
       }
 
-      @if (canCancel(a)) {
+      @if (canCancel(a) || canApplyForInsurance(a)) {
         <div class="actions">
-          <button type="button" mat-stroked-button color="warn" [disabled]="busy()" (click)="cancel()">
-            Cancel appointment
-          </button>
+          @if (canApplyForInsurance(a)) {
+            <a
+              [routerLink]="['/dashboard/patient/insurance-requests/new']"
+              mat-flat-button
+              color="primary"
+            >
+              Apply for insurance
+            </a>
+          }
+          @if (canCancel(a)) {
+            <button type="button" mat-stroked-button color="warn" [disabled]="busy()" (click)="cancel()">
+              Cancel appointment
+            </button>
+          }
         </div>
       }
     </section>

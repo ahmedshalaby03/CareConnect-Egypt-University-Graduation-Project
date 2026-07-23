@@ -1,0 +1,125 @@
+<div class="cc-page">
+  <header class="cc-page-header page-head">
+    <div>
+      <h1>Insurance companies</h1>
+      <p>The controlled list patients choose from when submitting a digital insurance request.</p>
+    </div>
+    <button type="button" mat-flat-button color="primary" (click)="openForm(null)">
+      <mat-icon>add</mat-icon>
+      Add company
+    </button>
+  </header>
+
+  <section class="cc-card filters">
+    <mat-form-field appearance="outline" class="filters__search">
+      <mat-label>Search by English or Arabic name</mat-label>
+      <input matInput [formControl]="searchControl" placeholder="e.g. Misr Insurance or مصر للتأمين" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="filters__status">
+      <mat-label>Status</mat-label>
+      <mat-select [formControl]="statusControl" (selectionChange)="onStatusChange()">
+        @for (option of statusFilters; track option.label) {
+          <mat-option [value]="option.value">{{ option.label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+  </section>
+
+  <section class="cc-card table-card">
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+
+    <div class="table-scroll">
+      <table mat-table [dataSource]="companies()" class="companies-table">
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Insurance company</th>
+          <td mat-cell *matCellDef="let company">
+            <div class="name-cell">
+              @if (company.logoUrl) {
+                <img [src]="company.logoUrl" [alt]="company.name" class="name-cell__logo" />
+              }
+              <span class="name-cell__name">{{ company.name }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="arabicName">
+          <th mat-header-cell *matHeaderCellDef>Arabic name</th>
+          <td mat-cell *matCellDef="let company">
+            @if (company.arabicName) {
+              <span dir="rtl" class="arabic">{{ company.arabicName }}</span>
+            } @else {
+              <span class="muted">—</span>
+            }
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="usage">
+          <th mat-header-cell *matHeaderCellDef>Requests</th>
+          <td mat-cell *matCellDef="let company">
+            <span [matTooltip]="'Insurance requests referencing this company'">
+              {{ company.requestCount }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let company">
+            <span
+              class="cc-status-chip"
+              [class.cc-status-chip--active]="company.isActive"
+              [class.cc-status-chip--inactive]="!company.isActive"
+            >
+              {{ company.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="col-actions">Actions</th>
+          <td mat-cell *matCellDef="let company" class="col-actions">
+            <button
+              type="button"
+              mat-icon-button
+              matTooltip="Edit insurance company"
+              (click)="openForm(company)"
+            >
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button
+              type="button"
+              mat-button
+              [disabled]="togglingId() === company.id"
+              (click)="toggleStatus(company)"
+            >
+              {{ company.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+
+    @if (!loading() && companies().length === 0) {
+      <div class="empty-state">
+        <mat-icon>search_off</mat-icon>
+        <p>No insurance companies match the current filters.</p>
+      </div>
+    }
+
+    <mat-paginator
+      [length]="totalCount()"
+      [pageIndex]="pageIndex()"
+      [pageSize]="pageSize()"
+      [pageSizeOptions]="[10, 25, 50]"
+      (page)="onPage($event)"
+      showFirstLastButtons
+    />
+  </section>
+</div>

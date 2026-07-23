@@ -1,0 +1,47 @@
+<h2 mat-dialog-title>Approve insurance request</h2>
+
+<mat-dialog-content>
+  @if (serverError()) {
+    <div class="cc-notice cc-notice--danger">
+      <p>{{ serverError() }}</p>
+      @if (serverErrorList().length > 0) {
+        <ul>
+          @for (message of serverErrorList(); track message) {
+            <li>{{ message }}</li>
+          }
+        </ul>
+      }
+    </div>
+  }
+
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Approved amount, EGP (optional)</mat-label>
+      <input matInput type="number" min="0" formControlName="approvedAmount" />
+      @if (form.controls.approvedAmount.hasError('min')) {
+        <mat-error>Amount cannot be negative.</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Approval reference number (optional)</mat-label>
+      <input matInput formControlName="approvalReferenceNumber" maxlength="100" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="cc-form-field">
+      <mat-label>Hospital notes (optional)</mat-label>
+      <textarea matInput formControlName="hospitalNotes" rows="3" maxlength="2000"></textarea>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button type="button" mat-button [disabled]="saving()" (click)="dialogRef.close()">Cancel</button>
+  <button type="button" mat-flat-button color="primary" [disabled]="saving()" (click)="submit()">
+    @if (saving()) {
+      <mat-progress-spinner mode="indeterminate" diameter="18" />
+    } @else {
+      Approve
+    }
+  </button>
+</mat-dialog-actions>
