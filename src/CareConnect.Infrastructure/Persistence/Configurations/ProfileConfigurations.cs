@@ -73,17 +73,26 @@ public class HospitalProfileConfiguration : IEntityTypeConfiguration<HospitalPro
         builder.Property(p => p.Description).HasMaxLength(2000);
         builder.Property(p => p.LogoUrl).HasMaxLength(500);
         builder.Property(p => p.WebsiteUrl).HasMaxLength(500);
+        builder.Property(p => p.LocationDescription).HasMaxLength(500);
+        builder.Property(p => p.NearbyLandmark).HasMaxLength(200);
 
         builder.Property(p => p.IsProfileCompleted).IsRequired().HasDefaultValue(false);
         builder.Property(p => p.CreatedAt).IsRequired();
 
-        // ~11 cm of precision, plenty for the map feature planned later.
+        // ~11 cm of precision - plenty for straight-line distance search.
         builder.Property(p => p.Latitude).HasPrecision(9, 6);
         builder.Property(p => p.Longitude).HasPrecision(9, 6);
 
         // The directory filters on these three together.
         builder.HasIndex(p => new { p.IsProfileCompleted, p.Governorate, p.City })
             .HasDatabaseName("IX_HospitalProfiles_Completed_Location");
+
+        builder.HasIndex(p => p.Governorate);
+        builder.HasIndex(p => p.City);
+
+        // Narrows the bounding-box pre-filter in nearby search before Haversine runs in memory.
+        builder.HasIndex(p => new { p.Latitude, p.Longitude })
+            .HasDatabaseName("IX_HospitalProfiles_Latitude_Longitude");
     }
 }
 

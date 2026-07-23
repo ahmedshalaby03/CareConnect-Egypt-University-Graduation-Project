@@ -157,6 +157,52 @@ public class HospitalProfileService : IHospitalProfileService
             "Hospital specialties updated successfully.");
     }
 
+    public async Task<Result<HospitalLocationDto>> GetOwnLocationAsync(
+        string userId,
+        CancellationToken ct = default)
+    {
+        var profile = await LoadAsync(userId, tracking: false, ct);
+
+        return profile is null
+            ? Result<HospitalLocationDto>.NotFound("Hospital profile not found for the current account.")
+            : Result<HospitalLocationDto>.Success(ToLocationDto(profile), "Hospital location retrieved successfully.");
+    }
+
+    public async Task<Result<HospitalLocationDto>> UpdateOwnLocationAsync(
+        string userId,
+        UpdateHospitalLocationRequest request,
+        CancellationToken ct = default)
+    {
+        // Ownership comes from the token, not from anything in the request body - a hospital
+        // can never reach another hospital's location this way.
+        var profile = await LoadAsync(userId, tracking: true, ct);
+        if (profile is null)
+        {
+            return Result<HospitalLocationDto>.NotFound("Hospital profile not found for the current account.");
+        }
+
+        // Only the location fields are touched - HospitalName, PhoneNumber, specialties etc.
+        // stay exactly as they were.
+        profile.Address = Normalise(request.Address);
+        profile.Governorate = Normalise(request.Governorate);
+        profile.City = Normalise(request.City);
+        profile.Latitude = request.Latitude;
+        profile.Longitude = request.Longitude;
+        profile.LocationDescription = Normalise(request.LocationDescription);
+        profile.NearbyLandmark = Normalise(request.NearbyLandmark);
+
+        profile.IsProfileCompleted = profile.HasRequiredProfileFields();
+        profile.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Hospital {UserId} updated its location (completed: {IsLocationCompleted}).",
+            userId, profile.HasCompletedLocation());
+
+        return Result<HospitalLocationDto>.Success(ToLocationDto(profile), "Hospital location updated successfully.");
+    }
+
     // ----------------------------------------------------------------- Helpers
 
     private async Task<HospitalProfile?> LoadAsync(string userId, bool tracking, CancellationToken ct)
@@ -208,6 +254,20 @@ public class HospitalProfileService : IHospitalProfileService
 
         return missing;
     }
+
+    private static HospitalLocationDto ToLocationDto(HospitalProfile profile) => new()
+    {
+        HospitalProfileId = profile.Id,
+        Address = profile.Address,
+        Governorate = profile.Governorate,
+        City = profile.City,
+        Latitude = profile.Latitude,
+        Longitude = profile.Longitude,
+        LocationDescription = profile.LocationDescription,
+        NearbyLandmark = profile.NearbyLandmark,
+        IsLocationCompleted = profile.HasCompletedLocation(),
+        UpdatedAt = profile.UpdatedAt
+    };
 
     internal static HospitalProfileDto ToDto(HospitalProfile profile) => new()
     {

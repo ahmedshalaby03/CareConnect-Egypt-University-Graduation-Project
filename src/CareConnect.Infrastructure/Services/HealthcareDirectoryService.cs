@@ -1,8 +1,10 @@
 using System.Globalization;
 using CareConnect.Application.Common.Models;
 using CareConnect.Application.DTOs.Directory;
+using CareConnect.Application.DTOs.HospitalDiscovery;
 using CareConnect.Application.DTOs.Specialties;
 using CareConnect.Application.Interfaces;
+using CareConnect.Domain.Entities;
 using CareConnect.Domain.Enums;
 using CareConnect.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,11 +21,24 @@ namespace CareConnect.Infrastructure.Services;
 public class HealthcareDirectoryService : IHealthcareDirectoryService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IGeoDistanceService _geoDistance;
 
-    public HealthcareDirectoryService(ApplicationDbContext context) => _context = context;
+    public HealthcareDirectoryService(ApplicationDbContext context, IGeoDistanceService geoDistance)
+    {
+        _context = context;
+        _geoDistance = geoDistance;
+    }
 
     // ------------------------------------------------------------- Hospitals
 
+    /// <summary>
+    /// Plain-search filters (name/specialty/location) run in SQL. HasAvailableAppointments
+    /// and distance sorting cannot translate to SQL (slot generation is a C# iterator, and
+    /// Haversine needs Math.Sin/Cos), so whenever either is in play this loads the full
+    /// filtered candidate set - reasonable for an academic-MVP hospital count - and finishes
+    /// filtering, sorting and paging in memory. A plain name/location search never pays that
+    /// cost: it stays fully paginated in SQL.
+    /// </summary>
     public async Task<Result<PagedResult<HospitalDirectoryItemDto>>> SearchHospitalsAsync(
         HospitalDirectoryQueryParameters query,
         CancellationToken ct = default)
@@ -37,7 +52,10 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
             var term = query.Search.Trim();
             hospitals = hospitals.Where(h =>
                 (h.HospitalName != null && EF.Functions.Like(h.HospitalName, $"%{term}%")) ||
-                (h.Description != null && EF.Functions.Like(h.Description, $"%{term}%")));
+                (h.Description != null && EF.Functions.Like(h.Description, $"%{term}%")) ||
+                (h.Address != null && EF.Functions.Like(h.Address, $"%{term}%")) ||
+                (h.City != null && EF.Functions.Like(h.City, $"%{term}%")) ||
+                (h.Governorate != null && EF.Functions.Like(h.Governorate, $"%{term}%")));
         }
 
         if (!string.IsNullOrWhiteSpace(query.Governorate))
@@ -58,40 +76,91 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                 h.HospitalSpecialties.Any(hs => hs.SpecialtyId == query.SpecialtyId.Value));
         }
 
-        var totalCount = await hospitals.CountAsync(ct);
+        if (query.HasLocation == true)
+        {
+            hospitals = hospitals.Where(h => h.Latitude != null && h.Longitude != null);
+        }
 
-        var items = await hospitals
-            .OrderBy(h => h.HospitalName)
+        if (query.HasAvailableBlood == true || query.BloodGroup.HasValue)
+        {
+            hospitals = hospitals.Where(h => h.BloodStocks.Any(s =>
+                s.AvailableUnits > 0
+                && s.IsAvailable
+                && (!query.BloodGroup.HasValue || s.BloodGroup == query.BloodGroup.Value)));
+        }
+
+        var needsInMemoryPipeline = query.HasAvailableAppointments.HasValue
+            || query.SortBy == HospitalSortBy.Distance;
+
+        if (!needsInMemoryPipeline)
+        {
+            var totalCount = await hospitals.CountAsync(ct);
+
+            var page = await hospitals
+                .OrderBy(h => h.HospitalName)
+                .Skip(query.Skip)
+                .Take(query.PageSize)
+                .Select(HospitalDirectoryProjections.HospitalProjection())
+                .ToListAsync(ct);
+
+            var pageIds = page.Select(h => h.Id).ToList();
+            var appointmentAvailability = await HospitalAvailabilityHelpers
+                .ComputeAppointmentAvailabilityAsync(_context, pageIds, ct);
+
+            var items = page
+                .Select(h => HospitalDirectoryProjections.ToDirectoryItemDto(
+                    h, appointmentAvailability, query.Latitude, query.Longitude, geoDistance: _geoDistance))
+                .ToList();
+
+            return Result<PagedResult<HospitalDirectoryItemDto>>.Success(
+                PagedResult<HospitalDirectoryItemDto>.Create(items, query.Page, query.PageSize, totalCount),
+                "Hospitals retrieved successfully.");
+        }
+
+        var candidates = await hospitals.Select(HospitalDirectoryProjections.HospitalProjection()).ToListAsync(ct);
+        var candidateIds = candidates.Select(h => h.Id).ToList();
+
+        var availability = await HospitalAvailabilityHelpers
+            .ComputeAppointmentAvailabilityAsync(_context, candidateIds, ct);
+
+        IEnumerable<HospitalDirectoryProjections.HospitalCandidate> filtered = candidates;
+
+        if (query.HasAvailableAppointments.HasValue)
+        {
+            filtered = filtered.Where(h =>
+                availability.TryGetValue(h.Id, out var a) && a.HasAvailableAppointments
+                == query.HasAvailableAppointments.Value);
+        }
+
+        var withDistance = filtered
+            .Select(h => (
+                Candidate: h,
+                DistanceKm: query.Latitude.HasValue && query.Longitude.HasValue && h.Latitude.HasValue && h.Longitude.HasValue
+                    ? _geoDistance.CalculateDistanceKm(query.Latitude.Value, query.Longitude.Value, h.Latitude.Value, h.Longitude.Value)
+                    : (double?)null))
+            .ToList();
+
+        var sorted = query.SortBy switch
+        {
+            HospitalSortBy.Distance => withDistance.OrderBy(x => x.DistanceKm ?? double.MaxValue),
+            HospitalSortBy.Newest => withDistance.OrderByDescending(x => x.Candidate.CreatedAt),
+            HospitalSortBy.City => withDistance.OrderBy(x => x.Candidate.City),
+            HospitalSortBy.Governorate => withDistance.OrderBy(x => x.Candidate.Governorate),
+            _ => withDistance.OrderBy(x => x.Candidate.HospitalName)
+        };
+
+        var sortedList = sorted.ToList();
+        var pagedTotal = sortedList.Count;
+
+        var pagedItems = sortedList
             .Skip(query.Skip)
             .Take(query.PageSize)
-            .Select(h => new HospitalDirectoryItemDto
-            {
-                Id = h.Id,
-                HospitalName = h.HospitalName ?? string.Empty,
-                Address = h.Address,
-                Governorate = h.Governorate,
-                City = h.City,
-                PhoneNumber = h.PhoneNumber,
-                Description = h.Description,
-                LogoUrl = h.LogoUrl,
-                Latitude = h.Latitude,
-                Longitude = h.Longitude,
-                Specialties = h.HospitalSpecialties
-                    .OrderBy(hs => hs.Specialty!.Name)
-                    .Select(hs => new SpecialtyOptionDto
-                    {
-                        Id = hs.Specialty!.Id,
-                        Name = hs.Specialty.Name,
-                        ArabicName = hs.Specialty.ArabicName
-                    })
-                    .ToList(),
-                NumberOfApprovedDoctors = h.DoctorAffiliations
-                    .Count(a => a.Status == AffiliationStatus.Approved)
-            })
-            .ToListAsync(ct);
+            .Select(x => HospitalDirectoryProjections.ToDirectoryItemDto(
+                x.Candidate, availability, query.Latitude, query.Longitude, x.DistanceKm))
+            .ToList();
 
         return Result<PagedResult<HospitalDirectoryItemDto>>.Success(
-            PagedResult<HospitalDirectoryItemDto>.Create(items, query.Page, query.PageSize, totalCount),
+            PagedResult<HospitalDirectoryItemDto>.Create(pagedItems, query.Page, query.PageSize, pagedTotal),
             "Hospitals retrieved successfully.");
     }
 

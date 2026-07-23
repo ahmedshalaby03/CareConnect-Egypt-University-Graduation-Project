@@ -1,0 +1,149 @@
+<div class="cc-page">
+  <header class="cc-page-header">
+    <h1>Hospital location</h1>
+    <p>Set your address and map coordinates so patients can find and get directions to you. CareConnect Egypt is built for hospitals located in Egypt.</p>
+  </header>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading your location…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Could not load your location</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else {
+    <div class="cc-card completion-banner" [class.completion-banner--complete]="location()?.isLocationCompleted">
+      <mat-icon>{{ location()?.isLocationCompleted ? 'check_circle' : 'info' }}</mat-icon>
+      <div>
+        <strong>{{ location()?.isLocationCompleted ? 'Location complete' : 'Location incomplete' }}</strong>
+        <p>
+          @if (location()?.isLocationCompleted) {
+            Your hospital will appear in nearby and distance-based searches.
+          } @else {
+            Add address, governorate, city and coordinates so patients can find you in nearby searches.
+          }
+        </p>
+      </div>
+    </div>
+
+    <form class="cc-card form" [formGroup]="form" (ngSubmit)="submit()">
+      @if (serverError()) {
+        <div class="cc-notice cc-notice--danger">
+          <p>{{ serverError() }}</p>
+          @if (serverErrorList().length > 0) {
+            <ul>
+              @for (message of serverErrorList(); track message) {
+                <li>{{ message }}</li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Address</mat-label>
+        <input matInput formControlName="address" maxlength="400" />
+        @if (form.controls.address.touched && form.controls.address.invalid) {
+          <mat-error>Address is required.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="form-row">
+        <mat-form-field appearance="outline">
+          <mat-label>Governorate</mat-label>
+          <mat-select formControlName="governorate">
+            @for (governorate of governorates; track governorate) {
+              <mat-option [value]="governorate">{{ governorate }}</mat-option>
+            }
+          </mat-select>
+          @if (form.controls.governorate.touched && form.controls.governorate.invalid) {
+            <mat-error>Governorate is required.</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>City</mat-label>
+          <input matInput formControlName="city" maxlength="100" />
+          @if (form.controls.city.touched && form.controls.city.invalid) {
+            <mat-error>City is required.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Nearby landmark (optional)</mat-label>
+        <input matInput formControlName="nearbyLandmark" maxlength="200" placeholder="e.g. Next to City Mall" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Location description (optional)</mat-label>
+        <textarea
+          matInput
+          formControlName="locationDescription"
+          rows="2"
+          maxlength="500"
+          placeholder="e.g. 3rd floor, block B"
+        ></textarea>
+      </mat-form-field>
+
+      <div class="coordinates-block">
+        <div class="coordinates-block__head">
+          <h2>Map coordinates</h2>
+          <button
+            type="button"
+            mat-stroked-button
+            [disabled]="locatingDevice()"
+            (click)="useCurrentLocation()"
+          >
+            @if (locatingDevice()) {
+              <mat-progress-spinner mode="indeterminate" diameter="18" />
+            } @else {
+              <mat-icon>my_location</mat-icon>
+            }
+            Use my current location
+          </button>
+        </div>
+        <p class="lead">
+          Clicking the button asks your browser for permission and fills the fields below for
+          you to review - nothing is saved until you press "Save changes".
+        </p>
+
+        <div class="form-row">
+          <mat-form-field appearance="outline">
+            <mat-label>Latitude (optional)</mat-label>
+            <input matInput type="number" step="0.000001" formControlName="latitude" />
+            @if (form.controls.latitude.hasError('min') || form.controls.latitude.hasError('max')) {
+              <mat-error>Latitude must be between -90 and 90.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Longitude (optional)</mat-label>
+            <input matInput type="number" step="0.000001" formControlName="longitude" />
+            @if (form.controls.longitude.hasError('min') || form.controls.longitude.hasError('max')) {
+              <mat-error>Longitude must be between -180 and 180.</mat-error>
+            }
+          </mat-form-field>
+        </div>
+      </div>
+
+      @if (location()?.updatedAt) {
+        <p class="updated-at">Last updated {{ location()!.updatedAt | date: 'medium' }}</p>
+      }
+
+      <div class="form-actions">
+        <button type="submit" mat-flat-button color="primary" [disabled]="saving()">
+          @if (saving()) {
+            <mat-progress-spinner mode="indeterminate" diameter="18" />
+          } @else {
+            Save changes
+          }
+        </button>
+      </div>
+    </form>
+  }
+</div>

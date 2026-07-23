@@ -37,6 +37,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
   Hospital: [
     { label: 'Dashboard', route: '/dashboard/hospital', icon: 'dashboard', exact: true },
     { label: 'Profile', route: '/dashboard/hospital/profile', icon: 'domain' },
+    { label: 'Location', route: '/dashboard/hospital/location', icon: 'near_me' },
     { label: 'Requests', route: '/dashboard/hospital/doctor-requests', icon: 'how_to_reg' },
     { label: 'Our doctors', route: '/dashboard/hospital/doctors', icon: 'groups' },
     { label: 'Appointments', route: '/dashboard/hospital/appointments', icon: 'event_note' },

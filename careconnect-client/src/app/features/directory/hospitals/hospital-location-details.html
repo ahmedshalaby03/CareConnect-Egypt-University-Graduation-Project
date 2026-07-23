@@ -1,0 +1,90 @@
+<div class="cc-page">
+  <a [routerLink]="['/hospitals', id()]" mat-button class="back">
+    <mat-icon>arrow_back</mat-icon>
+    Back to hospital
+  </a>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="36" />
+      <p>Loading location…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Location unavailable</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (location(); as l) {
+    <header class="cc-page-header">
+      <h1>{{ l.hospitalName }}</h1>
+      <p>Location and directions</p>
+    </header>
+
+    <section class="cc-card">
+      <dl class="facts">
+        <div class="facts__full">
+          <dt>Address</dt>
+          <dd>{{ l.address ?? 'Not provided' }}</dd>
+        </div>
+        <div>
+          <dt>Governorate</dt>
+          <dd>{{ l.governorate ?? '—' }}</dd>
+        </div>
+        <div>
+          <dt>City</dt>
+          <dd>{{ l.city ?? '—' }}</dd>
+        </div>
+        @if (l.nearbyLandmark) {
+          <div class="facts__full">
+            <dt>Nearby landmark</dt>
+            <dd>{{ l.nearbyLandmark }}</dd>
+          </div>
+        }
+        @if (l.locationDescription) {
+          <div class="facts__full">
+            <dt>Location description</dt>
+            <dd>{{ l.locationDescription }}</dd>
+          </div>
+        }
+        @if (l.phoneNumber) {
+          <div>
+            <dt>Phone</dt>
+            <dd>{{ l.phoneNumber }}</dd>
+          </div>
+        }
+        @if (l.latitude !== null && l.longitude !== null) {
+          <div>
+            <dt>Coordinates</dt>
+            <dd>{{ l.latitude }}, {{ l.longitude }}</dd>
+          </div>
+        }
+      </dl>
+
+      @if (l.distanceKm !== null) {
+        <p class="distance">
+          <mat-icon>near_me</mat-icon>
+          Approximately {{ l.distanceKm }} km away (straight-line distance)
+        </p>
+      } @else {
+        <button type="button" mat-stroked-button [disabled]="locatingDevice()" (click)="findMyDistance()">
+          @if (locatingDevice()) {
+            <mat-progress-spinner mode="indeterminate" diameter="18" />
+          } @else {
+            <mat-icon>near_me</mat-icon>
+          }
+          Show distance from my location
+        </button>
+      }
+
+      <div class="actions">
+        @if (l.directionsUrl) {
+          <a [href]="l.directionsUrl" target="_blank" rel="noopener" mat-flat-button color="primary">
+            <mat-icon>directions</mat-icon>
+            Get directions
+          </a>
+        }
+      </div>
+    </section>
+  }
+</div>

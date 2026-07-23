@@ -204,6 +204,13 @@ export const routes: Routes = [
           import('./features/hospital/profile/hospital-profile').then((m) => m.HospitalProfilePage),
       },
       {
+        path: 'dashboard/hospital/location',
+        title: 'Hospital location - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/hospital/location/hospital-location').then((m) => m.HospitalLocationPage),
+      },
+      {
         path: 'dashboard/hospital/doctor-requests',
         title: 'Doctor requests - CareConnect Egypt',
         canActivate: [roleGuard('Hospital')],
@@ -321,6 +328,14 @@ export const routes: Routes = [
         title: 'Hospital - CareConnect Egypt',
         loadComponent: () =>
           import('./features/directory/hospitals/hospital-details').then((m) => m.HospitalDetails),
+      },
+      {
+        path: 'hospitals/:id/location',
+        title: 'Hospital location - CareConnect Egypt',
+        loadComponent: () =>
+          import('./features/directory/hospitals/hospital-location-details').then(
+            (m) => m.HospitalLocationDetailsPage,
+          ),
       },
       {
         path: 'doctors',

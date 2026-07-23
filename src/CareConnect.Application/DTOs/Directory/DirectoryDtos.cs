@@ -1,5 +1,7 @@
 using CareConnect.Application.Common.Models;
+using CareConnect.Application.DTOs.HospitalDiscovery;
 using CareConnect.Application.DTOs.Specialties;
+using CareConnect.Domain.Enums;
 
 namespace CareConnect.Application.DTOs.Directory;
 
@@ -13,6 +15,19 @@ public class HospitalDirectoryQueryParameters : PagedQueryParameters
     public string? Governorate { get; set; }
     public string? City { get; set; }
     public Guid? SpecialtyId { get; set; }
+
+    /// <summary>Only hospitals with both coordinates set.</summary>
+    public bool? HasLocation { get; set; }
+
+    public bool? HasAvailableAppointments { get; set; }
+    public bool? HasAvailableBlood { get; set; }
+    public BloodGroup? BloodGroup { get; set; }
+
+    public HospitalSortBy SortBy { get; set; } = HospitalSortBy.Name;
+
+    /// <summary>Required together, and required when SortBy is Distance - see the validator.</summary>
+    public decimal? Latitude { get; set; }
+    public decimal? Longitude { get; set; }
 }
 
 public class DoctorDirectoryQueryParameters : PagedQueryParameters
@@ -43,10 +58,30 @@ public class HospitalDirectoryItemDto
     public string? LogoUrl { get; init; }
     public decimal? Latitude { get; init; }
     public decimal? Longitude { get; init; }
+    public string? LocationDescription { get; init; }
+    public string? NearbyLandmark { get; init; }
+
+    /// <summary>Address + Governorate + City + both coordinates present - required for nearby/distance search.</summary>
+    public bool IsLocationCompleted { get; init; }
+
+    /// <summary>
+    /// Straight-line distance from the coordinates supplied on this request, when any were
+    /// given. Null on a plain search with no location involved.
+    /// </summary>
+    public double? DistanceKm { get; init; }
+
+    public string? DirectionsUrl { get; init; }
 
     public IReadOnlyList<SpecialtyOptionDto> Specialties { get; init; } = [];
 
     public int NumberOfApprovedDoctors { get; init; }
+
+    /// <summary>True when at least one bookable slot exists in the next 7 days - see IHospitalDiscoveryService.</summary>
+    public bool HasAvailableAppointments { get; init; }
+    public DateTime? NextAvailableAppointmentAt { get; init; }
+
+    public bool IsBloodAvailable { get; init; }
+    public IReadOnlyList<string> AvailableBloodGroups { get; init; } = [];
 }
 
 public class HospitalDirectoryDetailsDto : HospitalDirectoryItemDto
