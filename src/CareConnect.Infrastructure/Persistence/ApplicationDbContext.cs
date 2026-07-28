@@ -29,6 +29,7 @@ public class ApplicationDbContext
     public DbSet<AppointmentDoctorReview> AppointmentDoctorReviews => Set<AppointmentDoctorReview>();
     public DbSet<AppointmentHospitalReview> AppointmentHospitalReviews => Set<AppointmentHospitalReview>();
     public DbSet<MedicalServiceProviderReview> MedicalServiceProviderReviews => Set<MedicalServiceProviderReview>();
+    public DbSet<Notification> Notifications => Set<Notification>();
 
     public DbSet<Specialty> Specialties => Set<Specialty>();
     public DbSet<HospitalSpecialty> HospitalSpecialties => Set<HospitalSpecialty>();

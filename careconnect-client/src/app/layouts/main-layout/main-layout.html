@@ -26,6 +26,59 @@
     @if (user(); as currentUser) {
       <button
         type="button"
+        mat-icon-button
+        class="app-bar__notifications"
+        aria-label="Open notifications"
+        [matBadge]="badgeText()"
+        [matBadgeHidden]="unreadCount() === 0"
+        matBadgeColor="warn"
+        [matMenuTriggerFor]="notificationsMenu"
+        (menuOpened)="loadRecentNotifications()"
+      >
+        <mat-icon>notifications</mat-icon>
+      </button>
+
+      <mat-menu #notificationsMenu="matMenu" xPosition="before" class="notification-menu">
+        <div class="notification-menu__head" (click)="$event.stopPropagation()">
+          <strong>Notifications</strong>
+          @if (unreadCount() > 0) {
+            <button mat-button type="button" (click)="markAllNotificationsRead()">
+              Mark all read
+            </button>
+          }
+        </div>
+
+        @if (notificationsLoading()) {
+          <div class="notification-menu__state">Loading notifications…</div>
+        } @else if (recentNotifications().length === 0) {
+          <div class="notification-menu__state">You have no notifications yet.</div>
+        } @else {
+          @for (item of recentNotifications(); track item.id) {
+            <button
+              mat-menu-item
+              type="button"
+              class="notification-menu__item"
+              [class.notification-menu__item--unread]="!item.isRead"
+              (click)="openNotification(item)"
+            >
+              <mat-icon>{{ notificationIcon(item) }}</mat-icon>
+              <span class="notification-menu__copy">
+                <strong>{{ item.title }}</strong>
+                <span>{{ item.message }}</span>
+                <small>{{ item.createdAt | date: 'short' }}</small>
+              </span>
+            </button>
+          }
+        }
+
+        <a mat-menu-item routerLink="/notifications" class="notification-menu__all">
+          <mat-icon>list</mat-icon>
+          <span>View all notifications</span>
+        </a>
+      </mat-menu>
+
+      <button
+        type="button"
         mat-button
         class="app-bar__account"
         [matMenuTriggerFor]="accountMenu"

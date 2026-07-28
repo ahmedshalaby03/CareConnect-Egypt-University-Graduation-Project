@@ -60,6 +60,7 @@ public static class DependencyInjection
         services.AddScoped<IReviewService>(sp => sp.GetRequiredService<ReviewService>());
         services.AddScoped<IRatingQueryService>(sp => sp.GetRequiredService<ReviewService>());
         services.AddScoped<IReviewModerationService>(sp => sp.GetRequiredService<ReviewService>());
+        services.AddScoped<INotificationService, NotificationService>();
 
         services.AddScoped<IDoctorAvailabilityService, DoctorAvailabilityService>();
         services.AddScoped<IDoctorUnavailablePeriodService, DoctorUnavailablePeriodService>();

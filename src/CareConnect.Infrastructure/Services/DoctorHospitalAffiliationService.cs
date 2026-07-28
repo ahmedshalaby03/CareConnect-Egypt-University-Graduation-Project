@@ -19,13 +19,16 @@ public class DoctorHospitalAffiliationService : IDoctorHospitalAffiliationServic
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<DoctorHospitalAffiliationService> _logger;
+    private readonly INotificationService _notifications;
 
     public DoctorHospitalAffiliationService(
         ApplicationDbContext context,
-        ILogger<DoctorHospitalAffiliationService> logger)
+        ILogger<DoctorHospitalAffiliationService> logger,
+        INotificationService notifications)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     // =========================================================== Doctor side
@@ -164,6 +167,11 @@ public class DoctorHospitalAffiliationService : IDoctorHospitalAffiliationServic
         };
 
         _context.DoctorHospitalAffiliations.Add(affiliation);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.AffiliationSubmitted(
+                affiliation.Id,
+                hospital.UserId),
+            ct);
         await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation(
@@ -377,6 +385,12 @@ public class DoctorHospitalAffiliationService : IDoctorHospitalAffiliationServic
         affiliation.RejectionReason = null;
         affiliation.UpdatedAt = DateTime.UtcNow;
 
+        await QueueDoctorUpdateAsync(
+            affiliation,
+            "approved",
+            "Affiliation request approved",
+            NotificationType.Success,
+            ct);
         await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Hospital {UserId} approved request {RequestId}.", hospitalUserId, requestId);
@@ -412,6 +426,12 @@ public class DoctorHospitalAffiliationService : IDoctorHospitalAffiliationServic
         affiliation.IsPrimary = false;
         affiliation.UpdatedAt = DateTime.UtcNow;
 
+        await QueueDoctorUpdateAsync(
+            affiliation,
+            "rejected",
+            "Affiliation request rejected",
+            NotificationType.Warning,
+            ct);
         await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Hospital {UserId} rejected request {RequestId}.", hospitalUserId, requestId);
@@ -535,6 +555,32 @@ public class DoctorHospitalAffiliationService : IDoctorHospitalAffiliationServic
             .Where(h => h.UserId == userId)
             .Select(h => (Guid?)h.Id)
             .FirstOrDefaultAsync(ct);
+
+    private async Task QueueDoctorUpdateAsync(
+        DoctorHospitalAffiliation affiliation,
+        string transition,
+        string title,
+        NotificationType type,
+        CancellationToken ct)
+    {
+        var doctorUserId = await _context.DoctorProfiles
+            .Where(profile => profile.Id == affiliation.DoctorProfileId)
+            .Select(profile => profile.UserId)
+            .FirstOrDefaultAsync(ct);
+        if (doctorUserId is null)
+        {
+            return;
+        }
+
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.AffiliationDoctorUpdate(
+                affiliation.Id,
+                doctorUserId,
+                transition,
+                title,
+                type),
+            ct);
+    }
 
     private IQueryable<DoctorHospitalAffiliation> FilterHospitalAffiliations(
         Guid hospitalProfileId,

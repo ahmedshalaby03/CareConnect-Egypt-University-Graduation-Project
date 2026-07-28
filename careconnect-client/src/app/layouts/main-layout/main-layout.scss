@@ -97,6 +97,59 @@
   height: 48px;
 }
 
+.app-bar__notifications {
+  margin-inline-end: 4px;
+  color: #fff;
+}
+
+.notification-menu__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  min-width: min(380px, calc(100vw - 24px));
+  padding: 8px 14px 4px;
+}
+
+.notification-menu__state {
+  max-width: 380px;
+  padding: 20px 16px;
+  color: var(--mat-sys-on-surface-variant);
+  text-align: center;
+}
+
+.notification-menu__item {
+  height: auto;
+  min-height: 72px;
+  padding-block: 8px;
+
+  &--unread {
+    background: color-mix(in srgb, var(--cc-brand) 9%, white);
+  }
+}
+
+.notification-menu__copy {
+  display: grid;
+  gap: 2px;
+  max-width: 330px;
+  white-space: normal;
+  line-height: 1.25;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  small {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.notification-menu__all {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+}
+
 .app-bar__avatar {
   display: grid;
   place-items: center;

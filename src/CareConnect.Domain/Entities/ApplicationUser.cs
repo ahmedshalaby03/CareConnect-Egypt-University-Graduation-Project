@@ -14,6 +14,7 @@ public class ApplicationUser : IdentityUser
     public DateTime? LastLoginAt { get; set; }
 
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+    public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
     // Exactly one of these is populated, depending on the role chosen at registration.
     public PatientProfile? PatientProfile { get; set; }

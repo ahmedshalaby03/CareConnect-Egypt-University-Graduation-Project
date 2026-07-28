@@ -21,11 +21,16 @@ public class BloodRequestService : IBloodRequestService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<BloodRequestService> _logger;
+    private readonly INotificationService _notifications;
 
-    public BloodRequestService(ApplicationDbContext context, ILogger<BloodRequestService> logger)
+    public BloodRequestService(
+        ApplicationDbContext context,
+        ILogger<BloodRequestService> logger,
+        INotificationService notifications)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     // =========================================================== Patient side
@@ -208,6 +213,8 @@ public class BloodRequestService : IBloodRequestService
         }
 
         _context.BloodRequests.Add(bloodRequest);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.BloodSubmitted(bloodRequest.Id, hospital.User!.Id), ct);
         await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation(
@@ -253,6 +260,12 @@ public class BloodRequestService : IBloodRequestService
         bloodRequest.CancelledAt = DateTime.UtcNow;
         bloodRequest.UpdatedAt = DateTime.UtcNow;
 
+        var hospitalUserId = await _context.HospitalProfiles.AsNoTracking()
+            .Where(profile => profile.Id == bloodRequest.HospitalProfileId)
+            .Select(profile => profile.UserId)
+            .FirstAsync(ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.BloodCancelledByPatient(requestId, hospitalUserId), ct);
         await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Patient {PatientProfileId} cancelled blood request {RequestId}.",
@@ -395,6 +408,10 @@ public class BloodRequestService : IBloodRequestService
             bloodRequest.ApprovedAt = DateTime.UtcNow;
             bloodRequest.UpdatedAt = DateTime.UtcNow;
 
+            await QueuePatientUpdateAsync(
+                bloodRequest, "approved", "Blood request approved",
+                "Your blood request was approved and the requested units were allocated.",
+                NotificationType.Success, ct);
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -441,6 +458,10 @@ public class BloodRequestService : IBloodRequestService
         bloodRequest.RejectedAt = DateTime.UtcNow;
         bloodRequest.UpdatedAt = DateTime.UtcNow;
 
+        await QueuePatientUpdateAsync(
+            bloodRequest, "rejected", "Blood request rejected",
+            "Your blood request was rejected.",
+            NotificationType.Warning, ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<HospitalBloodRequestDto>.Success(
@@ -470,6 +491,10 @@ public class BloodRequestService : IBloodRequestService
         bloodRequest.FulfilledAt = DateTime.UtcNow;
         bloodRequest.UpdatedAt = DateTime.UtcNow;
 
+        await QueuePatientUpdateAsync(
+            bloodRequest, "fulfilled", "Blood request fulfilled",
+            "Your approved blood request was marked as fulfilled.",
+            NotificationType.Success, ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<HospitalBloodRequestDto>.Success(
@@ -672,6 +697,23 @@ public class BloodRequestService : IBloodRequestService
             .Where(r => r.Id == requestId)
             .Select(HospitalProjection())
             .FirstAsync(ct);
+
+    private async Task QueuePatientUpdateAsync(
+        BloodRequest request,
+        string transition,
+        string title,
+        string message,
+        NotificationType type,
+        CancellationToken ct)
+    {
+        var patientUserId = await _context.PatientProfiles.AsNoTracking()
+            .Where(profile => profile.Id == request.PatientProfileId)
+            .Select(profile => profile.UserId)
+            .FirstAsync(ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.BloodPatientUpdate(
+                request.Id, patientUserId, transition, title, message, type), ct);
+    }
 
     private static Expression<Func<BloodRequest, PatientBloodRequestDto>> PatientProjection() =>
         r => new PatientBloodRequestDto

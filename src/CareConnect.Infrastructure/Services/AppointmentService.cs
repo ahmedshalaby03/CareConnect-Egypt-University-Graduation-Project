@@ -20,11 +20,16 @@ public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<AppointmentService> _logger;
+    private readonly INotificationService _notifications;
 
-    public AppointmentService(ApplicationDbContext context, ILogger<AppointmentService> logger)
+    public AppointmentService(
+        ApplicationDbContext context,
+        ILogger<AppointmentService> logger,
+        INotificationService notifications)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     // =========================================================== Patient side
@@ -304,6 +309,8 @@ public class AppointmentService : IAppointmentService
                     "This slot was just booked by another patient. Please choose a different time.");
             }
 
+            await _notifications.QueueAsync(
+                WorkflowNotificationFactory.AppointmentBooked(appointment.Id, doctor.User!.Id), ct);
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -356,6 +363,14 @@ public class AppointmentService : IAppointmentService
         }
 
         ApplyCancellation(appointment, patientUserId, request.CancellationReason);
+        var recipients = await GetAppointmentRecipientsAsync(appointmentId, ct);
+        await _notifications.QueueManyAsync(
+        [
+            WorkflowNotificationFactory.AppointmentCancelledForOwner(
+                appointmentId, recipients.DoctorUserId, "doctor"),
+            WorkflowNotificationFactory.AppointmentCancelledForOwner(
+                appointmentId, recipients.HospitalUserId, "hospital")
+        ], ct);
         await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation("Patient {PatientProfileId} cancelled appointment {AppointmentId}.",
@@ -503,6 +518,12 @@ public class AppointmentService : IAppointmentService
         appointment.ConfirmedAt = DateTime.UtcNow;
         appointment.UpdatedAt = DateTime.UtcNow;
 
+        var recipients = await GetAppointmentRecipientsAsync(appointmentId, ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.AppointmentPatientUpdate(
+                appointmentId, recipients.PatientUserId, "confirmed",
+                "Appointment confirmed", "Your appointment request was confirmed.",
+                NotificationType.Success), ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<DoctorAppointmentDto>.Success(
@@ -532,6 +553,12 @@ public class AppointmentService : IAppointmentService
         appointment.RejectedAt = DateTime.UtcNow;
         appointment.UpdatedAt = DateTime.UtcNow;
 
+        var recipients = await GetAppointmentRecipientsAsync(appointmentId, ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.AppointmentPatientUpdate(
+                appointmentId, recipients.PatientUserId, "rejected",
+                "Appointment rejected", "Your appointment request was rejected.",
+                NotificationType.Warning), ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<DoctorAppointmentDto>.Success(
@@ -557,6 +584,12 @@ public class AppointmentService : IAppointmentService
         }
 
         ApplyCancellation(appointment, doctorUserId, request.CancellationReason);
+        var recipients = await GetAppointmentRecipientsAsync(appointmentId, ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.AppointmentPatientUpdate(
+                appointmentId, recipients.PatientUserId, "cancelled-by-doctor",
+                "Appointment cancelled", "Your appointment was cancelled by the doctor.",
+                NotificationType.Warning), ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<DoctorAppointmentDto>.Success(
@@ -584,6 +617,13 @@ public class AppointmentService : IAppointmentService
         appointment.CompletedAt = DateTime.UtcNow;
         appointment.UpdatedAt = DateTime.UtcNow;
 
+        var recipients = await GetAppointmentRecipientsAsync(appointmentId, ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.AppointmentPatientUpdate(
+                appointmentId, recipients.PatientUserId, "completed",
+                "Appointment completed",
+                "Your appointment has been marked as completed. You may now leave a verified review.",
+                NotificationType.Information), ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<DoctorAppointmentDto>.Success(
@@ -610,6 +650,13 @@ public class AppointmentService : IAppointmentService
         appointment.Status = AppointmentStatus.NoShow;
         appointment.UpdatedAt = DateTime.UtcNow;
 
+        var recipients = await GetAppointmentRecipientsAsync(appointmentId, ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.AppointmentPatientUpdate(
+                appointmentId, recipients.PatientUserId, "no-show",
+                "Appointment marked as no-show",
+                "Your appointment was marked as a no-show.",
+                NotificationType.Warning), ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<DoctorAppointmentDto>.Success(
@@ -895,6 +942,21 @@ public class AppointmentService : IAppointmentService
             .Where(a => a.Id == appointmentId)
             .Select(DoctorProjection())
             .FirstAsync(ct);
+
+    private async Task<AppointmentRecipients> GetAppointmentRecipientsAsync(
+        Guid appointmentId, CancellationToken ct) =>
+        await _context.Appointments.AsNoTracking()
+            .Where(appointment => appointment.Id == appointmentId)
+            .Select(appointment => new AppointmentRecipients(
+                appointment.PatientProfile!.UserId,
+                appointment.DoctorProfile!.UserId,
+                appointment.HospitalProfile!.UserId))
+            .FirstAsync(ct);
+
+    private sealed record AppointmentRecipients(
+        string PatientUserId,
+        string DoctorUserId,
+        string HospitalUserId);
 
     private static System.Linq.Expressions.Expression<Func<Appointment, PatientAppointmentDto>> PatientProjection() =>
         a => new PatientAppointmentDto

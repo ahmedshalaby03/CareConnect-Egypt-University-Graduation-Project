@@ -1,0 +1,125 @@
+<section class="page-shell">
+  <header class="page-head">
+    <div>
+      <p class="cc-eyebrow">Your activity</p>
+      <h1>Notifications</h1>
+      <p>
+        {{ unreadCount() }} unread · Updates from appointments, requests, affiliations,
+        reviews, and your account.
+      </p>
+    </div>
+    <button mat-stroked-button type="button" (click)="markAllRead()">
+      <mat-icon>done_all</mat-icon>
+      Mark all as read
+    </button>
+  </header>
+
+  <mat-card class="filters-card">
+    <form [formGroup]="filters" class="cc-filters" (ngSubmit)="applyFilters()">
+      <mat-form-field appearance="outline">
+        <mat-label>Search</mat-label>
+        <input matInput formControlName="search" maxlength="150" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Read status</mat-label>
+        <mat-select formControlName="isRead">
+          <mat-option [value]="null">All</mat-option>
+          <mat-option [value]="false">Unread</mat-option>
+          <mat-option [value]="true">Read</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Category</mat-label>
+        <mat-select formControlName="category">
+          <mat-option [value]="null">All categories</mat-option>
+          @for (category of categories; track category) {
+            <mat-option [value]="category">{{ categoryLabels[category] }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>From</mat-label>
+        <input matInput type="date" formControlName="dateFrom" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>To</mat-label>
+        <input matInput type="date" formControlName="dateTo" />
+      </mat-form-field>
+
+      <div class="filter-actions">
+        <button mat-flat-button type="submit">Apply</button>
+        <button mat-button type="button" (click)="clearFilters()">Clear</button>
+      </div>
+    </form>
+  </mat-card>
+
+  @if (loading()) {
+    <mat-progress-bar mode="indeterminate" />
+  } @else if (errorMessage(); as message) {
+    <div class="cc-notice cc-notice--danger">
+      <mat-icon>cloud_off</mat-icon>
+      <span>{{ message }}</span>
+      <button mat-button type="button" (click)="applyFilters()">Retry</button>
+    </div>
+  } @else if (items().length === 0) {
+    <div class="cc-empty-state">
+      <mat-icon>notifications_none</mat-icon>
+      <h2>No notifications found</h2>
+      <p>New activity will appear here.</p>
+    </div>
+  } @else {
+    <div class="notification-list">
+      @for (item of items(); track item.id) {
+        <article
+          class="notification"
+          [class.notification--unread]="!item.isRead"
+          [class]="typeClass(item)"
+        >
+          <div class="notification__icon"><mat-icon>{{ iconFor(item) }}</mat-icon></div>
+          <button class="notification__content" type="button" (click)="open(item)">
+            <span class="notification__heading">
+              <strong>{{ item.title }}</strong>
+              @if (!item.isRead) { <span class="notification__dot" aria-label="Unread"></span> }
+            </span>
+            <span>{{ item.message }}</span>
+            <small>
+              {{ categoryLabels[item.category] }} · {{ item.createdAt | date: 'medium' }}
+            </small>
+          </button>
+          <div class="notification__actions">
+            <button
+              mat-icon-button
+              type="button"
+              [disabled]="busyId() === item.id"
+              [attr.aria-label]="item.isRead ? 'Mark as unread' : 'Mark as read'"
+              (click)="toggleRead(item)"
+            >
+              <mat-icon>{{ item.isRead ? 'mark_email_unread' : 'mark_email_read' }}</mat-icon>
+            </button>
+            <button
+              mat-icon-button
+              type="button"
+              [disabled]="busyId() === item.id"
+              aria-label="Dismiss notification"
+              (click)="dismiss(item)"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+  }
+
+  <mat-paginator
+    [length]="totalCount()"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="[10, 20, 50]"
+    (page)="onPage($event)"
+  />
+</section>

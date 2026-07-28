@@ -40,6 +40,14 @@ export const routes: Routes = [
       import('./layouts/main-layout/main-layout').then((m) => m.MainLayout),
     children: [
       {
+        path: 'notifications',
+        title: 'Notifications - CareConnect Egypt',
+        loadComponent: () =>
+          import('./features/notifications/notification-center').then(
+            (m) => m.NotificationCenter,
+          ),
+      },
+      {
         path: 'dashboard/patient',
         title: 'Patient dashboard - CareConnect Egypt',
         canActivate: [roleGuard('Patient')],

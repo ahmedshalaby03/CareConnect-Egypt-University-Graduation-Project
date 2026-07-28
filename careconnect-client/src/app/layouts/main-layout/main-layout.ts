@@ -1,11 +1,24 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { DatePipe, DOCUMENT } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { MatBadgeModule } from '@angular/material/badge';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { fromEvent, merge, Observable, timer } from 'rxjs';
+import { AppNotification } from '../../core/models/notification.model';
 import { ROLE_LABELS, UserRole } from '../../core/models/user.model';
 import { AuthService } from '../../core/services/auth.service';
+import { InAppNotificationService } from '../../core/services/in-app-notification.service';
 
 interface NavLink {
   label: string;
@@ -84,7 +97,9 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     RouterOutlet,
     RouterLink,
     RouterLinkActive,
+    DatePipe,
     MatToolbarModule,
+    MatBadgeModule,
     MatButtonModule,
     MatIconModule,
     MatMenuModule,
@@ -95,8 +110,16 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
 })
 export class MainLayout {
   private readonly auth = inject(AuthService);
+  private readonly notifications = inject(InAppNotificationService);
+  private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly document = inject(DOCUMENT);
 
   protected readonly user = this.auth.currentUser;
+  protected readonly unreadCount = this.notifications.unreadCount;
+  protected readonly recentNotifications = signal<AppNotification[]>([]);
+  protected readonly notificationsLoading = signal(false);
+  protected readonly badgeText = computed(() => this.unreadCount() > 99 ? '99+' : `${this.unreadCount()}`);
 
   protected readonly navLinks = computed<NavLink[]>(() => {
     const role = this.user()?.role;
@@ -120,7 +143,72 @@ export class MainLayout {
     return letters.toUpperCase();
   });
 
+  constructor() {
+    const refreshes: Observable<unknown>[] = [timer(0, 60_000)];
+    const browserWindow = this.document.defaultView;
+    if (browserWindow) {
+      refreshes.push(fromEvent(browserWindow, 'focus'));
+    }
+
+    merge(...refreshes)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.notifications.refreshUnreadCount().subscribe());
+  }
+
+  protected loadRecentNotifications(): void {
+    this.notificationsLoading.set(true);
+    this.notifications.getRecent().subscribe({
+      next: (items) => {
+        this.recentNotifications.set(items);
+        this.notificationsLoading.set(false);
+      },
+      error: () => this.notificationsLoading.set(false),
+    });
+  }
+
+  protected openNotification(item: AppNotification): void {
+    const navigate = () => void this.router.navigateByUrl(this.safeInternalRoute(item.actionRoute));
+    if (item.isRead) {
+      navigate();
+      return;
+    }
+
+    this.notifications.markAsRead(item.id).subscribe({
+      next: () => {
+        this.notifications.unreadCount.update((count) => Math.max(0, count - 1));
+        navigate();
+      },
+    });
+  }
+
+  protected notificationIcon(item: AppNotification): string {
+    switch (item.category) {
+      case 1: return 'event';
+      case 2: return 'fact_check';
+      case 3: return 'bloodtype';
+      case 4: return 'medical_services';
+      case 5: return 'handshake';
+      case 6: return 'star';
+      case 7: return 'person';
+      default: return 'notifications';
+    }
+  }
+
+  protected markAllNotificationsRead(): void {
+    this.notifications.markAllAsRead().subscribe({
+      next: () => this.loadRecentNotifications(),
+    });
+  }
+
   protected logout(): void {
     this.auth.logout();
+  }
+
+  private safeInternalRoute(route: string | null): string {
+    if (!route || !route.startsWith('/') || route.includes('//') ||
+        route.includes('://') || route.toLowerCase().startsWith('javascript:')) {
+      return '/notifications';
+    }
+    return route;
   }
 }
