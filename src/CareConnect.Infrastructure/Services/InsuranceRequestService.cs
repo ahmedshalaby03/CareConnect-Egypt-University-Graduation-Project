@@ -20,11 +20,16 @@ public class InsuranceRequestService : IInsuranceRequestService
 {
     private readonly ApplicationDbContext _context;
     private readonly ILogger<InsuranceRequestService> _logger;
+    private readonly INotificationService _notifications;
 
-    public InsuranceRequestService(ApplicationDbContext context, ILogger<InsuranceRequestService> logger)
+    public InsuranceRequestService(
+        ApplicationDbContext context,
+        ILogger<InsuranceRequestService> logger,
+        INotificationService notifications)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     // =========================================================== Patient side
@@ -234,6 +239,9 @@ public class InsuranceRequestService : IInsuranceRequestService
                     "This appointment already has an active insurance request awaiting a decision.");
             }
 
+            await _notifications.QueueAsync(
+                WorkflowNotificationFactory.InsuranceSubmitted(
+                    insuranceRequest.Id, hospital.User!.Id), ct);
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -408,6 +416,10 @@ public class InsuranceRequestService : IInsuranceRequestService
         insuranceRequest.ReviewedAt = DateTime.UtcNow;
         insuranceRequest.UpdatedAt = DateTime.UtcNow;
 
+        await QueuePatientUpdateAsync(
+            insuranceRequest, "under-review", "Insurance request under review",
+            "The hospital started reviewing your insurance request.",
+            NotificationType.Information, ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<HospitalInsuranceRequestDto>.Success(
@@ -449,6 +461,10 @@ public class InsuranceRequestService : IInsuranceRequestService
         insuranceRequest.ApprovedAt = DateTime.UtcNow;
         insuranceRequest.UpdatedAt = DateTime.UtcNow;
 
+        await QueuePatientUpdateAsync(
+            insuranceRequest, "approved", "Insurance request approved",
+            "Your insurance request was approved.",
+            NotificationType.Success, ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<HospitalInsuranceRequestDto>.Success(
@@ -479,6 +495,10 @@ public class InsuranceRequestService : IInsuranceRequestService
         insuranceRequest.RejectedAt = DateTime.UtcNow;
         insuranceRequest.UpdatedAt = DateTime.UtcNow;
 
+        await QueuePatientUpdateAsync(
+            insuranceRequest, "rejected", "Insurance request rejected",
+            "Your insurance request was rejected.",
+            NotificationType.Warning, ct);
         await _context.SaveChangesAsync(ct);
 
         return Result<HospitalInsuranceRequestDto>.Success(
@@ -657,6 +677,23 @@ public class InsuranceRequestService : IInsuranceRequestService
             .Where(r => r.Id == requestId)
             .Select(HospitalProjection())
             .FirstAsync(ct);
+
+    private async Task QueuePatientUpdateAsync(
+        InsuranceRequest request,
+        string transition,
+        string title,
+        string message,
+        NotificationType type,
+        CancellationToken ct)
+    {
+        var patientUserId = await _context.PatientProfiles.AsNoTracking()
+            .Where(profile => profile.Id == request.PatientProfileId)
+            .Select(profile => profile.UserId)
+            .FirstAsync(ct);
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.InsurancePatientUpdate(
+                request.Id, patientUserId, transition, title, message, type), ct);
+    }
 
     private static Expression<Func<InsuranceRequest, PatientInsuranceRequestDto>> PatientProjection() =>
         r => new PatientInsuranceRequestDto

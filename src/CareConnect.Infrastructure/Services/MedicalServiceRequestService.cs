@@ -25,13 +25,16 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
 
     private readonly ApplicationDbContext _context;
     private readonly ILogger<MedicalServiceRequestService> _logger;
+    private readonly INotificationService _notifications;
 
     public MedicalServiceRequestService(
         ApplicationDbContext context,
-        ILogger<MedicalServiceRequestService> logger)
+        ILogger<MedicalServiceRequestService> logger,
+        INotificationService notifications)
     {
         _context = context;
         _logger = logger;
+        _notifications = notifications;
     }
 
     // ================================================================ Patient
@@ -81,7 +84,8 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
                 CategoryName = service.MedicalServiceCategory!.Name,
                 CategoryIsActive = service.MedicalServiceCategory.IsActive,
                 ProviderPublished = service.MedicalServiceProviderProfile!.IsPublished,
-                ProviderActive = service.MedicalServiceProviderProfile.User!.IsActive
+                ProviderActive = service.MedicalServiceProviderProfile.User!.IsActive,
+                ProviderUserId = service.MedicalServiceProviderProfile.UserId
             })
             .FirstOrDefaultAsync(ct);
 
@@ -193,6 +197,11 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
             }
 
             _context.MedicalServiceRequests.Add(entity);
+            await _notifications.QueueAsync(
+                WorkflowNotificationFactory.MedicalServiceSubmitted(
+                    entity.Id,
+                    offering.ProviderUserId),
+                ct);
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -335,6 +344,17 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
                 return failure;
             }
 
+            var providerUserId = await ResolveProviderUserIdAsync(
+                entity.MedicalServiceProviderProfileId,
+                ct);
+            if (providerUserId is not null)
+            {
+                await _notifications.QueueAsync(
+                    WorkflowNotificationFactory.MedicalServiceCancelledByPatient(
+                        entity.Id,
+                        providerUserId),
+                    ct);
+            }
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -507,6 +527,13 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
                 return failure;
             }
 
+            await QueuePatientUpdateAsync(
+                entity,
+                "accepted",
+                "Medical service request accepted",
+                "Your medical service request was accepted.",
+                NotificationType.Success,
+                ct);
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -604,6 +631,13 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
                 return failure;
             }
 
+            await QueuePatientUpdateAsync(
+                entity,
+                "completed",
+                "Medical service completed",
+                "Your service request has been completed. You may now leave a verified review.",
+                NotificationType.Information,
+                ct);
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -701,6 +735,31 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
                 return failure;
             }
 
+            var notification = target switch
+            {
+                MedicalServiceRequestStatus.Rejected => (
+                    Transition: "rejected",
+                    Title: "Medical service request rejected",
+                    Message: "Your medical service request was rejected.",
+                    Type: NotificationType.Warning),
+                MedicalServiceRequestStatus.CancelledByProvider => (
+                    Transition: "cancelled-by-provider",
+                    Title: "Service request cancelled by provider",
+                    Message: "The provider cancelled your medical service request.",
+                    Type: NotificationType.Warning),
+                _ => (
+                    Transition: target.ToString().ToLowerInvariant(),
+                    Title: "Medical service request updated",
+                    Message: "Your medical service request was updated.",
+                    Type: NotificationType.Information)
+            };
+            await QueuePatientUpdateAsync(
+                entity,
+                notification.Transition,
+                notification.Title,
+                notification.Message,
+                notification.Type,
+                ct);
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -715,6 +774,42 @@ public sealed class MedicalServiceRequestService : IMedicalServiceRequestService
             await LoadDetailsAsync(requestId, includePatientContact: true, ct),
             successMessage);
     }
+
+    private async Task QueuePatientUpdateAsync(
+        MedicalServiceRequest entity,
+        string transition,
+        string title,
+        string message,
+        NotificationType type,
+        CancellationToken ct)
+    {
+        var patientUserId = await _context.PatientProfiles
+            .Where(profile => profile.Id == entity.PatientProfileId)
+            .Select(profile => profile.UserId)
+            .FirstOrDefaultAsync(ct);
+        if (patientUserId is null)
+        {
+            return;
+        }
+
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.MedicalServicePatientUpdate(
+                entity.Id,
+                patientUserId,
+                transition,
+                title,
+                message,
+                type),
+            ct);
+    }
+
+    private Task<string?> ResolveProviderUserIdAsync(
+        Guid providerProfileId,
+        CancellationToken ct) =>
+        _context.MedicalServiceProviderProfiles
+            .Where(profile => profile.Id == providerProfileId)
+            .Select(profile => profile.UserId)
+            .FirstOrDefaultAsync(ct);
 
     private Result<MedicalServiceRequestDetailsDto>? ApplyTransition(
         MedicalServiceRequest entity,

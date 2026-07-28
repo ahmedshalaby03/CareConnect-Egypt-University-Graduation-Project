@@ -1,0 +1,148 @@
+:host {
+  display: block;
+}
+
+.page-shell {
+  width: min(1050px, calc(100% - 32px));
+  margin: 28px auto 48px;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+
+  h1,
+  p {
+    margin-top: 0;
+  }
+}
+
+.filters-card {
+  margin-bottom: 18px;
+  padding: 18px;
+}
+
+.cc-filters {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(4, minmax(130px, 1fr)) auto;
+  gap: 12px;
+  align-items: start;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 6px;
+  min-height: 56px;
+  align-items: center;
+}
+
+.notification-list {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.notification {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-inline-start: 4px solid var(--mat-sys-outline);
+  border-radius: 14px;
+  background: var(--mat-sys-surface);
+
+  &--unread {
+    background: color-mix(in srgb, var(--cc-brand) 7%, white);
+  }
+
+  &--success {
+    border-inline-start-color: #238636;
+  }
+
+  &--warning,
+  &--actionrequired {
+    border-inline-start-color: #d97706;
+  }
+
+  &--information {
+    border-inline-start-color: var(--cc-brand);
+  }
+}
+
+.notification__icon {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  color: var(--cc-brand-dark);
+  background: color-mix(in srgb, var(--cc-brand) 12%, white);
+}
+
+.notification__content {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  border: 0;
+  padding: 0;
+  text-align: start;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+
+  small {
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
+.notification__heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notification__dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--cc-brand);
+}
+
+.notification__actions {
+  display: flex;
+}
+
+@media (max-width: 900px) {
+  .cc-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 620px) {
+  .page-shell {
+    width: min(100% - 20px, 1050px);
+  }
+
+  .page-head {
+    flex-direction: column;
+  }
+
+  .cc-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .notification {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .notification__actions {
+    grid-column: 2;
+    justify-content: flex-end;
+  }
+}

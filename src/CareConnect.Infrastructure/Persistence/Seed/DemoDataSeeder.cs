@@ -1,3 +1,5 @@
+using CareConnect.Application.DTOs.Notifications;
+using CareConnect.Application.Interfaces;
 using CareConnect.Domain.Constants;
 using CareConnect.Domain.Entities;
 using CareConnect.Domain.Enums;
@@ -35,17 +37,20 @@ public class DemoDataSeeder : IDemoDataSeeder
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RoleManager<ApplicationRole> _roleManager;
     private readonly ILogger<DemoDataSeeder> _logger;
+    private readonly INotificationService _notifications;
 
     public DemoDataSeeder(
         ApplicationDbContext context,
         UserManager<ApplicationUser> userManager,
         RoleManager<ApplicationRole> roleManager,
-        ILogger<DemoDataSeeder> logger)
+        ILogger<DemoDataSeeder> logger,
+        INotificationService notifications)
     {
         _context = context;
         _userManager = userManager;
         _roleManager = roleManager;
         _logger = logger;
+        _notifications = notifications;
     }
 
     public async Task SeedAsync(CancellationToken ct = default)
@@ -76,6 +81,7 @@ public class DemoDataSeeder : IDemoDataSeeder
             await SeedBloodRequestsAsync(patient, hospitals, ct);
             await SeedMedicalServiceRequestsAsync(patient, ct);
             await SeedVerifiedReviewsAsync(patient, appointments, ct);
+            await SeedNotificationsAsync(patient, ct);
         }
         else
         {
@@ -86,6 +92,178 @@ public class DemoDataSeeder : IDemoDataSeeder
 
         _logger.LogInformation("Demo data seeding completed.");
     }
+
+    private async Task SeedNotificationsAsync(
+        PatientProfile patient,
+        CancellationToken ct)
+    {
+        var doctor = await _userManager.FindByEmailAsync(
+            "doctor.cardiology@careconnect.local");
+        var hospital = await _userManager.FindByEmailAsync(
+            "cairohospital@careconnect.local");
+        var provider = await _userManager.FindByEmailAsync(
+            "provider1@careconnect.local");
+
+        var commands = new List<CreateNotificationCommand>
+        {
+            DemoNotification(
+                patient.UserId,
+                NotificationType.Success,
+                NotificationCategory.Appointment,
+                "Appointment confirmed",
+                "A demo appointment was confirmed.",
+                "/dashboard/patient/appointments",
+                "demo:notification:patient:appointment-confirmed"),
+            DemoNotification(
+                patient.UserId,
+                NotificationType.Success,
+                NotificationCategory.Insurance,
+                "Insurance request approved",
+                "A demo insurance request was approved.",
+                "/dashboard/patient/insurance-requests",
+                "demo:notification:patient:insurance-approved"),
+            DemoNotification(
+                patient.UserId,
+                NotificationType.Success,
+                NotificationCategory.BloodBank,
+                "Blood request fulfilled",
+                "A demo blood request was fulfilled.",
+                "/dashboard/patient/blood-requests",
+                "demo:notification:patient:blood-fulfilled"),
+            DemoNotification(
+                patient.UserId,
+                NotificationType.Information,
+                NotificationCategory.MedicalService,
+                "Medical service request updated",
+                "A demo medical service request has a new status.",
+                "/dashboard/patient/service-requests",
+                "demo:notification:patient:medical-service-updated"),
+            DemoNotification(
+                patient.UserId,
+                NotificationType.Success,
+                NotificationCategory.Review,
+                "Review restored",
+                "A demo verified review was restored and is visible again.",
+                "/dashboard/patient/reviews",
+                "demo:notification:patient:review-restored")
+        };
+
+        if (doctor is not null)
+        {
+            commands.AddRange(
+            [
+                DemoNotification(
+                    doctor.Id,
+                    NotificationType.ActionRequired,
+                    NotificationCategory.Appointment,
+                    "New appointment request",
+                    "A patient submitted a demo appointment request.",
+                    "/dashboard/doctor/appointments",
+                    "demo:notification:doctor:new-appointment"),
+                DemoNotification(
+                    doctor.Id,
+                    NotificationType.Success,
+                    NotificationCategory.HospitalAffiliation,
+                    "Affiliation request approved",
+                    "A demo affiliation request was approved.",
+                    "/dashboard/doctor/hospital-requests",
+                    "demo:notification:doctor:affiliation-approved"),
+                DemoNotification(
+                    doctor.Id,
+                    NotificationType.Information,
+                    NotificationCategory.Review,
+                    "New verified review",
+                    "A patient submitted a new verified doctor review.",
+                    "/dashboard/doctor/reviews",
+                    "demo:notification:doctor:new-review")
+            ]);
+        }
+
+        if (hospital is not null)
+        {
+            commands.AddRange(
+            [
+                DemoNotification(
+                    hospital.Id,
+                    NotificationType.ActionRequired,
+                    NotificationCategory.Insurance,
+                    "New insurance request",
+                    "A patient submitted a demo insurance request.",
+                    "/dashboard/hospital/insurance-requests",
+                    "demo:notification:hospital:new-insurance"),
+                DemoNotification(
+                    hospital.Id,
+                    NotificationType.ActionRequired,
+                    NotificationCategory.BloodBank,
+                    "New blood request",
+                    "A patient submitted a demo blood request.",
+                    "/dashboard/hospital/blood-requests",
+                    "demo:notification:hospital:new-blood"),
+                DemoNotification(
+                    hospital.Id,
+                    NotificationType.ActionRequired,
+                    NotificationCategory.HospitalAffiliation,
+                    "New doctor affiliation request",
+                    "A doctor submitted a demo affiliation request.",
+                    "/dashboard/hospital/doctor-requests",
+                    "demo:notification:hospital:new-affiliation"),
+                DemoNotification(
+                    hospital.Id,
+                    NotificationType.Information,
+                    NotificationCategory.Review,
+                    "New verified review",
+                    "A patient submitted a new verified hospital review.",
+                    "/dashboard/hospital/reviews",
+                    "demo:notification:hospital:new-review")
+            ]);
+        }
+
+        if (provider is not null)
+        {
+            commands.AddRange(
+            [
+                DemoNotification(
+                    provider.Id,
+                    NotificationType.ActionRequired,
+                    NotificationCategory.MedicalService,
+                    "New medical service request",
+                    "A patient submitted a demo medical service request.",
+                    "/dashboard/service-provider/requests",
+                    "demo:notification:provider:new-request"),
+                DemoNotification(
+                    provider.Id,
+                    NotificationType.Information,
+                    NotificationCategory.Review,
+                    "New verified review",
+                    "A patient submitted a new verified medical service review.",
+                    "/dashboard/service-provider/reviews",
+                    "demo:notification:provider:new-review")
+            ]);
+        }
+
+        await _notifications.QueueManyAsync(commands, ct);
+        await _context.SaveChangesAsync(ct);
+        _logger.LogInformation("Demo notifications verified.");
+    }
+
+    private static CreateNotificationCommand DemoNotification(
+        string recipientUserId,
+        NotificationType type,
+        NotificationCategory category,
+        string title,
+        string message,
+        string route,
+        string key) =>
+        new()
+        {
+            RecipientApplicationUserId = recipientUserId,
+            Type = type,
+            Category = category,
+            Title = title,
+            Message = message,
+            ActionRoute = route,
+            DeduplicationKey = key
+        };
 
     // ================================================================= Identity
 

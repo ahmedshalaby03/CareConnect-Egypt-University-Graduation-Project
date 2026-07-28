@@ -12,8 +12,15 @@ namespace CareConnect.Infrastructure.Services;
 public sealed class ReviewService : IReviewService, IRatingQueryService, IReviewModerationService
 {
     private readonly ApplicationDbContext _context;
+    private readonly INotificationService _notifications;
 
-    public ReviewService(ApplicationDbContext context) => _context = context;
+    public ReviewService(
+        ApplicationDbContext context,
+        INotificationService notifications)
+    {
+        _context = context;
+        _notifications = notifications;
+    }
 
     public async Task<Result<ReviewEligibilityDto>> GetEligibilityAsync(
         string userId, ReviewType type, Guid sourceId, CancellationToken ct = default)
@@ -75,11 +82,13 @@ public sealed class ReviewService : IReviewService, IRatingQueryService, IReview
 
             var now = DateTime.UtcNow;
             var comment = NormalizeComment(request.Comment);
+            var reviewId = Guid.NewGuid();
             switch (type)
             {
                 case ReviewType.Doctor:
                     _context.AppointmentDoctorReviews.Add(new AppointmentDoctorReview
                     {
+                        Id = reviewId,
                         AppointmentId = sourceId, PatientProfileId = patientId.Value,
                         DoctorProfileId = target.Value, Rating = request.Rating,
                         Comment = comment, CreatedAt = now
@@ -88,6 +97,7 @@ public sealed class ReviewService : IReviewService, IRatingQueryService, IReview
                 case ReviewType.Hospital:
                     _context.AppointmentHospitalReviews.Add(new AppointmentHospitalReview
                     {
+                        Id = reviewId,
                         AppointmentId = sourceId, PatientProfileId = patientId.Value,
                         HospitalProfileId = target.Value, Rating = request.Rating,
                         Comment = comment, CreatedAt = now
@@ -96,6 +106,7 @@ public sealed class ReviewService : IReviewService, IRatingQueryService, IReview
                 case ReviewType.MedicalServiceProvider:
                     _context.MedicalServiceProviderReviews.Add(new MedicalServiceProviderReview
                     {
+                        Id = reviewId,
                         MedicalServiceRequestId = sourceId, PatientProfileId = patientId.Value,
                         MedicalServiceProviderProfileId = target.Value, Rating = request.Rating,
                         Comment = comment, CreatedAt = now
@@ -105,6 +116,25 @@ public sealed class ReviewService : IReviewService, IRatingQueryService, IReview
                     return Result<ReviewDto>.Invalid("Review type is invalid.");
             }
 
+            var ownerUserId = await ResolveReviewOwnerUserIdAsync(type, target.Value, ct);
+            if (ownerUserId is not null)
+            {
+                var (route, reviewKind) = type switch
+                {
+                    ReviewType.Doctor => ("/dashboard/doctor/reviews", "doctor"),
+                    ReviewType.Hospital => ("/dashboard/hospital/reviews", "hospital"),
+                    ReviewType.MedicalServiceProvider =>
+                        ("/dashboard/service-provider/reviews", "medical service"),
+                    _ => ("/notifications", "service")
+                };
+                await _notifications.QueueAsync(
+                    WorkflowNotificationFactory.NewReview(
+                        reviewId,
+                        ownerUserId,
+                        route,
+                        reviewKind),
+                    ct);
+            }
             await _context.SaveChangesAsync(ct);
             await transaction.CommitAsync(ct);
         }
@@ -276,6 +306,16 @@ public sealed class ReviewService : IReviewService, IRatingQueryService, IReview
 
         var now = DateTime.UtcNow;
         var normalizedReason = status == ReviewModerationStatus.Hidden ? reason?.Trim() : null;
+        await using var transaction = await _context.Database.BeginTransactionAsync(
+            IsolationLevel.ReadCommitted,
+            ct);
+
+        var patientUserId = await ResolveReviewPatientUserIdAsync(type, id, ct);
+        if (patientUserId is null)
+        {
+            return Result<ReviewDto>.NotFound("Review not found.");
+        }
+
         var updated = type switch
         {
             ReviewType.Doctor => await UpdateModerationAsync(
@@ -289,7 +329,22 @@ public sealed class ReviewService : IReviewService, IRatingQueryService, IReview
                 status, normalizedReason, adminUserId, now, ct),
             _ => 0
         };
-        if (updated == 0) return Result<ReviewDto>.NotFound("Review not found.");
+        if (updated == 0)
+        {
+            return Result<ReviewDto>.NotFound("Review not found.");
+        }
+
+        var hidden = status == ReviewModerationStatus.Hidden;
+        await _notifications.QueueAsync(
+            WorkflowNotificationFactory.ReviewModerated(
+                id,
+                patientUserId,
+                hidden ? "hidden" : "restored",
+                hidden ? "Review hidden by moderation" : "Review restored",
+                hidden ? NotificationType.Warning : NotificationType.Success),
+            ct);
+        await _context.SaveChangesAsync(ct);
+        await transaction.CommitAsync(ct);
         return await GetByIdAsync(adminUserId, type, id, ct);
     }
 
@@ -302,6 +357,48 @@ public sealed class ReviewService : IReviewService, IRatingQueryService, IReview
             .SetProperty(r => r.ModerationReason, reason)
             .SetProperty(r => r.ModeratedByApplicationUserId, adminUserId)
             .SetProperty(r => r.ModeratedAt, now), ct);
+
+    private Task<string?> ResolveReviewOwnerUserIdAsync(
+        ReviewType type,
+        Guid targetId,
+        CancellationToken ct) =>
+        type switch
+        {
+            ReviewType.Doctor => _context.DoctorProfiles
+                .Where(profile => profile.Id == targetId)
+                .Select(profile => profile.UserId)
+                .FirstOrDefaultAsync(ct),
+            ReviewType.Hospital => _context.HospitalProfiles
+                .Where(profile => profile.Id == targetId)
+                .Select(profile => profile.UserId)
+                .FirstOrDefaultAsync(ct),
+            ReviewType.MedicalServiceProvider => _context.MedicalServiceProviderProfiles
+                .Where(profile => profile.Id == targetId)
+                .Select(profile => profile.UserId)
+                .FirstOrDefaultAsync(ct),
+            _ => Task.FromResult<string?>(null)
+        };
+
+    private Task<string?> ResolveReviewPatientUserIdAsync(
+        ReviewType type,
+        Guid reviewId,
+        CancellationToken ct) =>
+        type switch
+        {
+            ReviewType.Doctor => _context.AppointmentDoctorReviews
+                .Where(review => review.Id == reviewId)
+                .Select(review => review.PatientProfile!.UserId)
+                .FirstOrDefaultAsync(ct),
+            ReviewType.Hospital => _context.AppointmentHospitalReviews
+                .Where(review => review.Id == reviewId)
+                .Select(review => review.PatientProfile!.UserId)
+                .FirstOrDefaultAsync(ct),
+            ReviewType.MedicalServiceProvider => _context.MedicalServiceProviderReviews
+                .Where(review => review.Id == reviewId)
+                .Select(review => review.PatientProfile!.UserId)
+                .FirstOrDefaultAsync(ct),
+            _ => Task.FromResult<string?>(null)
+        };
 
     private IQueryable<ReviewRow> Rows()
     {
