@@ -29,6 +29,8 @@ export interface HospitalDirectoryItem {
   nextAvailableAppointmentAt: string | null;
   isBloodAvailable: boolean;
   availableBloodGroups: string[];
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface HospitalDirectoryDetails extends HospitalDirectoryItem {
@@ -78,6 +80,8 @@ export interface DoctorDirectoryItem {
   profileImageUrl: string | null;
   /** Approved affiliations only. */
   hospitals: DirectoryHospitalSummary[];
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface DoctorDirectoryDetails extends DoctorDirectoryItem {

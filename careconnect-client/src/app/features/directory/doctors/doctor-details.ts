@@ -7,11 +7,12 @@ import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor'
 import { DoctorDirectoryDetails } from '../../../core/models/directory.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { DirectoryService } from '../../../core/services/directory.service';
+import { RatingPanel } from '../../../shared/rating-panel/rating-panel';
 
 /** Public doctor page: professional details and the hospitals they are approved at. */
 @Component({
   selector: 'app-doctor-details',
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, RatingPanel],
   templateUrl: './doctor-details.html',
   styleUrl: './doctor-details.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

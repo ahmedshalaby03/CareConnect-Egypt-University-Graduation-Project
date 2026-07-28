@@ -31,7 +31,9 @@ internal static class HospitalDirectoryProjections
         DateTime CreatedAt,
         IReadOnlyList<SpecialtyOptionDto> Specialties,
         int NumberOfApprovedDoctors,
-        IReadOnlyList<BloodGroup> AvailableBloodGroups);
+        IReadOnlyList<BloodGroup> AvailableBloodGroups,
+        double? AverageRating,
+        int ReviewCount);
 
     internal static Expression<Func<HospitalProfile, HospitalCandidate>> HospitalProjection() =>
         h => new HospitalCandidate(
@@ -62,7 +64,10 @@ internal static class HospitalDirectoryProjections
                 .Where(s => s.AvailableUnits > 0 && s.IsAvailable)
                 .Select(s => s.BloodGroup)
                 .Distinct()
-                .ToList());
+                .ToList(),
+            h.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatus.Visible)
+                .Select(r => (double?)r.Rating).Average(),
+            h.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatus.Visible));
 
     internal static HospitalDirectoryItemDto ToDirectoryItemDto(
         HospitalCandidate h,
@@ -105,7 +110,9 @@ internal static class HospitalDirectoryProjections
             HasAvailableAppointments = availability.HasAvailableAppointments,
             NextAvailableAppointmentAt = availability.NextAvailableAt,
             IsBloodAvailable = h.AvailableBloodGroups.Count > 0,
-            AvailableBloodGroups = h.AvailableBloodGroups.Select(bg => bg.ToDisplayName()).ToList()
+            AvailableBloodGroups = h.AvailableBloodGroups.Select(bg => bg.ToDisplayName()).ToList(),
+            AverageRating = h.AverageRating.HasValue ? Math.Round(h.AverageRating.Value, 1) : null,
+            ReviewCount = h.ReviewCount
         };
     }
 }

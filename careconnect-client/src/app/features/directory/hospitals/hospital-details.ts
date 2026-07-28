@@ -8,11 +8,12 @@ import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor'
 import { HospitalDirectoryDetails } from '../../../core/models/directory.model';
 import { AuthService } from '../../../core/services/auth.service';
 import { DirectoryService } from '../../../core/services/directory.service';
+import { RatingPanel } from '../../../shared/rating-panel/rating-panel';
 
 /** Public hospital page: profile, specialties and the doctors approved to work there. */
 @Component({
   selector: 'app-hospital-details',
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule],
+  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatTooltipModule, RatingPanel],
   templateUrl: './hospital-details.html',
   styleUrl: './hospital-details.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -52,4 +52,5 @@ public class MedicalServiceRequest
 
     public ICollection<MedicalServiceRequestStatusHistory> StatusHistory { get; set; } =
         new List<MedicalServiceRequestStatusHistory>();
+    public MedicalServiceProviderReview? Review { get; set; }
 }

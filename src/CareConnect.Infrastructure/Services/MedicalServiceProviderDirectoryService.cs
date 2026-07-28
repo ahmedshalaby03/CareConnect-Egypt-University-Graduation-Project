@@ -93,6 +93,11 @@ public sealed class MedicalServiceProviderDirectoryService
                         service.IsActive &&
                         service.MedicalServiceCategory!.IsActive)
                     .Min(service => (decimal?)service.Price),
+                AverageRating = profile.Reviews
+                    .Where(review => review.ModerationStatus == Domain.Enums.ReviewModerationStatus.Visible)
+                    .Select(review => (double?)review.Rating).Average(),
+                ReviewCount = profile.Reviews.Count(
+                    review => review.ModerationStatus == Domain.Enums.ReviewModerationStatus.Visible),
                 Categories = profile.ServiceOfferings
                     .Where(service =>
                         service.IsActive &&
@@ -151,7 +156,11 @@ public sealed class MedicalServiceProviderDirectoryService
                 City = candidate.City,
                 Categories = candidate.Categories,
                 MinimumServicePrice = candidate.MinimumServicePrice,
-                DistanceKm = candidate.DistanceKm
+                DistanceKm = candidate.DistanceKm,
+                AverageRating = candidate.AverageRating.HasValue
+                    ? Math.Round(candidate.AverageRating.Value, 1)
+                    : null,
+                ReviewCount = candidate.ReviewCount
             })
             .ToList();
 
@@ -286,6 +295,8 @@ public sealed class MedicalServiceProviderDirectoryService
         public decimal Latitude { get; init; }
         public decimal Longitude { get; init; }
         public decimal? MinimumServicePrice { get; init; }
+        public double? AverageRating { get; init; }
+        public int ReviewCount { get; init; }
         public double? DistanceKm { get; set; }
         public IReadOnlyList<MedicalServiceCategoryOptionDto> Categories { get; init; } = [];
     }

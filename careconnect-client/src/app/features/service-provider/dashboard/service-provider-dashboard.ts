@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -8,10 +9,12 @@ import { MedicalServiceProviderProfile } from '../../../core/models/medical-serv
 import { MedicalServiceRequestDashboardSummary } from '../../../core/models/medical-service-request.model';
 import { MedicalServiceProviderService } from '../../../core/services/medical-service-provider.service';
 import { MedicalServiceRequestService } from '../../../core/services/medical-service-request.service';
+import { RatingSummary } from '../../../core/models/review.model';
+import { ReviewService } from '../../../core/services/review.service';
 
 @Component({
   selector: 'app-service-provider-dashboard',
-  imports: [RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [RouterLink, DecimalPipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="cc-page">
@@ -47,6 +50,13 @@ import { MedicalServiceRequestService } from '../../../core/services/medical-ser
             <article class="cc-card"><mat-icon>cancel</mat-icon><strong>{{ requests.cancelledOrRejectedCount }}</strong><span>Cancelled or rejected</span></article>
           </div>
         }
+        @if (reviewSummary(); as reviews) {
+          <h2>Patient feedback</h2>
+          <div class="cc-card-grid stats">
+            <article class="cc-card"><mat-icon>star</mat-icon><strong>{{ reviews.averageRating === null ? '—' : (reviews.averageRating | number:'1.1-1') }}</strong><span>Average rating</span></article>
+            <article class="cc-card"><mat-icon>rate_review</mat-icon><strong>{{ reviews.reviewCount }}</strong><span>Visible reviews</span></article>
+          </div>
+        }
         @if (!item.isReadyToPublish) {
           <article class="cc-card requirements">
             <h2>Before publishing</h2>
@@ -69,8 +79,10 @@ import { MedicalServiceRequestService } from '../../../core/services/medical-ser
 export class ServiceProviderDashboard implements OnInit {
   private readonly providers = inject(MedicalServiceProviderService);
   private readonly requests = inject(MedicalServiceRequestService);
+  private readonly reviews = inject(ReviewService);
   protected readonly profile = signal<MedicalServiceProviderProfile | null>(null);
   protected readonly requestSummary = signal<MedicalServiceRequestDashboardSummary | null>(null);
+  protected readonly reviewSummary = signal<RatingSummary | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
@@ -82,6 +94,10 @@ export class ServiceProviderDashboard implements OnInit {
     this.requests.getProviderSummary().subscribe({
       next: (summary) => this.requestSummary.set(summary),
       error: () => this.requestSummary.set(null),
+    });
+    this.reviews.getOwnerSummary('medical-service-provider').subscribe({
+      next: (summary) => this.reviewSummary.set(summary),
+      error: () => this.reviewSummary.set(null),
     });
   }
 }

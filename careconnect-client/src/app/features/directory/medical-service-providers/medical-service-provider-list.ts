@@ -43,7 +43,7 @@ import { NotificationService } from '../../../core/services/notification.service
       @if (error()) { <div class="cc-notice cc-notice--error">{{ error() }}</div> }
       <div class="cc-card-grid provider-grid">
         @for (provider of providers(); track provider.id) {
-          <article class="cc-card provider-card"><div><span class="eyebrow">{{ labels[provider.providerType] }}</span><h2>{{ provider.businessName }}</h2><p><mat-icon>location_on</mat-icon>{{ provider.city }}, {{ provider.governorate }} @if (provider.distanceKm !== null) { · {{ provider.distanceKm }} km away }</p></div>
+          <article class="cc-card provider-card"><div><span class="eyebrow">{{ labels[provider.providerType] }}</span><h2>{{ provider.businessName }}</h2><p>{{ provider.reviewCount ? provider.averageRating + ' ★ (' + provider.reviewCount + ' reviews)' : 'No reviews yet' }}</p><p><mat-icon>location_on</mat-icon>{{ provider.city }}, {{ provider.governorate }} @if (provider.distanceKm !== null) { · {{ provider.distanceKm }} km away }</p></div>
             <p>{{ provider.description }}</p><div class="chips">@for (category of provider.categories; track category.id) { <span class="cc-role-chip">{{ category.name }}</span> }</div>
             <footer><span>@if (provider.minimumServicePrice !== null) { From <strong>{{ provider.minimumServicePrice | currency:'EGP ':'symbol':'1.0-2' }}</strong> }</span><a mat-flat-button [routerLink]="['/medical-service-providers', provider.id]">View details</a></footer>
           </article>

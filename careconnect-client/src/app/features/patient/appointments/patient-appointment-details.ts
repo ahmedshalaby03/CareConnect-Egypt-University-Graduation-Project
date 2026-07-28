@@ -11,13 +11,14 @@ import { AppointmentService } from '../../../core/services/appointment.service';
 import { InsuranceRequestService } from '../../../core/services/insurance-request.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ReasonDialog, ReasonDialogData } from '../../../shared/reason-dialog/reason-dialog';
+import { ReviewAction } from '../../../shared/review-action/review-action';
 
 /** Statuses that block a second active insurance request for the same appointment. */
 const BLOCKING_INSURANCE_STATUSES = new Set(['Pending', 'UnderReview', 'Approved']);
 
 @Component({
   selector: 'app-patient-appointment-details',
-  imports: [RouterLink, DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [RouterLink, DatePipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule, ReviewAction],
   templateUrl: './patient-appointment-details.html',
   styleUrl: './patient-appointment-details.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

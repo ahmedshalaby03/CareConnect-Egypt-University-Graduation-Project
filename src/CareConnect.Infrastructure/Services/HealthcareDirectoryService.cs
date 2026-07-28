@@ -305,6 +305,10 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                 Governorate = d.Governorate,
                 City = d.City,
                 ProfileImageUrl = d.ProfileImageUrl,
+                AverageRating = d.Reviews
+                    .Where(r => r.ModerationStatus == ReviewModerationStatus.Visible)
+                    .Select(r => (double?)r.Rating).Average(),
+                ReviewCount = d.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatus.Visible),
                 Hospitals = d.HospitalAffiliations
                     .Where(a => a.Status == AffiliationStatus.Approved
                                 && a.HospitalProfile!.IsProfileCompleted)
@@ -354,6 +358,10 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                 ProfileImageUrl = d.ProfileImageUrl,
                 LicenseNumber = d.LicenseNumber,
                 Address = d.Address,
+                AverageRating = d.Reviews
+                    .Where(r => r.ModerationStatus == ReviewModerationStatus.Visible)
+                    .Select(r => (double?)r.Rating).Average(),
+                ReviewCount = d.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatus.Visible),
                 Hospitals = d.HospitalAffiliations
                     .Where(a => a.Status == AffiliationStatus.Approved
                                 && a.HospitalProfile!.IsProfileCompleted)

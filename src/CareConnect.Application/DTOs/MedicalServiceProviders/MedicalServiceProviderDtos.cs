@@ -192,6 +192,8 @@ public class MedicalServiceProviderSummaryDto
     public IReadOnlyList<MedicalServiceCategoryOptionDto> Categories { get; init; } = [];
     public decimal? MinimumServicePrice { get; init; }
     public double? DistanceKm { get; init; }
+    public double? AverageRating { get; init; }
+    public int ReviewCount { get; init; }
 }
 
 public class MedicalServiceProviderDetailsDto

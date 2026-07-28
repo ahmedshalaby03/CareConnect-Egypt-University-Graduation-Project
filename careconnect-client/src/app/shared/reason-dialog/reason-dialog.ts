@@ -12,6 +12,9 @@ export interface ReasonDialogData {
   confirmLabel?: string;
   /** Renders the confirm button in the danger colour. Defaults to true. */
   destructive?: boolean;
+  /** Defaults preserve the existing appointment-dialog behavior. */
+  minLength?: number;
+  maxLength?: number;
 }
 
 /**
@@ -32,12 +35,20 @@ export interface ReasonDialogData {
       <form [formGroup]="form">
         <mat-form-field appearance="outline" class="cc-form-field">
           <mat-label>{{ data.fieldLabel }}</mat-label>
-          <textarea matInput formControlName="reason" rows="4"></textarea>
+          <textarea
+            matInput
+            formControlName="reason"
+            rows="4"
+            [maxlength]="data.maxLength ?? 500"
+          ></textarea>
+          <mat-hint align="end">
+            {{ form.controls.reason.value.length }}/{{ data.maxLength ?? 500 }}
+          </mat-hint>
           @if (form.controls.reason.hasError('required') && form.controls.reason.touched) {
             <mat-error>{{ data.fieldLabel }} is required.</mat-error>
           }
           @if (form.controls.reason.hasError('minlength')) {
-            <mat-error>Please give at least 5 characters.</mat-error>
+            <mat-error>Please give at least {{ data.minLength ?? 5 }} characters.</mat-error>
           }
         </mat-form-field>
       </form>
@@ -74,7 +85,11 @@ export class ReasonDialog {
   private readonly fb = inject(NonNullableFormBuilder);
 
   protected readonly form = this.fb.group({
-    reason: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
+    reason: ['', [
+      Validators.required,
+      Validators.minLength(this.data.minLength ?? 5),
+      Validators.maxLength(this.data.maxLength ?? 500),
+    ]],
   });
 
   protected submit(): void {
