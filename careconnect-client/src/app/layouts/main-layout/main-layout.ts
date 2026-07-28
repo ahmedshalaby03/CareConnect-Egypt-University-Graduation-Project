@@ -25,6 +25,11 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Insurance requests', route: '/dashboard/patient/insurance-requests', icon: 'fact_check' },
     { label: 'Blood bank', route: '/blood-bank', icon: 'bloodtype' },
     { label: 'Blood requests', route: '/dashboard/patient/blood-requests', icon: 'water_drop' },
+    {
+      label: 'AI Medical Assistant',
+      route: '/dashboard/patient/ai-assistant',
+      icon: 'smart_toy',
+    },
   ],
   Doctor: [
     { label: 'Dashboard', route: '/dashboard/doctor', icon: 'dashboard', exact: true },

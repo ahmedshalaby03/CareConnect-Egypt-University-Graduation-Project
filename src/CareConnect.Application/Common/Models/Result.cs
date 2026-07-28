@@ -11,7 +11,9 @@ public enum ResultStatus
     Unauthorized,
     Forbidden,
     NotFound,
-    Conflict
+    Conflict,
+    RateLimited,
+    ServiceUnavailable
 }
 
 public class Result<T>
@@ -39,4 +41,10 @@ public class Result<T>
 
     public static Result<T> Conflict(string message) =>
         Failure(ResultStatus.Conflict, message);
+
+    public static Result<T> RateLimited(string message) =>
+        Failure(ResultStatus.RateLimited, message);
+
+    public static Result<T> ServiceUnavailable(string message) =>
+        Failure(ResultStatus.ServiceUnavailable, message);
 }

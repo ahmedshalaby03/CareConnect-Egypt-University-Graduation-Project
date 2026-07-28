@@ -27,6 +27,7 @@ builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services.AddAuthorization(options => options.AddCareConnectPolicies());
 builder.Services.AddCareConnectCors(builder.Configuration);
+builder.Services.AddCareConnectRateLimiting();
 
 builder.Services.AddControllers(options => options.Filters.Add<FluentValidationFilter>());
 
@@ -63,6 +64,7 @@ else
 app.UseCors(CorsExtensions.PolicyName);
 
 app.UseAuthentication();
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
