@@ -160,6 +160,7 @@ public sealed class MedicalServiceProviderProfileService
                 Price = service.Price,
                 EstimatedDurationMinutes = service.EstimatedDurationMinutes,
                 PreparationInstructions = service.PreparationInstructions,
+                DeliveryModeAvailability = service.DeliveryModeAvailability,
                 IsActive = service.IsActive,
                 CreatedAt = service.CreatedAt,
                 UpdatedAt = service.UpdatedAt
@@ -224,6 +225,7 @@ public sealed class MedicalServiceProviderProfileService
             Price = request.Price,
             EstimatedDurationMinutes = request.EstimatedDurationMinutes,
             PreparationInstructions = Normalise(request.PreparationInstructions),
+            DeliveryModeAvailability = request.DeliveryModeAvailability,
             IsActive = request.IsActive,
             CreatedAt = now
         };
@@ -277,6 +279,7 @@ public sealed class MedicalServiceProviderProfileService
         service.Price = request.Price;
         service.EstimatedDurationMinutes = request.EstimatedDurationMinutes;
         service.PreparationInstructions = Normalise(request.PreparationInstructions);
+        service.DeliveryModeAvailability = request.DeliveryModeAvailability;
         service.IsActive = request.IsActive;
         service.UpdatedAt = DateTime.UtcNow;
 
@@ -571,6 +574,7 @@ public sealed class MedicalServiceProviderProfileService
         Price = service.Price,
         EstimatedDurationMinutes = service.EstimatedDurationMinutes,
         PreparationInstructions = service.PreparationInstructions,
+        DeliveryModeAvailability = service.DeliveryModeAvailability,
         IsActive = service.IsActive,
         CreatedAt = service.CreatedAt,
         UpdatedAt = service.UpdatedAt

@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IMedicalServiceCategoryService, MedicalServiceCategoryService>();
         services.AddScoped<IMedicalServiceProviderProfileService, MedicalServiceProviderProfileService>();
         services.AddScoped<IMedicalServiceProviderDirectoryService, MedicalServiceProviderDirectoryService>();
+        services.AddScoped<IMedicalServiceRequestService, MedicalServiceRequestService>();
 
         services.AddScoped<IDoctorAvailabilityService, DoctorAvailabilityService>();
         services.AddScoped<IDoctorUnavailablePeriodService, DoctorUnavailablePeriodService>();

@@ -80,6 +80,9 @@ public sealed class CreateMedicalServiceOfferingRequestValidator
             .InclusiveBetween(5, 1440)
             .WithMessage("Estimated duration must be between 5 and 1440 minutes.")
             .When(request => request.EstimatedDurationMinutes.HasValue);
+        RuleFor(request => request.DeliveryModeAvailability)
+            .IsInEnum()
+            .WithMessage("Select a valid service delivery-mode option.");
         RuleFor(request => request.PreparationInstructions)
             .MaximumLength(2000)
             .WithMessage("Preparation instructions must not exceed 2000 characters.");

@@ -74,6 +74,7 @@ public class DemoDataSeeder : IDemoDataSeeder
             var appointments = await SeedAppointmentsAsync(patient, doctors, hospitals, ct);
             await SeedInsuranceRequestsAsync(patient, appointments, hospitals, ct);
             await SeedBloodRequestsAsync(patient, hospitals, ct);
+            await SeedMedicalServiceRequestsAsync(patient, ct);
         }
         else
         {
@@ -675,6 +676,22 @@ public class DemoDataSeeder : IDemoDataSeeder
                 });
         }
 
+        await _context.SaveChangesAsync(ct);
+
+        // These exact offerings belong to the Development demo catalog. Keep their
+        // delivery modes deterministic so request-form behaviour is meaningful.
+        var demoServices = await _context.MedicalServiceOfferings
+            .Where(service => service.MedicalServiceProviderProfileId == profile.Id)
+            .ToListAsync(ct);
+        foreach (var service in demoServices)
+        {
+            service.DeliveryModeAvailability = service.Name switch
+            {
+                "Physiotherapy Session" => ServiceDeliveryModeAvailability.Both,
+                "Home Nursing Visit" => ServiceDeliveryModeAvailability.HomeVisitOnly,
+                _ => ServiceDeliveryModeAvailability.AtProviderLocationOnly
+            };
+        }
         await _context.SaveChangesAsync(ct);
 
         profile.IsPublished = true;
@@ -1346,6 +1363,210 @@ public class DemoDataSeeder : IDemoDataSeeder
         }
 
         _logger.LogInformation("Blood requests verified ({Created} created) for the existing demo Patient.", created);
+    }
+
+    // ==================================================== Medical service requests
+
+    private async Task SeedMedicalServiceRequestsAsync(
+        PatientProfile patient,
+        CancellationToken ct)
+    {
+        var provider = await _context.MedicalServiceProviderProfiles
+            .AsNoTracking()
+            .Where(profile => profile.User!.Email == "provider1@careconnect.local")
+            .Select(profile => new { profile.Id, profile.UserId })
+            .FirstOrDefaultAsync(ct);
+        if (provider is null)
+        {
+            _logger.LogWarning("Skipping medical-service request demos: provider1 was not found.");
+            return;
+        }
+
+        var services = await _context.MedicalServiceOfferings
+            .AsNoTracking()
+            .Where(service => service.MedicalServiceProviderProfileId == provider.Id)
+            .Select(service => new
+            {
+                service.Id,
+                service.Name,
+                service.Price,
+                service.EstimatedDurationMinutes,
+                CategoryName = service.MedicalServiceCategory!.Name
+            })
+            .ToDictionaryAsync(service => service.Name, StringComparer.OrdinalIgnoreCase, ct);
+
+        var now = DateTime.UtcNow;
+        var today = DateOnly.FromDateTime(now);
+        var futureOne = NextProviderWorkingDay(today.AddDays(1));
+        var futureTwo = NextProviderWorkingDay(futureOne.AddDays(2));
+        var past = PreviousProviderWorkingDay(today.AddDays(-3));
+
+        var seeds = new[]
+        {
+            new
+            {
+                RequestNumber = "MSR-2026-DEMO0001",
+                ServiceName = "Complete Blood Count",
+                Date = futureOne,
+                Time = new TimeOnly(10, 0),
+                DeliveryMode = ServiceDeliveryMode.AtProviderLocation,
+                Status = MedicalServiceRequestStatus.Pending
+            },
+            new
+            {
+                RequestNumber = "MSR-2026-DEMO0002",
+                ServiceName = "Physiotherapy Session",
+                Date = futureTwo,
+                Time = new TimeOnly(11, 0),
+                DeliveryMode = ServiceDeliveryMode.AtProviderLocation,
+                Status = MedicalServiceRequestStatus.Accepted
+            },
+            new
+            {
+                RequestNumber = "MSR-2026-DEMO0003",
+                ServiceName = "Home Nursing Visit",
+                Date = past,
+                Time = new TimeOnly(12, 0),
+                DeliveryMode = ServiceDeliveryMode.HomeVisit,
+                Status = MedicalServiceRequestStatus.Completed
+            },
+            new
+            {
+                RequestNumber = "MSR-2026-DEMO0004",
+                ServiceName = "Chest X-Ray",
+                Date = futureOne,
+                Time = new TimeOnly(14, 0),
+                DeliveryMode = ServiceDeliveryMode.AtProviderLocation,
+                Status = MedicalServiceRequestStatus.Rejected
+            }
+        };
+
+        var existingNumbers = await _context.MedicalServiceRequests
+            .AsNoTracking()
+            .Where(request => seeds.Select(seed => seed.RequestNumber).Contains(request.RequestNumber))
+            .Select(request => request.RequestNumber)
+            .ToListAsync(ct);
+        var existing = existingNumbers.ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var created = 0;
+
+        foreach (var seed in seeds)
+        {
+            if (existing.Contains(seed.RequestNumber) ||
+                !services.TryGetValue(seed.ServiceName, out var service))
+            {
+                continue;
+            }
+
+            var createdAt = seed.Status == MedicalServiceRequestStatus.Completed
+                ? now.AddDays(-7)
+                : now.AddHours(-4);
+            var request = new MedicalServiceRequest
+            {
+                RequestNumber = seed.RequestNumber,
+                PatientProfileId = patient.Id,
+                MedicalServiceProviderProfileId = provider.Id,
+                MedicalServiceOfferingId = service.Id,
+                Status = seed.Status,
+                DeliveryMode = seed.DeliveryMode,
+                RequestedDate = seed.Date,
+                PreferredStartTime = seed.Time,
+                PatientNotes = "Development demo medical service request.",
+                HomeVisitAddress = seed.DeliveryMode == ServiceDeliveryMode.HomeVisit
+                    ? "Shubra El-Kheima, Qalyubia"
+                    : null,
+                ServiceNameSnapshot = service.Name,
+                CategoryNameSnapshot = service.CategoryName,
+                PriceSnapshot = service.Price,
+                DurationMinutesSnapshot = service.EstimatedDurationMinutes,
+                CreatedAt = createdAt
+            };
+
+            request.StatusHistory.Add(new MedicalServiceRequestStatusHistory
+            {
+                MedicalServiceRequest = request,
+                PreviousStatus = null,
+                NewStatus = MedicalServiceRequestStatus.Pending,
+                ChangedByApplicationUserId = patient.UserId,
+                Reason = "Request submitted.",
+                CreatedAt = createdAt
+            });
+
+            if (seed.Status == MedicalServiceRequestStatus.Accepted ||
+                seed.Status == MedicalServiceRequestStatus.Completed)
+            {
+                var acceptedAt = createdAt.AddHours(1);
+                request.ScheduledAt = seed.Date.ToDateTime(seed.Time, DateTimeKind.Unspecified);
+                request.ProviderResponseNote = "Your demo request has been scheduled.";
+                request.StatusHistory.Add(new MedicalServiceRequestStatusHistory
+                {
+                    MedicalServiceRequest = request,
+                    PreviousStatus = MedicalServiceRequestStatus.Pending,
+                    NewStatus = MedicalServiceRequestStatus.Accepted,
+                    ChangedByApplicationUserId = provider.UserId,
+                    Reason = request.ProviderResponseNote,
+                    CreatedAt = acceptedAt
+                });
+            }
+
+            if (seed.Status == MedicalServiceRequestStatus.Completed)
+            {
+                request.CompletedAt = now.AddDays(-1);
+                request.StatusHistory.Add(new MedicalServiceRequestStatusHistory
+                {
+                    MedicalServiceRequest = request,
+                    PreviousStatus = MedicalServiceRequestStatus.Accepted,
+                    NewStatus = MedicalServiceRequestStatus.Completed,
+                    ChangedByApplicationUserId = provider.UserId,
+                    Reason = "Service completed.",
+                    CreatedAt = request.CompletedAt.Value
+                });
+            }
+            else if (seed.Status == MedicalServiceRequestStatus.Rejected)
+            {
+                request.RejectionReason = "The requested time is unavailable in this demo workflow.";
+                request.ProviderResponseNote = "Please submit a new request for another time.";
+                request.StatusHistory.Add(new MedicalServiceRequestStatusHistory
+                {
+                    MedicalServiceRequest = request,
+                    PreviousStatus = MedicalServiceRequestStatus.Pending,
+                    NewStatus = MedicalServiceRequestStatus.Rejected,
+                    ChangedByApplicationUserId = provider.UserId,
+                    Reason = request.RejectionReason,
+                    CreatedAt = createdAt.AddHours(1)
+                });
+            }
+
+            _context.MedicalServiceRequests.Add(request);
+            existing.Add(seed.RequestNumber);
+            created++;
+        }
+
+        if (created > 0)
+        {
+            await _context.SaveChangesAsync(ct);
+        }
+
+        _logger.LogInformation(
+            "Medical service requests verified ({Created} created) for the existing demo Patient.",
+            created);
+    }
+
+    private static DateOnly NextProviderWorkingDay(DateOnly date)
+    {
+        while (date.DayOfWeek == DayOfWeek.Friday)
+        {
+            date = date.AddDays(1);
+        }
+        return date;
+    }
+
+    private static DateOnly PreviousProviderWorkingDay(DateOnly date)
+    {
+        while (date.DayOfWeek == DayOfWeek.Friday)
+        {
+            date = date.AddDays(-1);
+        }
+        return date;
     }
 
     // ==================================================================== Helpers

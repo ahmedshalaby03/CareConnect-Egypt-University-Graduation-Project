@@ -23,6 +23,9 @@ public class ApplicationDbContext
     public DbSet<MedicalServiceOffering> MedicalServiceOfferings => Set<MedicalServiceOffering>();
     public DbSet<MedicalServiceProviderWorkingHour> MedicalServiceProviderWorkingHours =>
         Set<MedicalServiceProviderWorkingHour>();
+    public DbSet<MedicalServiceRequest> MedicalServiceRequests => Set<MedicalServiceRequest>();
+    public DbSet<MedicalServiceRequestStatusHistory> MedicalServiceRequestStatusHistory =>
+        Set<MedicalServiceRequestStatusHistory>();
 
     public DbSet<Specialty> Specialties => Set<Specialty>();
     public DbSet<HospitalSpecialty> HospitalSpecialties => Set<HospitalSpecialty>();
