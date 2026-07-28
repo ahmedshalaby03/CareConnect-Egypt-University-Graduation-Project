@@ -293,8 +293,45 @@ export const routes: Routes = [
         title: 'Service provider dashboard - CareConnect Egypt',
         canActivate: [roleGuard('MedicalServiceProvider')],
         loadComponent: () =>
-          import('./features/dashboard/role-dashboard/role-dashboard').then((m) => m.RoleDashboard),
-        data: { role: 'MedicalServiceProvider' },
+          import('./features/service-provider/dashboard/service-provider-dashboard').then(
+            (m) => m.ServiceProviderDashboard,
+          ),
+      },
+      {
+        path: 'dashboard/service-provider/profile',
+        title: 'Business profile - CareConnect Egypt',
+        canActivate: [roleGuard('MedicalServiceProvider')],
+        loadComponent: () =>
+          import('./features/service-provider/profile/service-provider-profile').then(
+            (m) => m.ServiceProviderProfilePage,
+          ),
+      },
+      {
+        path: 'dashboard/service-provider/services',
+        title: 'My services - CareConnect Egypt',
+        canActivate: [roleGuard('MedicalServiceProvider')],
+        loadComponent: () =>
+          import('./features/service-provider/services/service-provider-services').then(
+            (m) => m.ServiceProviderServicesPage,
+          ),
+      },
+      {
+        path: 'dashboard/service-provider/working-hours',
+        title: 'Working hours - CareConnect Egypt',
+        canActivate: [roleGuard('MedicalServiceProvider')],
+        loadComponent: () =>
+          import('./features/service-provider/working-hours/service-provider-working-hours').then(
+            (m) => m.ServiceProviderWorkingHoursPage,
+          ),
+      },
+      {
+        path: 'dashboard/service-provider/preview',
+        title: 'Provider preview - CareConnect Egypt',
+        canActivate: [roleGuard('MedicalServiceProvider')],
+        loadComponent: () =>
+          import('./features/service-provider/preview/service-provider-preview').then(
+            (m) => m.ServiceProviderPreviewPage,
+          ),
       },
 
       // --------------------------------------------------------- SuperAdmin
@@ -322,6 +359,15 @@ export const routes: Routes = [
           import('./features/super-admin/insurance-companies/insurance-companies').then(
             (m) => m.SuperAdminInsuranceCompanies,
           ),
+      },
+      {
+        path: 'super-admin/medical-service-categories',
+        title: 'Medical service categories - CareConnect Egypt',
+        canActivate: [roleGuard('SuperAdmin')],
+        loadComponent: () =>
+          import(
+            './features/super-admin/medical-service-categories/medical-service-categories'
+          ).then((m) => m.SuperAdminMedicalServiceCategories),
       },
 
       // ---------------------------------------------- Directories (any role)
@@ -379,6 +425,22 @@ export const routes: Routes = [
           import('./features/blood-bank/blood-bank-hospital-details').then(
             (m) => m.BloodBankHospitalDetails,
           ),
+      },
+      {
+        path: 'medical-service-providers',
+        title: 'Medical services - CareConnect Egypt',
+        loadComponent: () =>
+          import(
+            './features/directory/medical-service-providers/medical-service-provider-list'
+          ).then((m) => m.MedicalServiceProviderListPage),
+      },
+      {
+        path: 'medical-service-providers/:id',
+        title: 'Medical service provider - CareConnect Egypt',
+        loadComponent: () =>
+          import(
+            './features/directory/medical-service-providers/medical-service-provider-details'
+          ).then((m) => m.MedicalServiceProviderDetailsPage),
       },
     ],
   },

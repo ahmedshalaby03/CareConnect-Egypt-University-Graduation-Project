@@ -435,14 +435,18 @@ public class DemoDataSeeder : IDemoDataSeeder
                 _context.HospitalProfiles.Add(profile);
                 created++;
             }
+            else
+            {
+                // Fill only missing fields on rows owned by this Development demo dataset.
+                // This remains non-destructive and never overwrites a hospital's manual edit.
+                profile.LocationDescription ??= seed.LocationDescription;
+                profile.NearbyLandmark ??= seed.NearbyLandmark;
+            }
 
             result[seed.Name] = profile;
         }
 
-        if (created > 0)
-        {
-            await _context.SaveChangesAsync(ct);
-        }
+        await _context.SaveChangesAsync(ct);
 
         _logger.LogInformation(
             "Hospital accounts and profiles verified ({Total} total, {Created} created).",
@@ -550,28 +554,135 @@ public class DemoDataSeeder : IDemoDataSeeder
             return;
         }
 
-        var profile = await _context.MedicalServiceProviderProfiles.FirstOrDefaultAsync(p => p.UserId == user.Id, ct);
-        if (profile is not null)
+        var profile = await _context.MedicalServiceProviderProfiles
+            .Include(p => p.ServiceOfferings)
+            .Include(p => p.WorkingHours)
+            .FirstOrDefaultAsync(p => p.UserId == user.Id, ct);
+        if (profile is null)
         {
-            _logger.LogInformation("MedicalServiceProvider account already present.");
-            return;
+            profile = new MedicalServiceProviderProfile
+            {
+                UserId = user.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.MedicalServiceProviderProfiles.Add(profile);
         }
 
-        profile = new MedicalServiceProviderProfile
-        {
-            UserId = user.Id,
-            ProviderName = name,
-            ServiceType = "General medical services",
-            Address = "Nasr City, Cairo",
-            Governorate = "Cairo",
-            City = "Nasr City",
-            Description = "Demo medical services provider for local development."
-        };
-
-        _context.MedicalServiceProviderProfiles.Add(profile);
+        // This row is owned by the Development demo seeder, so completing its newly-added
+        // catalog fields is intentional. No other provider profile is changed.
+        profile.BusinessName = "CareConnect Integrated Medical Center";
+        profile.ProviderType = MedicalServiceProviderType.MedicalCenter;
+        profile.Description =
+            "A development-only medical services center offering diagnostic and rehabilitation services.";
+        profile.PhoneNumber = "01000000005";
+        profile.Address = "Nasr City, Cairo, Egypt";
+        profile.Governorate = "Cairo";
+        profile.City = "Nasr City";
+        profile.Latitude = 30.056100m;
+        profile.Longitude = 31.330000m;
+        profile.UpdatedAt = DateTime.UtcNow;
+        profile.IsPublished = false;
         await _context.SaveChangesAsync(ct);
 
-        _logger.LogInformation("MedicalServiceProvider account created.");
+        var categorySeeds = new (string Name, string Description)[]
+        {
+            ("Laboratory Tests", "Clinical laboratory and diagnostic testing services."),
+            ("Diagnostic Imaging", "Medical imaging and radiology services."),
+            ("Physiotherapy", "Physical rehabilitation and therapy services."),
+            ("Home Healthcare", "Healthcare services delivered at the beneficiary's home."),
+            ("Nursing Services", "Professional nursing and patient-care services."),
+            ("Pharmacy Services", "Medication and pharmacy support services."),
+            ("General Medical Services", "General outpatient medical services.")
+        };
+
+        foreach (var seed in categorySeeds)
+        {
+            if (await _context.MedicalServiceCategories.AnyAsync(
+                    category => category.Name.ToLower() == seed.Name.ToLower(),
+                    ct))
+            {
+                continue;
+            }
+
+            _context.MedicalServiceCategories.Add(new MedicalServiceCategory
+            {
+                Name = seed.Name,
+                Description = seed.Description,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        await _context.SaveChangesAsync(ct);
+
+        var categories = await _context.MedicalServiceCategories
+            .Where(category => categorySeeds.Select(seed => seed.Name).Contains(category.Name))
+            .ToDictionaryAsync(category => category.Name, StringComparer.OrdinalIgnoreCase, ct);
+
+        var serviceSeeds = new[]
+        {
+            new { Name = "Complete Blood Count", Category = "Laboratory Tests", Price = 250m, Duration = 20 },
+            new { Name = "Liver Function Test", Category = "Laboratory Tests", Price = 450m, Duration = 30 },
+            new { Name = "Chest X-Ray", Category = "Diagnostic Imaging", Price = 600m, Duration = 30 },
+            new { Name = "Physiotherapy Session", Category = "Physiotherapy", Price = 500m, Duration = 60 },
+            new { Name = "Home Nursing Visit", Category = "Nursing Services", Price = 750m, Duration = 60 }
+        };
+
+        foreach (var seed in serviceSeeds)
+        {
+            if (await _context.MedicalServiceOfferings.AnyAsync(
+                    service =>
+                        service.MedicalServiceProviderProfileId == profile.Id &&
+                        service.Name.ToLower() == seed.Name.ToLower(),
+                    ct))
+            {
+                continue;
+            }
+
+            _context.MedicalServiceOfferings.Add(new MedicalServiceOffering
+            {
+                MedicalServiceProviderProfileId = profile.Id,
+                MedicalServiceCategoryId = categories[seed.Category].Id,
+                Name = seed.Name,
+                Description = $"{seed.Name} provided by the development demo medical center.",
+                Price = seed.Price,
+                EstimatedDurationMinutes = seed.Duration,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+
+        foreach (var day in Enum.GetValues<DayOfWeek>())
+        {
+            if (await _context.MedicalServiceProviderWorkingHours.AnyAsync(
+                    hour =>
+                        hour.MedicalServiceProviderProfileId == profile.Id &&
+                        hour.DayOfWeek == day,
+                    ct))
+            {
+                continue;
+            }
+
+            var isFriday = day == DayOfWeek.Friday;
+            _context.MedicalServiceProviderWorkingHours.Add(
+                new MedicalServiceProviderWorkingHour
+                {
+                    MedicalServiceProviderProfileId = profile.Id,
+                    DayOfWeek = day,
+                    IsClosed = isFriday,
+                    OpenTime = isFriday ? null : new TimeOnly(9, 0),
+                    CloseTime = isFriday ? null : new TimeOnly(21, 0)
+                });
+        }
+
+        await _context.SaveChangesAsync(ct);
+
+        profile.IsPublished = true;
+        profile.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "MedicalServiceProvider demo profile, categories, services and working hours verified.");
     }
 
     // ========================================================= Hospital <-> user helper

@@ -106,11 +106,29 @@ public class MedicalServiceProviderProfileConfiguration
         builder.HasIndex(p => p.UserId).IsUnique();
 
         builder.Property(p => p.UserId).IsRequired();
-        builder.Property(p => p.ProviderName).HasMaxLength(200);
-        builder.Property(p => p.ServiceType).HasMaxLength(100);
+        // Reuse the two legacy columns so existing provider data is preserved.
+        // Keep the legacy database widths to avoid truncating existing profile data. The
+        // API validators apply the tighter new UX limits for future writes.
+        builder.Property(p => p.BusinessName).HasColumnName("ProviderName").HasMaxLength(200);
+        builder.Property(p => p.ProviderType)
+            .HasColumnName("ServiceType")
+            .HasConversion<string>()
+            .HasMaxLength(100);
+        builder.Property(p => p.Description).HasMaxLength(2000);
+        builder.Property(p => p.PhoneNumber).HasMaxLength(30);
         builder.Property(p => p.Address).HasMaxLength(400);
         builder.Property(p => p.Governorate).HasMaxLength(100);
         builder.Property(p => p.City).HasMaxLength(100);
-        builder.Property(p => p.Description).HasMaxLength(2000);
+        builder.Property(p => p.Latitude).HasPrecision(9, 6);
+        builder.Property(p => p.Longitude).HasPrecision(9, 6);
+        builder.Property(p => p.IsPublished).IsRequired().HasDefaultValue(false);
+        builder.Property(p => p.CreatedAt)
+            .IsRequired()
+            .HasDefaultValueSql("SYSUTCDATETIME()");
+
+        builder.HasIndex(p => p.Governorate);
+        builder.HasIndex(p => p.City);
+        builder.HasIndex(p => new { p.Latitude, p.Longitude })
+            .HasDatabaseName("IX_MedicalServiceProviderProfiles_Latitude_Longitude");
     }
 }
