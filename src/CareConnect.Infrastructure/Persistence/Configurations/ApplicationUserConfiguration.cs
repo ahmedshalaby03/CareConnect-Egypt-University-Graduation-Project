@@ -50,6 +50,6 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
         builder.HasOne(u => u.MedicalServiceProviderProfile)
             .WithOne(p => p.User!)
             .HasForeignKey<MedicalServiceProviderProfile>(p => p.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }
