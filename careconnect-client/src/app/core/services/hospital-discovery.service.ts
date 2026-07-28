@@ -11,6 +11,7 @@ import {
   NearbyHospitalQuery,
   SuperAdminHospitalLocationStats,
 } from '../models/hospital-discovery.model';
+import { ApiAssetUrlService } from './api-asset-url.service';
 
 /**
  * Location-aware hospital discovery: nearby search, single-hospital location details, and
@@ -19,6 +20,7 @@ import {
 @Injectable({ providedIn: 'root' })
 export class HospitalDiscoveryService {
   private readonly http = inject(HttpClient);
+  private readonly assets = inject(ApiAssetUrlService);
   private readonly hospitalsUrl = `${environment.apiBaseUrl}/hospitals`;
 
   searchNearby(query: NearbyHospitalQuery): Observable<PagedResult<HospitalDirectoryItem>> {
@@ -43,7 +45,13 @@ export class HospitalDiscoveryService {
 
     return this.http
       .get<ApiResponse<PagedResult<HospitalDirectoryItem>>>(`${this.hospitalsUrl}/nearby`, { params })
-      .pipe(map((response) => response.data!));
+      .pipe(map((response) => ({
+        ...response.data!,
+        items: response.data!.items.map((hospital) => ({
+          ...hospital,
+          logoUrl: this.assets.resolve(hospital.logoUrl),
+        })),
+      })));
   }
 
   getLocationDetails(

@@ -19,10 +19,12 @@ import {
   UpdateMedicalServiceProviderProfileRequest,
   UpdateProviderWorkingHoursRequest,
 } from '../models/medical-service-provider.model';
+import { ApiAssetUrlService } from './api-asset-url.service';
 
 @Injectable({ providedIn: 'root' })
 export class MedicalServiceProviderService {
   private readonly http = inject(HttpClient);
+  private readonly assets = inject(ApiAssetUrlService);
   private readonly managementUrl = `${environment.apiBaseUrl}/medical-service-provider`;
   private readonly directoryUrl = `${environment.apiBaseUrl}/medical-service-providers`;
   private readonly categoriesUrl = `${environment.apiBaseUrl}/medical-service-categories`;
@@ -146,7 +148,13 @@ export class MedicalServiceProviderService {
 
     return this.http
       .get<ApiResponse<PagedResult<MedicalServiceProviderSummary>>>(this.directoryUrl, { params })
-      .pipe(map((response) => response.data!));
+      .pipe(map((response) => ({
+        ...response.data!,
+        items: response.data!.items.map((provider) => ({
+          ...provider,
+          profileImageUrl: this.assets.resolve(provider.profileImageUrl),
+        })),
+      })));
   }
 
   getDetails(
@@ -160,7 +168,10 @@ export class MedicalServiceProviderService {
     }
     return this.http
       .get<ApiResponse<MedicalServiceProviderDetails>>(`${this.directoryUrl}/${id}`, { params })
-      .pipe(map((response) => response.data!));
+      .pipe(map((response) => ({
+        ...response.data!,
+        profileImageUrl: this.assets.resolve(response.data!.profileImageUrl),
+      })));
   }
 
   getCategories(query: MedicalServiceCategoryQuery): Observable<PagedResult<MedicalServiceCategory>> {

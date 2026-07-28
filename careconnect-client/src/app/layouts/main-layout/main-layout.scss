@@ -47,6 +47,12 @@
   flex: 1 1 auto;
 }
 
+.app-bar__nav-button {
+  display: none;
+  margin-inline-start: 8px;
+  color: #fff;
+}
+
 .app-nav {
   display: flex;
   align-items: center;
@@ -84,17 +90,32 @@
   }
 }
 
-/* The menu doubles as the mobile navigation, so these links hide on wide screens. */
-.app-menu__mobile-link {
-  display: none;
-}
-
 .app-bar__account {
   display: inline-flex;
   align-items: center;
+  min-width: 0;
+  max-width: min(270px, 30vw);
+  height: 44px;
+  padding-inline: 6px 10px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--cc-brand-dark);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 14%);
+
+}
+
+.app-bar__account-content {
+  display: flex;
+  align-items: center;
+  flex-direction: row;
   gap: 8px;
-  color: #fff;
-  height: 48px;
+  min-width: 0;
+  width: 100%;
+
+  > mat-icon {
+    flex: 0 0 auto;
+    color: var(--cc-brand);
+  }
 }
 
 .app-bar__notifications {
@@ -153,62 +174,110 @@
 .app-bar__avatar {
   display: grid;
   place-items: center;
+  flex: 0 0 34px;
   width: 34px;
   height: 34px;
+  overflow: hidden;
   border-radius: 50%;
-  background: rgb(255 255 255 / 22%);
+  background: var(--cc-brand-light);
+  color: var(--cc-brand-dark);
   font-size: 0.82rem;
-  font-weight: 600;
+  font-weight: 800;
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 }
 
 .app-bar__account-text {
   display: flex;
+  min-width: 0;
   flex-direction: column;
   align-items: flex-start;
   line-height: 1.2;
 }
 
 .app-bar__name {
+  display: block;
+  max-width: 165px;
+  overflow: hidden;
+  color: var(--cc-brand-dark);
   font-size: 0.9rem;
-  font-weight: 500;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-bar__role {
+  display: block;
+  max-width: 165px;
+  overflow: hidden;
+  color: var(--cc-brand);
   font-size: 0.72rem;
-  opacity: 0.85;
+  font-weight: 600;
+  opacity: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app-content {
   flex: 1 1 auto;
 }
 
-.app-menu-head {
-  opacity: 1 !important;
-
-  &__name {
-    font-weight: 600;
-  }
-
-  &__email {
-    font-size: 0.8rem;
-    color: var(--mat-sys-on-surface-variant);
-  }
-}
-
-/* Below this width the inline nav would wrap and crowd the brand, so it moves into the
-   account menu instead. */
-@media (max-width: 1080px) {
+/* Roles have many destinations. At laptop and tablet widths a dedicated, keyboard-friendly
+   menu keeps every route reachable without allowing the toolbar to scroll horizontally. */
+@media (max-width: 1679px) {
   .app-nav {
     display: none;
   }
 
-  .app-menu__mobile-link {
-    display: flex;
+  .app-bar__nav-button {
+    display: inline-flex;
   }
 }
 
 @media (max-width: 600px) {
+  .app-bar {
+    padding-inline: 8px;
+  }
+
+  .app-bar__title {
+    font-size: 0.95rem;
+  }
+
+  .app-bar__mark {
+    display: none;
+  }
+
   .app-bar__account-text {
     display: none;
+  }
+
+  .app-bar__account {
+    width: 42px;
+    min-width: 42px;
+    max-width: 42px;
+    height: 42px;
+    padding: 4px;
+  }
+
+  .app-bar__account-content {
+    justify-content: center;
+
+    > mat-icon {
+      display: none;
+    }
+  }
+
+  .notification-menu__head,
+  .notification-menu__state {
+    min-width: min(340px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+  }
+
+  .notification-menu__copy {
+    max-width: calc(100vw - 100px);
   }
 }

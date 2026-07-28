@@ -1,8 +1,10 @@
 using System.Text;
 using CareConnect.Application.Common.Models;
 using CareConnect.Domain.Constants;
+using CareConnect.Domain.Entities;
 using CareConnect.Infrastructure.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CareConnect.Api.Extensions;
@@ -46,6 +48,9 @@ public static class AuthenticationExtensions
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.Key)),
                     ValidateLifetime = true,
+                    RequireExpirationTime = true,
+                    RequireSignedTokens = true,
+                    ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                     ClockSkew = TimeSpan.FromSeconds(settings.ClockSkewSeconds),
                     NameClaimType = AppClaimTypes.FullName,
                     RoleClaimType = AppClaimTypes.Role
@@ -55,6 +60,28 @@ public static class AuthenticationExtensions
                 // client has nothing to show the user.
                 options.Events = new JwtBearerEvents
                 {
+                    OnTokenValidated = async context =>
+                    {
+                        var userId = context.Principal?
+                            .FindFirst(AppClaimTypes.UserId)?
+                            .Value;
+                        if (string.IsNullOrWhiteSpace(userId))
+                        {
+                            context.Fail("The access token has no user identifier.");
+                            return;
+                        }
+
+                        var userManager = context.HttpContext.RequestServices
+                            .GetRequiredService<UserManager<ApplicationUser>>();
+                        var user = await userManager.FindByIdAsync(userId);
+
+                        // Deactivation takes effect for already-issued access tokens as well as
+                        // login and refresh attempts.
+                        if (user is null || !user.IsActive)
+                        {
+                            context.Fail("The account is inactive.");
+                        }
+                    },
                     OnChallenge = async context =>
                     {
                         context.HandleResponse();

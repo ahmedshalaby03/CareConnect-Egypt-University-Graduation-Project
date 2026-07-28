@@ -17,7 +17,9 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.10" />
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.10" />
+    <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
     <!-- Every Microsoft.IdentityModel.* / System.IdentityModel.* package must resolve to the
          same version. SqlClient and JwtBearer both drag in 7.7.1, so these pin the graph to 8.20.0. -->
     <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.20.0" />

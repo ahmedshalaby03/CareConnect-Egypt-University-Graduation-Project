@@ -1,3 +1,4 @@
+using CareConnect.Application.Common;
 using CareConnect.Application.Common.Models;
 using CareConnect.Application.DTOs.MedicalServiceProviders;
 using CareConnect.Application.Interfaces;
@@ -81,6 +82,9 @@ public sealed class MedicalServiceProviderDirectoryService
             .Select(profile => new DirectoryCandidate
             {
                 Id = profile.Id,
+                ProfileImageUrl = profile.User!.ProfileImageFileName == null
+                    ? null
+                    : ProfileImageStorageConstants.RequestPath + "/" + profile.User.ProfileImageFileName,
                 BusinessName = profile.BusinessName!,
                 ProviderType = profile.ProviderType!.Value,
                 Description = profile.Description,
@@ -148,6 +152,7 @@ public sealed class MedicalServiceProviderDirectoryService
             .Select(candidate => new MedicalServiceProviderSummaryDto
             {
                 Id = candidate.Id,
+                ProfileImageUrl = candidate.ProfileImageUrl,
                 BusinessName = candidate.BusinessName,
                 ProviderType = candidate.ProviderType,
                 ProviderTypeName = candidate.ProviderType.ToString(),
@@ -179,6 +184,7 @@ public sealed class MedicalServiceProviderDirectoryService
         CancellationToken ct = default)
     {
         var provider = await EligibleProfiles()
+            .Include(profile => profile.User)
             .Include(profile => profile.ServiceOfferings)
                 .ThenInclude(service => service.MedicalServiceCategory)
             .Include(profile => profile.WorkingHours)
@@ -203,6 +209,9 @@ public sealed class MedicalServiceProviderDirectoryService
             new MedicalServiceProviderDetailsDto
             {
                 Id = provider.Id,
+                ProfileImageUrl = provider.User!.ProfileImageFileName == null
+                    ? null
+                    : ProfileImageStorageConstants.RequestPath + "/" + provider.User.ProfileImageFileName,
                 BusinessName = provider.BusinessName!,
                 ProviderType = provider.ProviderType!.Value,
                 ProviderTypeName = provider.ProviderType.Value.ToString(),
@@ -287,6 +296,7 @@ public sealed class MedicalServiceProviderDirectoryService
     private sealed class DirectoryCandidate
     {
         public Guid Id { get; init; }
+        public string? ProfileImageUrl { get; init; }
         public string BusinessName { get; init; } = string.Empty;
         public Domain.Enums.MedicalServiceProviderType ProviderType { get; init; }
         public string? Description { get; init; }

@@ -13,6 +13,12 @@ public class ApplicationUser : IdentityUser
 
     public DateTime? LastLoginAt { get; set; }
 
+    /// <summary>
+    /// Random server-managed file name only. Image bytes and physical paths are never
+    /// stored in SQL Server, and clients cannot write this value directly.
+    /// </summary>
+    public string? ProfileImageFileName { get; set; }
+
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 

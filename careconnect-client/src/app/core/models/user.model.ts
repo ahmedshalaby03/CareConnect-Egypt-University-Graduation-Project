@@ -42,6 +42,7 @@ export interface User {
   isActive: boolean;
   createdAt: string;
   lastLoginAt: string | null;
+  profileImageUrl: string | null;
 }
 
 /**
@@ -53,7 +54,7 @@ export const ROLE_HOME_ROUTE: Record<UserRole, string> = {
   Doctor: '/dashboard/doctor',
   Hospital: '/dashboard/hospital',
   MedicalServiceProvider: '/dashboard/service-provider',
-  SuperAdmin: '/super-admin',
+  SuperAdmin: '/super-admin/dashboard',
 };
 
 export function homeRouteForRole(role: UserRole | null | undefined): string {

@@ -18,6 +18,20 @@ export const routes: Routes = [
       import('./layouts/auth-layout/auth-layout').then((m) => m.AuthLayout),
     children: [
       {
+        path: 'forbidden',
+        title: 'Access denied - CareConnect Egypt',
+        loadComponent: () =>
+          import('./features/errors/error-page').then((m) => m.ErrorPage),
+        data: { code: '403' },
+      },
+      {
+        path: 'error',
+        title: 'Application error - CareConnect Egypt',
+        loadComponent: () =>
+          import('./features/errors/error-page').then((m) => m.ErrorPage),
+        data: { code: 'error' },
+      },
+      {
         path: 'login',
         title: 'Sign in - CareConnect Egypt',
         loadComponent: () => import('./features/auth/login/login').then((m) => m.Login),
@@ -39,6 +53,22 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./layouts/main-layout/main-layout').then((m) => m.MainLayout),
     children: [
+      {
+        path: 'account/profile',
+        title: 'Account settings - CareConnect Egypt',
+        loadComponent: () =>
+          import('./features/account/profile/account-profile').then(
+            (m) => m.AccountProfilePage,
+          ),
+      },
+      {
+        path: 'account/security',
+        title: 'Security - CareConnect Egypt',
+        loadComponent: () =>
+          import('./features/account/security/account-security').then(
+            (m) => m.AccountSecurityPage,
+          ),
+      },
       {
         path: 'notifications',
         title: 'Notifications - CareConnect Egypt',
@@ -342,9 +372,8 @@ export const routes: Routes = [
         title: 'Service provider dashboard - CareConnect Egypt',
         canActivate: [roleGuard('MedicalServiceProvider')],
         loadComponent: () =>
-          import('./features/service-provider/dashboard/service-provider-dashboard').then(
-            (m) => m.ServiceProviderDashboard,
-          ),
+          import('./features/dashboard/role-dashboard/role-dashboard').then((m) => m.RoleDashboard),
+        data: { role: 'MedicalServiceProvider' },
       },
       {
         path: 'dashboard/service-provider/profile',
@@ -410,6 +439,14 @@ export const routes: Routes = [
       },
 
       // --------------------------------------------------------- SuperAdmin
+      {
+        path: 'super-admin/dashboard',
+        title: 'SuperAdmin dashboard - CareConnect Egypt',
+        canActivate: [roleGuard('SuperAdmin')],
+        loadComponent: () =>
+          import('./features/dashboard/role-dashboard/role-dashboard').then((m) => m.RoleDashboard),
+        data: { role: 'SuperAdmin' },
+      },
       {
         path: 'super-admin',
         title: 'User management - CareConnect Egypt',
@@ -539,7 +576,14 @@ export const routes: Routes = [
   },
 
   {
+    path: 'not-found',
+    title: 'Page not found - CareConnect Egypt',
+    loadComponent: () =>
+      import('./features/errors/error-page').then((m) => m.ErrorPage),
+    data: { code: '404' },
+  },
+  {
     path: '**',
-    redirectTo: 'login',
+    redirectTo: 'not-found',
   },
 ];

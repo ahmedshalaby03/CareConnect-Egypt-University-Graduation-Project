@@ -88,9 +88,10 @@ public class HospitalDiscoveryService : IHospitalDiscoveryService
         // Bounding-box candidates only - small enough, for an academic-MVP hospital count,
         // to finish with an exact Haversine pass and the appointment-availability lookup in
         // memory rather than trying to translate either into SQL.
-        var candidates = await hospitals
-            .Select(HospitalDirectoryProjections.HospitalProjection())
-            .ToListAsync(ct);
+        var candidates = await HospitalDirectoryProjections.LoadCandidatesAsync(
+            _context,
+            hospitals,
+            ct);
 
         var withinRadius = candidates
             .Select(h => (

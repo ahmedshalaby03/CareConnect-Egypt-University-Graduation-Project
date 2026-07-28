@@ -1,0 +1,196 @@
+<section class="cc-page account-page">
+  <header class="cc-page-header">
+    <h1>Account settings</h1>
+    <p>Manage the shared name, phone number and profile image used across CareConnect.</p>
+  </header>
+
+  @if (loading()) {
+    <div class="cc-loading">
+      <mat-spinner diameter="40" />
+      <p>Loading your account…</p>
+    </div>
+  } @else if (loadError(); as error) {
+    <div class="cc-card cc-empty-state">
+      <mat-icon>error_outline</mat-icon>
+      <h2>Could not load account settings</h2>
+      <p>{{ error }}</p>
+    </div>
+  } @else if (account(); as currentAccount) {
+    @if (serverError()) {
+      <div class="cc-error-summary" role="alert">
+        <strong>{{ serverError() }}</strong>
+        @if (serverErrors().length) {
+          <ul>
+            @for (message of serverErrors(); track message) {
+              <li>{{ message }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    <div class="account-grid">
+      <section class="cc-card image-card" aria-labelledby="profile-image-title">
+        <div>
+          <h2 id="profile-image-title">Profile image</h2>
+          <p class="section-copy">JPEG, PNG or WebP. Maximum size 5 MB.</p>
+        </div>
+
+        <div class="avatar-preview">
+          @if (displayImageUrl(); as imageUrl) {
+            <img
+              [src]="imageUrl"
+              [alt]="currentAccount.fullName + ' profile image'"
+              (error)="onImageError()"
+            />
+          } @else {
+            <span aria-label="Profile initials">{{ initials() }}</span>
+          }
+        </div>
+
+        <input
+          #fileInput
+          class="file-input"
+          type="file"
+          accept="image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp"
+          aria-label="Choose a profile image"
+          (change)="selectImage($event)"
+        />
+
+        <div class="image-actions">
+          <button
+            type="button"
+            mat-stroked-button
+            [disabled]="uploading() || removing()"
+            (click)="fileInput.click()"
+          >
+            <mat-icon>photo_camera</mat-icon>
+            {{ currentAccount.hasProfileImage ? 'Choose replacement' : 'Choose image' }}
+          </button>
+
+          @if (selectedFile()) {
+            <button
+              type="button"
+              mat-flat-button
+              color="primary"
+              [disabled]="uploading()"
+              (click)="uploadImage()"
+            >
+              @if (uploading()) {
+                <mat-spinner diameter="18" />
+              } @else {
+                <mat-icon>upload</mat-icon>
+              }
+              Upload image
+            </button>
+            <button type="button" mat-button [disabled]="uploading()" (click)="cancelSelection()">
+              Cancel preview
+            </button>
+          }
+
+          @if (currentAccount.hasProfileImage && !selectedFile()) {
+            <button
+              type="button"
+              mat-button
+              class="remove-image"
+              [disabled]="removing()"
+              (click)="confirmRemoveImage()"
+            >
+              <mat-icon>delete_outline</mat-icon>
+              {{ removing() ? 'Removing…' : 'Remove image' }}
+            </button>
+          }
+        </div>
+
+        @if (selectedFile(); as file) {
+          <p class="selected-file">
+            Ready to upload: <strong>{{ file.name }}</strong>
+            ({{ file.size / 1024 | number: '1.0-0' }} KB)
+          </p>
+        }
+      </section>
+
+      <section class="cc-card account-card" aria-labelledby="account-information-title">
+        <div>
+          <h2 id="account-information-title">Basic account information</h2>
+          <p class="section-copy">Email, role and account status are read-only.</p>
+        </div>
+
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <mat-form-field appearance="outline">
+            <mat-label>Full name</mat-label>
+            <input matInput formControlName="fullName" maxlength="150" autocomplete="name" />
+            @if (form.controls.fullName.touched && form.controls.fullName.invalid) {
+              <mat-error>Enter a full name between 3 and 150 characters.</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Phone number</mat-label>
+            <input matInput formControlName="phoneNumber" maxlength="20" autocomplete="tel" />
+            @if (form.controls.phoneNumber.touched && form.controls.phoneNumber.invalid) {
+              <mat-error>Enter a valid phone number using 7–20 digits.</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="read-only-grid">
+            <div>
+              <span>Email</span>
+              <strong>{{ currentAccount.email }}</strong>
+            </div>
+            <div>
+              <span>Role</span>
+              <strong>{{ roleLabel() }}</strong>
+            </div>
+            <div>
+              <span>Status</span>
+              <strong
+                class="cc-status-chip"
+                [class.cc-status-chip--active]="currentAccount.isActive"
+                [class.cc-status-chip--inactive]="!currentAccount.isActive"
+              >
+                {{ currentAccount.isActive ? 'Active' : 'Inactive' }}
+              </strong>
+            </div>
+            <div>
+              <span>Member since</span>
+              <strong>{{ currentAccount.createdAt | date: 'mediumDate' }}</strong>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" mat-flat-button color="primary" [disabled]="saving()">
+              @if (saving()) {
+                <mat-spinner diameter="18" />
+              } @else {
+                <mat-icon>save</mat-icon>
+              }
+              Save account information
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <section class="cc-card links-card">
+        <div>
+          <h2>More settings</h2>
+          <p class="section-copy">
+            Account settings never modify professional, hospital or business-profile fields.
+          </p>
+        </div>
+        <div class="links-card__actions">
+          <a mat-stroked-button routerLink="/account/security">
+            <mat-icon>lock</mat-icon>
+            Security and password
+          </a>
+          @if (currentAccount.roleProfileRoute) {
+            <a mat-stroked-button [routerLink]="currentAccount.roleProfileRoute">
+              <mat-icon>open_in_new</mat-icon>
+              Open role-specific profile
+            </a>
+          }
+        </div>
+      </section>
+    </div>
+  }
+</section>

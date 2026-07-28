@@ -13,6 +13,7 @@ import {
   HospitalDirectoryQuery,
 } from '../models/directory.model';
 import { AvailableSlotsResponse } from '../models/slot.model';
+import { ApiAssetUrlService } from './api-asset-url.service';
 
 /**
  * Browse endpoints shared by every signed-in role. The API only ever returns completed
@@ -21,6 +22,7 @@ import { AvailableSlotsResponse } from '../models/slot.model';
 @Injectable({ providedIn: 'root' })
 export class DirectoryService {
   private readonly http = inject(HttpClient);
+  private readonly assets = inject(ApiAssetUrlService);
   private readonly hospitalsUrl = `${environment.apiBaseUrl}/hospitals`;
   private readonly doctorsUrl = `${environment.apiBaseUrl}/doctors`;
 
@@ -52,13 +54,13 @@ export class DirectoryService {
 
     return this.http
       .get<ApiResponse<PagedResult<HospitalDirectoryItem>>>(this.hospitalsUrl, { params })
-      .pipe(map((response) => response.data!));
+      .pipe(map((response) => this.normalizeHospitalPage(response.data!)));
   }
 
   getHospital(id: string): Observable<HospitalDirectoryDetails> {
     return this.http
       .get<ApiResponse<HospitalDirectoryDetails>>(`${this.hospitalsUrl}/${id}`)
-      .pipe(map((response) => response.data!));
+      .pipe(map((response) => this.normalizeHospitalDetails(response.data!)));
   }
 
   searchDoctors(query: DoctorDirectoryQuery): Observable<PagedResult<DoctorDirectoryItem>> {
@@ -72,13 +74,16 @@ export class DirectoryService {
 
     return this.http
       .get<ApiResponse<PagedResult<DoctorDirectoryItem>>>(this.doctorsUrl, { params })
-      .pipe(map((response) => response.data!));
+      .pipe(map((response) => ({
+        ...response.data!,
+        items: response.data!.items.map((doctor) => this.normalizeDoctor(doctor)),
+      })));
   }
 
   getDoctor(id: string): Observable<DoctorDirectoryDetails> {
     return this.http
       .get<ApiResponse<DoctorDirectoryDetails>>(`${this.doctorsUrl}/${id}`)
-      .pipe(map((response) => response.data!));
+      .pipe(map((response) => this.normalizeDoctor(response.data!)));
   }
 
   /** Slot generation always happens server-side; this just asks for the result. */
@@ -101,5 +106,35 @@ export class DirectoryService {
   private appendIfSet(params: HttpParams, key: string, value: string | null | undefined): HttpParams {
     const trimmed = value?.trim();
     return trimmed ? params.set(key, trimmed) : params;
+  }
+
+  private normalizeHospitalPage(
+    page: PagedResult<HospitalDirectoryItem>,
+  ): PagedResult<HospitalDirectoryItem> {
+    return {
+      ...page,
+      items: page.items.map((hospital) => ({
+        ...hospital,
+        logoUrl: this.assets.resolve(hospital.logoUrl),
+      })),
+    };
+  }
+
+  private normalizeHospitalDetails(hospital: HospitalDirectoryDetails): HospitalDirectoryDetails {
+    return {
+      ...hospital,
+      logoUrl: this.assets.resolve(hospital.logoUrl),
+      doctors: hospital.doctors.map((doctor) => ({
+        ...doctor,
+        profileImageUrl: this.assets.resolve(doctor.profileImageUrl),
+      })),
+    };
+  }
+
+  private normalizeDoctor<T extends DoctorDirectoryItem>(doctor: T): T {
+    return {
+      ...doctor,
+      profileImageUrl: this.assets.resolve(doctor.profileImageUrl),
+    };
   }
 }

@@ -91,6 +91,7 @@
               type="button"
               mat-icon-button
               matTooltip="Edit specialty"
+              [attr.aria-label]="'Edit ' + specialty.name"
               (click)="openForm(specialty)"
             >
               <mat-icon>edit</mat-icon>
@@ -98,6 +99,7 @@
             <mat-slide-toggle
               [checked]="specialty.isActive"
               [disabled]="togglingId() === specialty.id"
+              [attr.aria-label]="(specialty.isActive ? 'Deactivate ' : 'Activate ') + specialty.name"
               (change)="toggleStatus(specialty)"
               [matTooltip]="
                 specialty.isActive

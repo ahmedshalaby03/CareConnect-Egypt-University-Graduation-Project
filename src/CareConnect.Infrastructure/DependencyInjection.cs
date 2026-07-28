@@ -43,6 +43,8 @@ public static class DependencyInjection
 
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IAccountSettingsService, AccountSettingsService>();
+        services.AddSingleton<IProfileImageStorageService, LocalProfileImageStorageService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
 
         services.AddScoped<ISpecialtyService, SpecialtyService>();
@@ -61,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<IRatingQueryService>(sp => sp.GetRequiredService<ReviewService>());
         services.AddScoped<IReviewModerationService>(sp => sp.GetRequiredService<ReviewService>());
         services.AddScoped<INotificationService, NotificationService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         services.AddScoped<IDoctorAvailabilityService, DoctorAvailabilityService>();
         services.AddScoped<IDoctorUnavailablePeriodService, DoctorUnavailablePeriodService>();

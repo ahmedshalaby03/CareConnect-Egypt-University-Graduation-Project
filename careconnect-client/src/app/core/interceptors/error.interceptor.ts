@@ -55,7 +55,13 @@ function resolveMessage(
     case 404:
       return 'The requested resource was not found.';
     case 409:
-      return 'That record already exists.';
+      return 'The request conflicts with the latest saved data. Refresh and try again.';
+    case 429:
+      return 'Too many requests were sent. Please wait a moment and try again.';
+    case 500:
+      return 'The server could not complete the request. Please try again.';
+    case 503:
+      return 'The service is temporarily unavailable. Please try again shortly.';
     default:
       return 'Something went wrong. Please try again.';
   }

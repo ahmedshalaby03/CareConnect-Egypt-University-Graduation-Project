@@ -1,9 +1,12 @@
 using System.Linq.Expressions;
+using CareConnect.Application.Common;
 using CareConnect.Application.DTOs.Directory;
 using CareConnect.Application.DTOs.Specialties;
 using CareConnect.Application.Interfaces;
 using CareConnect.Domain.Entities;
 using CareConnect.Domain.Enums;
+using CareConnect.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
 
 namespace CareConnect.Infrastructure.Services;
 
@@ -35,8 +38,26 @@ internal static class HospitalDirectoryProjections
         double? AverageRating,
         int ReviewCount);
 
-    internal static Expression<Func<HospitalProfile, HospitalCandidate>> HospitalProjection() =>
-        h => new HospitalCandidate(
+    private sealed record HospitalCandidateSeed(
+        Guid Id,
+        string HospitalName,
+        string? Address,
+        string? Governorate,
+        string? City,
+        string? PhoneNumber,
+        string? Description,
+        string? LogoUrl,
+        decimal? Latitude,
+        decimal? Longitude,
+        string? LocationDescription,
+        string? NearbyLandmark,
+        DateTime CreatedAt,
+        int NumberOfApprovedDoctors,
+        double? AverageRating,
+        int ReviewCount);
+
+    private static Expression<Func<HospitalProfile, HospitalCandidateSeed>> ScalarProjection() =>
+        h => new HospitalCandidateSeed(
             h.Id,
             h.HospitalName ?? string.Empty,
             h.Address,
@@ -44,30 +65,99 @@ internal static class HospitalDirectoryProjections
             h.City,
             h.PhoneNumber,
             h.Description,
-            h.LogoUrl,
+            h.LogoUrl ?? (h.User!.ProfileImageFileName == null
+                ? null
+                : ProfileImageStorageConstants.RequestPath + "/" + h.User.ProfileImageFileName),
             h.Latitude,
             h.Longitude,
             h.LocationDescription,
             h.NearbyLandmark,
             h.CreatedAt,
-            h.HospitalSpecialties
-                .OrderBy(hs => hs.Specialty!.Name)
-                .Select(hs => new SpecialtyOptionDto
-                {
-                    Id = hs.Specialty!.Id,
-                    Name = hs.Specialty.Name,
-                    ArabicName = hs.Specialty.ArabicName
-                })
-                .ToList(),
             h.DoctorAffiliations.Count(a => a.Status == AffiliationStatus.Approved),
-            h.BloodStocks
-                .Where(s => s.AvailableUnits > 0 && s.IsAvailable)
-                .Select(s => s.BloodGroup)
-                .Distinct()
-                .ToList(),
             h.Reviews.Where(r => r.ModerationStatus == ReviewModerationStatus.Visible)
                 .Select(r => (double?)r.Rating).Average(),
             h.Reviews.Count(r => r.ModerationStatus == ReviewModerationStatus.Visible));
+
+    /// <summary>
+    /// Loads scalar hospital cards first, then hydrates specialties and blood groups in two
+    /// bounded batch queries. This avoids SQL APPLY, remains SQLite-compatible for the
+    /// existing test host, and avoids one query per card.
+    /// </summary>
+    internal static async Task<List<HospitalCandidate>> LoadCandidatesAsync(
+        ApplicationDbContext context,
+        IQueryable<HospitalProfile> hospitals,
+        CancellationToken cancellationToken)
+    {
+        var seeds = await hospitals.Select(ScalarProjection()).ToListAsync(cancellationToken);
+        if (seeds.Count == 0)
+        {
+            return [];
+        }
+
+        var ids = seeds.Select(seed => seed.Id).ToList();
+        var specialtyRows = await context.HospitalSpecialties
+            .AsNoTracking()
+            .Where(link =>
+                ids.Contains(link.HospitalProfileId) &&
+                link.Specialty!.IsActive)
+            .OrderBy(link => link.Specialty!.Name)
+            .Select(link => new
+            {
+                link.HospitalProfileId,
+                Specialty = new SpecialtyOptionDto
+                {
+                    Id = link.SpecialtyId,
+                    Name = link.Specialty!.Name,
+                    ArabicName = link.Specialty.ArabicName
+                }
+            })
+            .ToListAsync(cancellationToken);
+
+        var bloodRows = await context.BloodStocks
+            .AsNoTracking()
+            .Where(stock =>
+                ids.Contains(stock.HospitalProfileId) &&
+                stock.AvailableUnits > 0 &&
+                stock.IsAvailable)
+            .Select(stock => new { stock.HospitalProfileId, stock.BloodGroup })
+            .Distinct()
+            .ToListAsync(cancellationToken);
+
+        var specialtiesByHospital = specialtyRows
+            .GroupBy(row => row.HospitalProfileId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<SpecialtyOptionDto>)group
+                    .Select(row => row.Specialty)
+                    .ToList());
+        var bloodByHospital = bloodRows
+            .GroupBy(row => row.HospitalProfileId)
+            .ToDictionary(
+                group => group.Key,
+                group => (IReadOnlyList<BloodGroup>)group
+                    .Select(row => row.BloodGroup)
+                    .ToList());
+
+        return seeds.Select(seed => new HospitalCandidate(
+            seed.Id,
+            seed.HospitalName,
+            seed.Address,
+            seed.Governorate,
+            seed.City,
+            seed.PhoneNumber,
+            seed.Description,
+            seed.LogoUrl,
+            seed.Latitude,
+            seed.Longitude,
+            seed.LocationDescription,
+            seed.NearbyLandmark,
+            seed.CreatedAt,
+            specialtiesByHospital.GetValueOrDefault(seed.Id) ?? [],
+            seed.NumberOfApprovedDoctors,
+            bloodByHospital.GetValueOrDefault(seed.Id) ?? [],
+            seed.AverageRating,
+            seed.ReviewCount)).ToList();
+    }
 
     internal static HospitalDirectoryItemDto ToDirectoryItemDto(
         HospitalCandidate h,

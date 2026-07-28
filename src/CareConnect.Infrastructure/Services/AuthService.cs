@@ -19,17 +19,20 @@ public class AuthService : IAuthService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ApplicationDbContext _context;
     private readonly IJwtService _jwtService;
+    private readonly IProfileImageStorageService _profileImages;
     private readonly ILogger<AuthService> _logger;
 
     public AuthService(
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext context,
         IJwtService jwtService,
+        IProfileImageStorageService profileImages,
         ILogger<AuthService> logger)
     {
         _userManager = userManager;
         _context = context;
         _jwtService = jwtService;
+        _profileImages = profileImages;
         _logger = logger;
     }
 
@@ -447,7 +450,7 @@ public class AuthService : IAuthService
         }
     }
 
-    private static UserDto ToDto(ApplicationUser user, string role) => new()
+    private UserDto ToDto(ApplicationUser user, string role) => new()
     {
         Id = user.Id,
         FullName = user.FullName,
@@ -456,6 +459,7 @@ public class AuthService : IAuthService
         Role = role,
         IsActive = user.IsActive,
         CreatedAt = user.CreatedAt,
-        LastLoginAt = user.LastLoginAt
+        LastLoginAt = user.LastLoginAt,
+        ProfileImageUrl = _profileImages.GetPublicUrl(user.ProfileImageFileName)
     };
 }

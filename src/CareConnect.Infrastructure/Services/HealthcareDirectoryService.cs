@@ -1,4 +1,5 @@
 using System.Globalization;
+using CareConnect.Application.Common;
 using CareConnect.Application.Common.Models;
 using CareConnect.Application.DTOs.Directory;
 using CareConnect.Application.DTOs.HospitalDiscovery;
@@ -96,12 +97,13 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
         {
             var totalCount = await hospitals.CountAsync(ct);
 
-            var page = await hospitals
+            var page = await HospitalDirectoryProjections.LoadCandidatesAsync(
+                _context,
+                hospitals
                 .OrderBy(h => h.HospitalName)
                 .Skip(query.Skip)
-                .Take(query.PageSize)
-                .Select(HospitalDirectoryProjections.HospitalProjection())
-                .ToListAsync(ct);
+                .Take(query.PageSize),
+                ct);
 
             var pageIds = page.Select(h => h.Id).ToList();
             var appointmentAvailability = await HospitalAvailabilityHelpers
@@ -117,7 +119,10 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                 "Hospitals retrieved successfully.");
         }
 
-        var candidates = await hospitals.Select(HospitalDirectoryProjections.HospitalProjection()).ToListAsync(ct);
+        var candidates = await HospitalDirectoryProjections.LoadCandidatesAsync(
+            _context,
+            hospitals,
+            ct);
         var candidateIds = candidates.Select(h => h.Id).ToList();
 
         var availability = await HospitalAvailabilityHelpers
@@ -174,6 +179,9 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
             .Select(h => new
             {
                 Profile = h,
+                LogoUrl = h.LogoUrl ?? (h.User!.ProfileImageFileName == null
+                    ? null
+                    : ProfileImageStorageConstants.RequestPath + "/" + h.User.ProfileImageFileName),
                 Specialties = h.HospitalSpecialties
                     .OrderBy(hs => hs.Specialty!.Name)
                     .Select(hs => new SpecialtyOptionDto
@@ -203,7 +211,10 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                             },
                         YearsOfExperience = a.DoctorProfile.YearsOfExperience,
                         ConsultationPrice = a.DoctorProfile.ConsultationPrice,
-                        ProfileImageUrl = a.DoctorProfile.ProfileImageUrl
+                        ProfileImageUrl = a.DoctorProfile.User!.ProfileImageFileName == null
+                            ? a.DoctorProfile.ProfileImageUrl
+                            : ProfileImageStorageConstants.RequestPath + "/"
+                                + a.DoctorProfile.User.ProfileImageFileName
                     })
                     .ToList()
             })
@@ -226,7 +237,7 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                 City = profile.City,
                 PhoneNumber = profile.PhoneNumber,
                 Description = profile.Description,
-                LogoUrl = profile.LogoUrl,
+                LogoUrl = hospital.LogoUrl,
                 Latitude = profile.Latitude,
                 Longitude = profile.Longitude,
                 WebsiteUrl = profile.WebsiteUrl,
@@ -304,7 +315,9 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                 ConsultationPrice = d.ConsultationPrice,
                 Governorate = d.Governorate,
                 City = d.City,
-                ProfileImageUrl = d.ProfileImageUrl,
+                ProfileImageUrl = d.User!.ProfileImageFileName == null
+                    ? d.ProfileImageUrl
+                    : ProfileImageStorageConstants.RequestPath + "/" + d.User.ProfileImageFileName,
                 AverageRating = d.Reviews
                     .Where(r => r.ModerationStatus == ReviewModerationStatus.Visible)
                     .Select(r => (double?)r.Rating).Average(),
@@ -355,7 +368,9 @@ public class HealthcareDirectoryService : IHealthcareDirectoryService
                 ConsultationPrice = d.ConsultationPrice,
                 Governorate = d.Governorate,
                 City = d.City,
-                ProfileImageUrl = d.ProfileImageUrl,
+                ProfileImageUrl = d.User!.ProfileImageFileName == null
+                    ? d.ProfileImageUrl
+                    : ProfileImageStorageConstants.RequestPath + "/" + d.User.ProfileImageFileName,
                 LicenseNumber = d.LicenseNumber,
                 Address = d.Address,
                 AverageRating = d.Reviews

@@ -1,0 +1,121 @@
+<section class="cc-page security-page">
+  <header class="cc-page-header">
+    <h1>Security</h1>
+    <p>Change your password using the existing secure Identity workflow.</p>
+  </header>
+
+  <div class="security-grid">
+    <form class="cc-card security-form" [formGroup]="form" (ngSubmit)="submit()">
+      <div>
+        <h2>Change password</h2>
+        <p>You will be signed out after a successful password change.</p>
+      </div>
+
+      @if (serverError()) {
+        <div class="cc-error-summary" role="alert">
+          <strong>{{ serverError() }}</strong>
+          @if (serverErrors().length) {
+            <ul>
+              @for (message of serverErrors(); track message) {
+                <li>{{ message }}</li>
+              }
+            </ul>
+          }
+        </div>
+      }
+
+      <mat-form-field appearance="outline">
+        <mat-label>Current password</mat-label>
+        <input
+          matInput
+          formControlName="currentPassword"
+          [type]="showCurrent() ? 'text' : 'password'"
+          autocomplete="current-password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          [attr.aria-label]="showCurrent() ? 'Hide current password' : 'Show current password'"
+          (click)="showCurrent.update((value) => !value)"
+        >
+          <mat-icon>{{ showCurrent() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (form.controls.currentPassword.touched && form.controls.currentPassword.invalid) {
+          <mat-error>Current password is required.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>New password</mat-label>
+        <input
+          matInput
+          formControlName="newPassword"
+          [type]="showNew() ? 'text' : 'password'"
+          autocomplete="new-password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          [attr.aria-label]="showNew() ? 'Hide new password' : 'Show new password'"
+          (click)="showNew.update((value) => !value)"
+        >
+          <mat-icon>{{ showNew() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (form.controls.newPassword.touched && form.controls.newPassword.invalid) {
+          <mat-error>New password does not meet all requirements.</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Confirm new password</mat-label>
+        <input
+          matInput
+          formControlName="confirmNewPassword"
+          [type]="showConfirmation() ? 'text' : 'password'"
+          autocomplete="new-password"
+        />
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          [attr.aria-label]="showConfirmation() ? 'Hide password confirmation' : 'Show password confirmation'"
+          (click)="showConfirmation.update((value) => !value)"
+        >
+          <mat-icon>{{ showConfirmation() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (form.controls.confirmNewPassword.touched && form.hasError('passwordMismatch')) {
+          <mat-error>Passwords do not match.</mat-error>
+        }
+      </mat-form-field>
+
+      <div class="actions">
+        <a mat-button routerLink="/account/profile">Back to account</a>
+        <button type="submit" mat-flat-button color="primary" [disabled]="saving()">
+          @if (saving()) {
+            <mat-spinner diameter="18" />
+          } @else {
+            <mat-icon>lock_reset</mat-icon>
+          }
+          Change password
+        </button>
+      </div>
+    </form>
+
+    <aside class="cc-card requirements">
+      <mat-icon>verified_user</mat-icon>
+      <div>
+        <h2>Password requirements</h2>
+        <ul>
+          <li>At least 8 characters</li>
+          <li>At least one uppercase letter</li>
+          <li>At least one lowercase letter</li>
+          <li>At least one number</li>
+          <li>At least one special character</li>
+        </ul>
+        <p>Passwords are sent only to the secure API endpoint and are never stored in the browser.</p>
+      </div>
+    </aside>
+  </div>
+</section>
