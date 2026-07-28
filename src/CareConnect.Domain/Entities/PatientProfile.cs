@@ -16,4 +16,8 @@ public class PatientProfile
     public ICollection<BloodRequest> BloodRequests { get; set; } = new List<BloodRequest>();
     public ICollection<MedicalServiceRequest> MedicalServiceRequests { get; set; } =
         new List<MedicalServiceRequest>();
+    public ICollection<AppointmentDoctorReview> DoctorReviews { get; set; } = new List<AppointmentDoctorReview>();
+    public ICollection<AppointmentHospitalReview> HospitalReviews { get; set; } = new List<AppointmentHospitalReview>();
+    public ICollection<MedicalServiceProviderReview> MedicalServiceProviderReviews { get; set; } =
+        new List<MedicalServiceProviderReview>();
 }

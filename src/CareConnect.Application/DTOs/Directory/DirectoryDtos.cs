@@ -82,6 +82,8 @@ public class HospitalDirectoryItemDto
 
     public bool IsBloodAvailable { get; init; }
     public IReadOnlyList<string> AvailableBloodGroups { get; init; } = [];
+    public double? AverageRating { get; init; }
+    public int ReviewCount { get; init; }
 }
 
 public class HospitalDirectoryDetailsDto : HospitalDirectoryItemDto
@@ -121,6 +123,8 @@ public class DoctorDirectoryItemDto
 
     /// <summary>Approved affiliations only.</summary>
     public IReadOnlyList<DirectoryHospitalSummaryDto> Hospitals { get; init; } = [];
+    public double? AverageRating { get; init; }
+    public int ReviewCount { get; init; }
 }
 
 public class DoctorDirectoryDetailsDto : DoctorDirectoryItemDto

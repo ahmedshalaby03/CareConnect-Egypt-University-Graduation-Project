@@ -234,6 +234,130 @@ namespace CareConnect.Infrastructure.Migrations
                     b.ToTable("Appointments", (string)null);
                 });
 
+            modelBuilder.Entity("CareConnect.Domain.Entities.AppointmentDoctorReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("DoctorProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ModeratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModeratedByApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ModerationReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ModerationStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("PatientProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
+
+                    b.HasIndex("DoctorProfileId");
+
+                    b.HasIndex("ModeratedByApplicationUserId");
+
+                    b.HasIndex("ModerationStatus");
+
+                    b.HasIndex("PatientProfileId");
+
+                    b.ToTable("AppointmentDoctorReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AppointmentDoctorReviews_Rating", "[Rating] BETWEEN 1 AND 5");
+                        });
+                });
+
+            modelBuilder.Entity("CareConnect.Domain.Entities.AppointmentHospitalReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("AppointmentId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("HospitalProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ModeratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModeratedByApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ModerationReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ModerationStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("PatientProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId")
+                        .IsUnique();
+
+                    b.HasIndex("HospitalProfileId");
+
+                    b.HasIndex("ModeratedByApplicationUserId");
+
+                    b.HasIndex("ModerationStatus");
+
+                    b.HasIndex("PatientProfileId");
+
+                    b.ToTable("AppointmentHospitalReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_AppointmentHospitalReviews_Rating", "[Rating] BETWEEN 1 AND 5");
+                        });
+                });
+
             modelBuilder.Entity("CareConnect.Domain.Entities.BloodRequest", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1089,6 +1213,68 @@ namespace CareConnect.Infrastructure.Migrations
                     b.ToTable("MedicalServiceProviderProfiles", (string)null);
                 });
 
+            modelBuilder.Entity("CareConnect.Domain.Entities.MedicalServiceProviderReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MedicalServiceProviderProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MedicalServiceRequestId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("ModeratedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ModeratedByApplicationUserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("ModerationReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("ModerationStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<Guid>("PatientProfileId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MedicalServiceProviderProfileId");
+
+                    b.HasIndex("MedicalServiceRequestId")
+                        .IsUnique();
+
+                    b.HasIndex("ModeratedByApplicationUserId");
+
+                    b.HasIndex("ModerationStatus");
+
+                    b.HasIndex("PatientProfileId");
+
+                    b.ToTable("MedicalServiceProviderReviews", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_MedicalServiceProviderReviews_Rating", "[Rating] BETWEEN 1 AND 5");
+                        });
+                });
+
             modelBuilder.Entity("CareConnect.Domain.Entities.MedicalServiceProviderWorkingHour", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1544,6 +1730,74 @@ namespace CareConnect.Infrastructure.Migrations
                     b.Navigation("PatientProfile");
                 });
 
+            modelBuilder.Entity("CareConnect.Domain.Entities.AppointmentDoctorReview", b =>
+                {
+                    b.HasOne("CareConnect.Domain.Entities.Appointment", "Appointment")
+                        .WithOne("DoctorReview")
+                        .HasForeignKey("CareConnect.Domain.Entities.AppointmentDoctorReview", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.DoctorProfile", "DoctorProfile")
+                        .WithMany("Reviews")
+                        .HasForeignKey("DoctorProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.ApplicationUser", "ModeratedByApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ModeratedByApplicationUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CareConnect.Domain.Entities.PatientProfile", "PatientProfile")
+                        .WithMany("DoctorReviews")
+                        .HasForeignKey("PatientProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("DoctorProfile");
+
+                    b.Navigation("ModeratedByApplicationUser");
+
+                    b.Navigation("PatientProfile");
+                });
+
+            modelBuilder.Entity("CareConnect.Domain.Entities.AppointmentHospitalReview", b =>
+                {
+                    b.HasOne("CareConnect.Domain.Entities.Appointment", "Appointment")
+                        .WithOne("HospitalReview")
+                        .HasForeignKey("CareConnect.Domain.Entities.AppointmentHospitalReview", "AppointmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.HospitalProfile", "HospitalProfile")
+                        .WithMany("Reviews")
+                        .HasForeignKey("HospitalProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.ApplicationUser", "ModeratedByApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ModeratedByApplicationUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CareConnect.Domain.Entities.PatientProfile", "PatientProfile")
+                        .WithMany("HospitalReviews")
+                        .HasForeignKey("PatientProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("HospitalProfile");
+
+                    b.Navigation("ModeratedByApplicationUser");
+
+                    b.Navigation("PatientProfile");
+                });
+
             modelBuilder.Entity("CareConnect.Domain.Entities.BloodRequest", b =>
                 {
                     b.HasOne("CareConnect.Domain.Entities.BloodStock", "BloodStock")
@@ -1759,6 +2013,40 @@ namespace CareConnect.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("CareConnect.Domain.Entities.MedicalServiceProviderReview", b =>
+                {
+                    b.HasOne("CareConnect.Domain.Entities.MedicalServiceProviderProfile", "MedicalServiceProviderProfile")
+                        .WithMany("Reviews")
+                        .HasForeignKey("MedicalServiceProviderProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.MedicalServiceRequest", "MedicalServiceRequest")
+                        .WithOne("Review")
+                        .HasForeignKey("CareConnect.Domain.Entities.MedicalServiceProviderReview", "MedicalServiceRequestId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("CareConnect.Domain.Entities.ApplicationUser", "ModeratedByApplicationUser")
+                        .WithMany()
+                        .HasForeignKey("ModeratedByApplicationUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("CareConnect.Domain.Entities.PatientProfile", "PatientProfile")
+                        .WithMany("MedicalServiceProviderReviews")
+                        .HasForeignKey("PatientProfileId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MedicalServiceProviderProfile");
+
+                    b.Navigation("MedicalServiceRequest");
+
+                    b.Navigation("ModeratedByApplicationUser");
+
+                    b.Navigation("PatientProfile");
+                });
+
             modelBuilder.Entity("CareConnect.Domain.Entities.MedicalServiceProviderWorkingHour", b =>
                 {
                     b.HasOne("CareConnect.Domain.Entities.MedicalServiceProviderProfile", "MedicalServiceProviderProfile")
@@ -1903,6 +2191,10 @@ namespace CareConnect.Infrastructure.Migrations
 
             modelBuilder.Entity("CareConnect.Domain.Entities.Appointment", b =>
                 {
+                    b.Navigation("DoctorReview");
+
+                    b.Navigation("HospitalReview");
+
                     b.Navigation("InsuranceRequests");
                 });
 
@@ -1918,6 +2210,8 @@ namespace CareConnect.Infrastructure.Migrations
                     b.Navigation("Availabilities");
 
                     b.Navigation("HospitalAffiliations");
+
+                    b.Navigation("Reviews");
 
                     b.Navigation("UnavailablePeriods");
                 });
@@ -1937,6 +2231,8 @@ namespace CareConnect.Infrastructure.Migrations
                     b.Navigation("HospitalSpecialties");
 
                     b.Navigation("InsuranceRequests");
+
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("CareConnect.Domain.Entities.InsuranceCompany", b =>
@@ -1958,6 +2254,8 @@ namespace CareConnect.Infrastructure.Migrations
                 {
                     b.Navigation("MedicalServiceRequests");
 
+                    b.Navigation("Reviews");
+
                     b.Navigation("ServiceOfferings");
 
                     b.Navigation("WorkingHours");
@@ -1965,6 +2263,8 @@ namespace CareConnect.Infrastructure.Migrations
 
             modelBuilder.Entity("CareConnect.Domain.Entities.MedicalServiceRequest", b =>
                 {
+                    b.Navigation("Review");
+
                     b.Navigation("StatusHistory");
                 });
 
@@ -1974,7 +2274,13 @@ namespace CareConnect.Infrastructure.Migrations
 
                     b.Navigation("BloodRequests");
 
+                    b.Navigation("DoctorReviews");
+
+                    b.Navigation("HospitalReviews");
+
                     b.Navigation("InsuranceRequests");
+
+                    b.Navigation("MedicalServiceProviderReviews");
 
                     b.Navigation("MedicalServiceRequests");
                 });

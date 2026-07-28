@@ -146,6 +146,13 @@ export const routes: Routes = [
             (m) => m.PatientServiceRequestDetails,
           ),
       },
+      {
+        path: 'dashboard/patient/reviews',
+        title: 'My reviews - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/reviews/patient-reviews').then((m) => m.PatientReviews),
+      },
 
       // ------------------------------------------------------------- Doctor
       {
@@ -212,6 +219,14 @@ export const routes: Routes = [
           import('./features/doctor/appointments/doctor-appointment-details').then(
             (m) => m.DoctorAppointmentDetails,
           ),
+      },
+      {
+        path: 'dashboard/doctor/reviews',
+        title: 'Patient reviews - CareConnect Egypt',
+        canActivate: [roleGuard('Doctor')],
+        loadComponent: () =>
+          import('./features/reviews/owner-reviews').then((m) => m.OwnerReviews),
+        data: { ownerPath: 'doctor' },
       },
 
       // ----------------------------------------------------------- Hospital
@@ -305,6 +320,14 @@ export const routes: Routes = [
             (m) => m.HospitalBloodRequestDetails,
           ),
       },
+      {
+        path: 'dashboard/hospital/reviews',
+        title: 'Patient reviews - CareConnect Egypt',
+        canActivate: [roleGuard('Hospital')],
+        loadComponent: () =>
+          import('./features/reviews/owner-reviews').then((m) => m.OwnerReviews),
+        data: { ownerPath: 'hospital' },
+      },
 
       {
         path: 'dashboard/service-provider',
@@ -369,6 +392,14 @@ export const routes: Routes = [
             (m) => m.ProviderServiceRequestDetails,
           ),
       },
+      {
+        path: 'dashboard/service-provider/reviews',
+        title: 'Patient reviews - CareConnect Egypt',
+        canActivate: [roleGuard('MedicalServiceProvider')],
+        loadComponent: () =>
+          import('./features/reviews/owner-reviews').then((m) => m.OwnerReviews),
+        data: { ownerPath: 'medical-service-provider' },
+      },
 
       // --------------------------------------------------------- SuperAdmin
       {
@@ -404,6 +435,15 @@ export const routes: Routes = [
           import(
             './features/super-admin/medical-service-categories/medical-service-categories'
           ).then((m) => m.SuperAdminMedicalServiceCategories),
+      },
+      {
+        path: 'super-admin/reviews',
+        title: 'Review moderation - CareConnect Egypt',
+        canActivate: [roleGuard('SuperAdmin')],
+        loadComponent: () =>
+          import('./features/super-admin/reviews/review-moderation').then(
+            (m) => m.ReviewModeration,
+          ),
       },
 
       // ---------------------------------------------- Directories (any role)

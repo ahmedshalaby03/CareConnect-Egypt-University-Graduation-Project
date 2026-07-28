@@ -75,6 +75,7 @@ public class DemoDataSeeder : IDemoDataSeeder
             await SeedInsuranceRequestsAsync(patient, appointments, hospitals, ct);
             await SeedBloodRequestsAsync(patient, hospitals, ct);
             await SeedMedicalServiceRequestsAsync(patient, ct);
+            await SeedVerifiedReviewsAsync(patient, appointments, ct);
         }
         else
         {
@@ -1567,6 +1568,76 @@ public class DemoDataSeeder : IDemoDataSeeder
             date = date.AddDays(-1);
         }
         return date;
+    }
+
+    // =========================================================== Verified reviews
+
+    private async Task SeedVerifiedReviewsAsync(
+        PatientProfile patient,
+        IReadOnlyDictionary<string, Appointment> appointments,
+        CancellationToken ct)
+    {
+        const string completedAppointmentMarker = "Demo: completed dermatology visit from last week";
+        appointments.TryGetValue(completedAppointmentMarker, out var appointment);
+        var serviceRequest = await _context.MedicalServiceRequests
+            .AsNoTracking()
+            .FirstOrDefaultAsync(r =>
+                r.RequestNumber == "MSR-2026-DEMO0003" &&
+                r.Status == MedicalServiceRequestStatus.Completed, ct);
+
+        var created = 0;
+        var now = DateTime.UtcNow.AddDays(-1);
+        if (appointment?.Status == AppointmentStatus.Completed)
+        {
+            if (!await _context.AppointmentDoctorReviews.AnyAsync(
+                    r => r.AppointmentId == appointment.Id, ct))
+            {
+                _context.AppointmentDoctorReviews.Add(new AppointmentDoctorReview
+                {
+                    AppointmentId = appointment.Id,
+                    PatientProfileId = patient.Id,
+                    DoctorProfileId = appointment.DoctorProfileId,
+                    Rating = 5,
+                    Comment = "The doctor was professional, listened carefully, and explained the treatment plan clearly.",
+                    CreatedAt = now
+                });
+                created++;
+            }
+
+            if (!await _context.AppointmentHospitalReviews.AnyAsync(
+                    r => r.AppointmentId == appointment.Id, ct))
+            {
+                _context.AppointmentHospitalReviews.Add(new AppointmentHospitalReview
+                {
+                    AppointmentId = appointment.Id,
+                    PatientProfileId = patient.Id,
+                    HospitalProfileId = appointment.HospitalProfileId,
+                    Rating = 4,
+                    Comment = "The hospital was organized and the staff were helpful.",
+                    CreatedAt = now
+                });
+                created++;
+            }
+        }
+
+        if (serviceRequest is not null &&
+            !await _context.MedicalServiceProviderReviews.AnyAsync(
+                r => r.MedicalServiceRequestId == serviceRequest.Id, ct))
+        {
+            _context.MedicalServiceProviderReviews.Add(new MedicalServiceProviderReview
+            {
+                MedicalServiceRequestId = serviceRequest.Id,
+                PatientProfileId = patient.Id,
+                MedicalServiceProviderProfileId = serviceRequest.MedicalServiceProviderProfileId,
+                Rating = 5,
+                Comment = "The service was completed on time and the staff were professional.",
+                CreatedAt = now
+            });
+            created++;
+        }
+
+        if (created > 0) await _context.SaveChangesAsync(ct);
+        _logger.LogInformation("Verified reviews verified ({Created} created).", created);
     }
 
     // ==================================================================== Helpers

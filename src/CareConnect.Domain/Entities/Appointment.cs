@@ -51,6 +51,8 @@ public class Appointment
 
     /// <summary>An appointment may accumulate more than one insurance request over time (e.g. after a rejection).</summary>
     public ICollection<InsuranceRequest> InsuranceRequests { get; set; } = new List<InsuranceRequest>();
+    public AppointmentDoctorReview? DoctorReview { get; set; }
+    public AppointmentHospitalReview? HospitalReview { get; set; }
 
     /// <summary>
     /// True for Pending and Confirmed appointments, the two statuses that hold a slot -

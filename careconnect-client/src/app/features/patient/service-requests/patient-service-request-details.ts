@@ -10,10 +10,11 @@ import { DELIVERY_MODE_LABELS, MEDICAL_SERVICE_REQUEST_STATUS_LABELS, MedicalSer
 import { MedicalServiceRequestService } from '../../../core/services/medical-service-request.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ReasonDialog, ReasonDialogData } from '../../../shared/reason-dialog/reason-dialog';
+import { ReviewAction } from '../../../shared/review-action/review-action';
 
 @Component({
   selector: 'app-patient-service-request-details',
-  imports: [CurrencyPipe, DatePipe, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [CurrencyPipe, DatePipe, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, ReviewAction],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="cc-page">
@@ -26,6 +27,7 @@ import { ReasonDialog, ReasonDialogData } from '../../../shared/reason-dialog/re
           <article class="cc-card"><h2>Request details</h2><dl><dt>Category</dt><dd>{{ item.categoryName }}</dd><dt>Price snapshot</dt><dd>{{ item.priceSnapshot | currency:'EGP ':'symbol':'1.0-2' }}</dd><dt>Duration</dt><dd>{{ item.durationMinutesSnapshot ? item.durationMinutesSnapshot + ' minutes' : 'Not specified' }}</dd><dt>Delivery</dt><dd>{{ deliveryLabels[item.deliveryMode] }}</dd><dt>Preferred time</dt><dd>{{ item.requestedDate | date:'mediumDate' }} at {{ item.preferredStartTime }}</dd><dt>Confirmed schedule</dt><dd>{{ item.scheduledAt ? (item.scheduledAt | date:'medium') : 'Awaiting provider confirmation' }}</dd>@if (item.homeVisitAddress) { <dt>Home-visit address</dt><dd>{{ item.homeVisitAddress }}</dd> }@if (item.patientNotes) { <dt>Your notes</dt><dd>{{ item.patientNotes }}</dd> }</dl></article>
           <article class="cc-card"><h2>Provider response</h2><p>{{ item.providerResponseNote || 'No response note yet.' }}</p>@if (item.rejectionReason) { <div class="cc-notice cc-notice--error"><b>Rejection:</b> {{ item.rejectionReason }}</div> }@if (item.cancellationReason) { <div class="cc-notice"><b>Cancellation:</b> {{ item.cancellationReason }}</div> }<p>{{ item.providerPhoneNumber }}<br/>{{ item.providerAddress }}</p>@if (item.status === 1 || item.status === 2) { <button mat-stroked-button color="warn" (click)="cancel()"><mat-icon>cancel</mat-icon>Cancel request</button> }</article>
         </div>
+        @if(item.status === 6){<article class="cc-card timeline"><h2>Share your experience</h2><app-review-action [type]="3" [sourceId]="item.id" [targetName]="item.providerName" label="Provider"/></article>}
         <article class="cc-card timeline"><h2>Status timeline</h2>@for (history of item.statusHistory; track history.createdAt + history.newStatus) { <div class="event"><mat-icon>radio_button_checked</mat-icon><div><strong>{{ statusLabels[history.newStatus] }}</strong><p>{{ history.actorLabel }} · {{ history.createdAt | date:'medium' }}</p>@if (history.reason) { <p>{{ history.reason }}</p> }</div></div> }</article>
       }
     </section>

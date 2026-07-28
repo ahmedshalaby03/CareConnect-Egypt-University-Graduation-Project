@@ -168,6 +168,8 @@ export interface MedicalServiceProviderSummary {
   categories: MedicalServiceCategoryOption[];
   minimumServicePrice: number | null;
   distanceKm: number | null;
+  averageRating: number | null;
+  reviewCount: number;
 }
 
 export interface MedicalServiceProviderDetails {

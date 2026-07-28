@@ -28,4 +28,6 @@ public class MedicalServiceProviderProfile
         new List<MedicalServiceProviderWorkingHour>();
     public ICollection<MedicalServiceRequest> MedicalServiceRequests { get; set; } =
         new List<MedicalServiceRequest>();
+    public ICollection<MedicalServiceProviderReview> Reviews { get; set; } =
+        new List<MedicalServiceProviderReview>();
 }

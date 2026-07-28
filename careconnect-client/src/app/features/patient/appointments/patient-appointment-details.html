@@ -80,6 +80,12 @@
           }
         </div>
       }
+      @if (a.statusName === 'Completed') {
+        <div class="actions">
+          <app-review-action [type]="1" [sourceId]="a.appointmentId" [targetName]="a.doctorName" label="Doctor" />
+          <app-review-action [type]="2" [sourceId]="a.appointmentId" [targetName]="a.hospitalName" label="Hospital" />
+        </div>
+      }
     </section>
   }
 </div>

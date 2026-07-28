@@ -45,6 +45,7 @@ public class DoctorProfile
         new List<DoctorUnavailablePeriod>();
 
     public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    public ICollection<AppointmentDoctorReview> Reviews { get; set; } = new List<AppointmentDoctorReview>();
 
     /// <summary>
     /// The completion rule, kept next to the data it describes so the API and any future

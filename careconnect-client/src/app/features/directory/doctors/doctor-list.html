@@ -71,6 +71,7 @@
             }
             <div>
               <h2>{{ doctor.fullName }}</h2>
+              <p>{{ doctor.reviewCount ? (doctor.averageRating + ' ★ (' + doctor.reviewCount + ' reviews)') : 'No reviews yet' }}</p>
               @if (doctor.specialty) {
                 <p class="doctor-card__location">
                   <mat-icon>medical_information</mat-icon>

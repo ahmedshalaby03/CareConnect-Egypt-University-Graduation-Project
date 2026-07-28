@@ -132,6 +132,7 @@
             }
             <div>
               <h2>{{ hospital.hospitalName }}</h2>
+              <p>{{ hospital.reviewCount ? (hospital.averageRating + ' ★ (' + hospital.reviewCount + ' reviews)') : 'No reviews yet' }}</p>
               <p class="hospital-card__location">
                 <mat-icon>place</mat-icon>
                 <span>{{ hospital.city }}{{ hospital.city && hospital.governorate ? ', ' : '' }}{{ hospital.governorate }}</span>

@@ -10,10 +10,11 @@ import { GeolocationFailure, GeolocationService } from '../../../core/services/g
 import { MedicalServiceProviderService } from '../../../core/services/medical-service-provider.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { RatingPanel } from '../../../shared/rating-panel/rating-panel';
 
 @Component({
   selector: 'app-medical-service-provider-details',
-  imports: [CurrencyPipe, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [CurrencyPipe, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule, RatingPanel],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="cc-page">
@@ -25,6 +26,7 @@ import { AuthService } from '../../../core/services/auth.service';
         </article>
           <div class="columns"><section><h2>Services and prices</h2><div class="services">@for (service of item.services; track service.id) { <article class="cc-card"><div class="service-head"><div><small>{{ service.categoryName }}</small><h3>{{ service.name }}</h3></div><strong>{{ service.price | currency:'EGP ':'symbol':'1.0-2' }}</strong></div><p>{{ service.description }}</p>@if (service.estimatedDurationMinutes) { <p><b>Estimated duration:</b> {{ service.estimatedDurationMinutes }} minutes</p> }<p><b>Delivery:</b> {{ deliveryLabel(service.deliveryModeAvailability) }}</p>@if (service.preparationInstructions) { <p><b>Preparation:</b> {{ service.preparationInstructions }}</p> }@if (isPatient()) { <a mat-flat-button [routerLink]="['/medical-service-providers', item.id, 'services', service.id, 'request']"><mat-icon>send</mat-icon>Request service</a> }</article> }</div></section>
           <section><h2>Working hours</h2><article class="cc-card">@for (hour of item.workingHours; track hour.dayOfWeek) { <div class="hour"><span>{{ hour.dayName }}</span><strong>{{ hour.isClosed ? 'Closed' : hour.openTime + ' – ' + hour.closeTime }}</strong></div> }</article></section></div>
+        <app-rating-panel [type]="3" [targetId]="item.id"/>
       }
     </section>
   `,
