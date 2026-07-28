@@ -20,6 +20,16 @@ public static class DependencyInjection
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
         services.Configure<SuperAdminSettings>(configuration.GetSection(SuperAdminSettings.SectionName));
         services.Configure<DemoDataOptions>(configuration.GetSection(DemoDataOptions.SectionName));
+        services.AddOptions<GeminiOptions>()
+            .Bind(configuration.GetSection(GeminiOptions.SectionName))
+            .Validate(options => options.MaxOutputTokens is >= 100 and <= 2_000,
+                "Gemini:MaxOutputTokens must be between 100 and 2000.")
+            .Validate(options => options.TimeoutSeconds is >= 5 and <= 120,
+                "Gemini:TimeoutSeconds must be between 5 and 120.")
+            .Validate(options => options.MaximumHistoryMessages is >= 0 and <= 10,
+                "Gemini:MaximumHistoryMessages must be between 0 and 10.")
+            .Validate(options => options.MaximumMessageCharacters is >= 1 and <= 2_000,
+                "Gemini:MaximumMessageCharacters must be between 1 and 2000.");
 
         var connectionString = configuration.GetConnectionString("DefaultConnection")
             ?? throw new InvalidOperationException(
@@ -54,6 +64,10 @@ public static class DependencyInjection
         services.AddScoped<IBloodStockService, BloodStockService>();
         services.AddScoped<IBloodAvailabilityService, BloodAvailabilityService>();
         services.AddScoped<IBloodRequestService, BloodRequestService>();
+        services.AddHttpClient<IAiMedicalAssistantService, GeminiMedicalAssistantService>(client =>
+        {
+            client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/v1beta/");
+        });
 
         services.AddScoped<DatabaseSeeder>();
         services.AddScoped<IDemoDataSeeder, DemoDataSeeder>();

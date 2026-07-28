@@ -119,6 +119,15 @@ export const routes: Routes = [
             (m) => m.BloodRequestDetails,
           ),
       },
+      {
+        path: 'dashboard/patient/ai-assistant',
+        title: 'AI Medical Assistant - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import(
+            './features/patient/ai-medical-assistant/ai-medical-assistant'
+          ).then((m) => m.AiMedicalAssistantPage),
+      },
 
       // ------------------------------------------------------------- Doctor
       {

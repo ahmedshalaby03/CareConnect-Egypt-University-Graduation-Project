@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  inject,
+  input,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -55,8 +63,13 @@ export class DoctorList implements OnInit {
   protected readonly totalCount = signal(0);
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(9);
+  readonly specialtyId = input<string>('');
 
   ngOnInit(): void {
+    if (this.specialtyId()) {
+      this.specialtyControl.setValue(this.specialtyId(), { emitEvent: false });
+    }
+
     this.specialtyService.getActive().subscribe({
       next: (items) => this.specialties.set(items),
       error: () => undefined,

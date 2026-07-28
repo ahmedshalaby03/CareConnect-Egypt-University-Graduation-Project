@@ -1,0 +1,190 @@
+<section class="cc-page assistant-page">
+  <header class="cc-page-header assistant-header">
+    <div>
+      <h1>AI Medical Assistant</h1>
+      <p>Educational health guidance and help choosing the right medical specialty.</p>
+    </div>
+
+    @if (messages().length > 0) {
+      <button type="button" mat-stroked-button color="warn" (click)="clearChat()">
+        <mat-icon>delete_sweep</mat-icon>
+        Clear chat
+      </button>
+    }
+  </header>
+
+  <div class="safety-notice" role="note">
+    <mat-icon>health_and_safety</mat-icon>
+    <div>
+      <strong>Important safety information</strong>
+      <p>
+        This assistant provides educational guidance, not a diagnosis or a replacement for
+        a doctor. For severe or emergency symptoms, contact local emergency services or go
+        to the nearest emergency department immediately.
+      </p>
+    </div>
+  </div>
+
+  <div class="assistant-shell cc-card">
+    <div #chatViewport class="chat-viewport" aria-live="polite">
+      @if (messages().length === 0) {
+        <div class="welcome-state">
+          <mat-icon>medical_information</mat-icon>
+          <h2>How can I help you navigate your care?</h2>
+          <p>
+            Describe a general symptom or ask which specialty may be appropriate. Avoid
+            sharing names, national IDs, or other unnecessary personal information.
+          </p>
+
+          <div class="starter-grid">
+            @for (question of starterQuestions; track question) {
+              <button type="button" class="starter-question" (click)="useStarter(question)">
+                <mat-icon>chat_bubble_outline</mat-icon>
+                <span [dir]="directionFor(question)">{{ question }}</span>
+              </button>
+            }
+          </div>
+        </div>
+      }
+
+      @for (message of messages(); track message.id) {
+        <article
+          class="message-row"
+          [class.message-row--user]="message.role === 'user'"
+          [class.message-row--assistant]="message.role === 'assistant'"
+        >
+          <div class="message-bubble">
+            <div class="message-meta">
+              <strong>{{ message.role === 'user' ? 'You' : 'CareConnect Assistant' }}</strong>
+              <time>{{ message.createdAt | date: 'shortTime' }}</time>
+            </div>
+
+            <p class="message-text" [dir]="directionFor(message.content)">
+              {{ message.content }}
+            </p>
+
+            @if (message.role === 'assistant') {
+              <div class="response-details">
+                @if (message.urgencyLevel) {
+                  <span
+                    class="urgency-badge"
+                    [class.urgency--routine]="message.urgencyLevel === 'Routine'"
+                    [class.urgency--urgent]="message.urgencyLevel === 'Urgent'"
+                    [class.urgency--emergency]="message.urgencyLevel === 'Emergency'"
+                  >
+                    <mat-icon>
+                      {{ message.urgencyLevel === 'Emergency' ? 'emergency' : 'schedule' }}
+                    </mat-icon>
+                    {{ message.urgencyLevel }}
+                  </span>
+                }
+
+                @if (message.urgencyLevel === 'Emergency') {
+                  <div class="emergency-panel" role="alert">
+                    <mat-icon>warning</mat-icon>
+                    <div>
+                      <strong>Seek emergency care now</strong>
+                      <p>
+                        Contact local emergency services or go to the nearest emergency
+                        department immediately.
+                      </p>
+                    </div>
+                  </div>
+                }
+
+                @if (message.redFlags?.length) {
+                  <div class="red-flags">
+                    <strong>Warning signs to watch for</strong>
+                    <ul>
+                      @for (flag of message.redFlags; track flag) {
+                        <li [dir]="directionFor(flag)">{{ flag }}</li>
+                      }
+                    </ul>
+                  </div>
+                }
+
+                @if (message.suggestedSpecialtyId && message.suggestedSpecialtyName) {
+                  <div class="specialty-card">
+                    <div>
+                      <span>Suggested specialty</span>
+                      <strong>{{ message.suggestedSpecialtyName }}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      mat-flat-button
+                      (click)="browseSpecialty(message.suggestedSpecialtyId)"
+                    >
+                      Find {{ message.suggestedSpecialtyName }} doctors
+                    </button>
+                  </div>
+                }
+
+                @if (message.disclaimer) {
+                  <p class="response-disclaimer">{{ message.disclaimer }}</p>
+                }
+              </div>
+            }
+          </div>
+        </article>
+      }
+
+      @if (sending()) {
+        <div class="typing-indicator" aria-label="The medical assistant is responding">
+          <mat-spinner diameter="22"></mat-spinner>
+          <span>Reviewing your question safely…</span>
+        </div>
+      }
+
+      @if (errorMessage()) {
+        <div class="chat-error" role="alert">
+          <mat-icon>cloud_off</mat-icon>
+          <span>{{ errorMessage() }}</span>
+          @if (lastFailedRequest()) {
+            <button type="button" mat-stroked-button (click)="retry()">Retry</button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="composer">
+      <mat-form-field appearance="outline" class="composer-field">
+        <mat-label>Ask a general health question</mat-label>
+        <textarea
+          matInput
+          rows="3"
+          [formControl]="messageControl"
+          [maxlength]="maximumCharacters"
+          (keydown)="onComposerKeydown($event)"
+          placeholder="Describe your concern without unnecessary personal details…"
+        ></textarea>
+        <mat-hint>Enter to send · Shift+Enter for a new line</mat-hint>
+        <mat-hint align="end">
+          {{ messageControl.value.length }} / {{ maximumCharacters }}
+        </mat-hint>
+        @if (messageControl.hasError('required') && messageControl.touched) {
+          <mat-error>Please enter a question.</mat-error>
+        }
+        @if (messageControl.hasError('maxlength')) {
+          <mat-error>Your question is too long.</mat-error>
+        }
+      </mat-form-field>
+
+      <button
+        type="button"
+        mat-flat-button
+        class="send-button"
+        [disabled]="sending() || messageControl.invalid || !messageControl.value.trim()"
+        (click)="send()"
+      >
+        <mat-icon>send</mat-icon>
+        Send
+      </button>
+    </div>
+
+    <p class="privacy-note">
+      <mat-icon>privacy_tip</mat-icon>
+      This conversation stays in this browser session and is not stored in CareConnect's
+      database.
+    </p>
+  </div>
+</section>
