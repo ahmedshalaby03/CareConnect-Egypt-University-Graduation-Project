@@ -128,6 +128,24 @@ export const routes: Routes = [
             './features/patient/ai-medical-assistant/ai-medical-assistant'
           ).then((m) => m.AiMedicalAssistantPage),
       },
+      {
+        path: 'dashboard/patient/service-requests',
+        title: 'My service requests - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/service-requests/patient-service-requests').then(
+            (m) => m.PatientServiceRequests,
+          ),
+      },
+      {
+        path: 'dashboard/patient/service-requests/:id',
+        title: 'Service request - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/service-requests/patient-service-request-details').then(
+            (m) => m.PatientServiceRequestDetails,
+          ),
+      },
 
       // ------------------------------------------------------------- Doctor
       {
@@ -333,6 +351,24 @@ export const routes: Routes = [
             (m) => m.ServiceProviderPreviewPage,
           ),
       },
+      {
+        path: 'dashboard/service-provider/requests',
+        title: 'Service requests - CareConnect Egypt',
+        canActivate: [roleGuard('MedicalServiceProvider')],
+        loadComponent: () =>
+          import('./features/service-provider/requests/provider-service-requests').then(
+            (m) => m.ProviderServiceRequests,
+          ),
+      },
+      {
+        path: 'dashboard/service-provider/requests/:id',
+        title: 'Service request - CareConnect Egypt',
+        canActivate: [roleGuard('MedicalServiceProvider')],
+        loadComponent: () =>
+          import('./features/service-provider/requests/provider-service-request-details').then(
+            (m) => m.ProviderServiceRequestDetails,
+          ),
+      },
 
       // --------------------------------------------------------- SuperAdmin
       {
@@ -433,6 +469,15 @@ export const routes: Routes = [
           import(
             './features/directory/medical-service-providers/medical-service-provider-list'
           ).then((m) => m.MedicalServiceProviderListPage),
+      },
+      {
+        path: 'medical-service-providers/:providerId/services/:serviceId/request',
+        title: 'Request medical service - CareConnect Egypt',
+        canActivate: [roleGuard('Patient')],
+        loadComponent: () =>
+          import('./features/patient/service-requests/request-medical-service').then(
+            (m) => m.RequestMedicalService,
+          ),
       },
       {
         path: 'medical-service-providers/:id',

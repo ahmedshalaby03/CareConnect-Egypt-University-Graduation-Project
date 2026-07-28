@@ -61,6 +61,7 @@ public class MedicalServiceOfferingDto
     public decimal Price { get; init; }
     public int? EstimatedDurationMinutes { get; init; }
     public string? PreparationInstructions { get; init; }
+    public ServiceDeliveryModeAvailability DeliveryModeAvailability { get; init; }
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? UpdatedAt { get; init; }
@@ -74,6 +75,8 @@ public class CreateMedicalServiceOfferingRequest
     public decimal Price { get; set; }
     public int? EstimatedDurationMinutes { get; set; }
     public string? PreparationInstructions { get; set; }
+    public ServiceDeliveryModeAvailability DeliveryModeAvailability { get; set; } =
+        ServiceDeliveryModeAvailability.AtProviderLocationOnly;
     public bool IsActive { get; set; } = true;
 }
 

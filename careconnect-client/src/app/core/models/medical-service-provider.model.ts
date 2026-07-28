@@ -1,4 +1,5 @@
 import { PagedResult } from './api-response.model';
+import { ServiceDeliveryModeAvailability } from './medical-service-request.model';
 
 export type MedicalServiceProviderType =
   | 'MedicalCenter'
@@ -66,6 +67,7 @@ export interface MedicalServiceOffering {
   price: number;
   estimatedDurationMinutes: number | null;
   preparationInstructions: string | null;
+  deliveryModeAvailability: ServiceDeliveryModeAvailability;
   isActive: boolean;
   createdAt: string;
   updatedAt: string | null;
@@ -78,6 +80,7 @@ export interface MedicalServiceOfferingRequest {
   price: number;
   estimatedDurationMinutes: number | null;
   preparationInstructions: string | null;
+  deliveryModeAvailability: ServiceDeliveryModeAvailability;
   isActive: boolean;
 }
 

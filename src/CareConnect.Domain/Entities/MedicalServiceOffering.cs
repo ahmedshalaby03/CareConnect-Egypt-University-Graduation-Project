@@ -1,3 +1,5 @@
+using CareConnect.Domain.Enums;
+
 namespace CareConnect.Domain.Entities;
 
 public class MedicalServiceOffering
@@ -15,7 +17,12 @@ public class MedicalServiceOffering
     public decimal Price { get; set; }
     public int? EstimatedDurationMinutes { get; set; }
     public string? PreparationInstructions { get; set; }
+    public ServiceDeliveryModeAvailability DeliveryModeAvailability { get; set; } =
+        ServiceDeliveryModeAvailability.AtProviderLocationOnly;
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
+
+    public ICollection<MedicalServiceRequest> MedicalServiceRequests { get; set; } =
+        new List<MedicalServiceRequest>();
 }

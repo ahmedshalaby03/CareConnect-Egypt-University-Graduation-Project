@@ -16,6 +16,11 @@ public sealed class MedicalServiceOfferingConfiguration
         builder.Property(service => service.Description).HasMaxLength(2000);
         builder.Property(service => service.Price).HasPrecision(18, 2);
         builder.Property(service => service.PreparationInstructions).HasMaxLength(2000);
+        builder.Property(service => service.DeliveryModeAvailability)
+            .HasConversion<string>()
+            .HasMaxLength(30)
+            .HasSentinel((CareConnect.Domain.Enums.ServiceDeliveryModeAvailability)0)
+            .HasDefaultValue(CareConnect.Domain.Enums.ServiceDeliveryModeAvailability.AtProviderLocationOnly);
         builder.Property(service => service.IsActive).IsRequired().HasDefaultValue(true);
         builder.Property(service => service.CreatedAt).IsRequired();
 

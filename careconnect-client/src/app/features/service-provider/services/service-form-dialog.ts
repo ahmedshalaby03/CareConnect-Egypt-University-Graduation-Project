@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { friendlyMessageOf, validationErrorsOf } from '../../../core/interceptors/error.interceptor';
 import { MedicalServiceCategoryOption, MedicalServiceOffering } from '../../../core/models/medical-service-provider.model';
+import { ServiceDeliveryModeAvailability } from '../../../core/models/medical-service-request.model';
 import { MedicalServiceProviderService } from '../../../core/services/medical-service-provider.service';
 
 export interface ServiceFormDialogData {
@@ -27,6 +28,7 @@ export interface ServiceFormDialogData {
         <mat-form-field><mat-label>Category</mat-label><mat-select formControlName="categoryId">@for (category of data.categories; track category.id) { <mat-option [value]="category.id">{{ category.name }}</mat-option> }</mat-select></mat-form-field>
         <mat-form-field><mat-label>Price (EGP)</mat-label><input matInput type="number" min="0" formControlName="price"/></mat-form-field>
         <mat-form-field><mat-label>Duration (minutes)</mat-label><input matInput type="number" min="5" max="1440" formControlName="estimatedDurationMinutes"/></mat-form-field>
+        <mat-form-field><mat-label>Delivery options</mat-label><mat-select formControlName="deliveryModeAvailability"><mat-option [value]="1">At provider location only</mat-option><mat-option [value]="2">Home visit only</mat-option><mat-option [value]="3">At provider location and home visit</mat-option></mat-select></mat-form-field>
         <mat-form-field><mat-label>Description</mat-label><textarea matInput rows="3" formControlName="description"></textarea></mat-form-field>
         <mat-form-field><mat-label>Preparation instructions</mat-label><textarea matInput rows="3" formControlName="preparationInstructions"></textarea></mat-form-field>
         <mat-slide-toggle formControlName="isActive">Active and visible after publication</mat-slide-toggle>
@@ -52,6 +54,7 @@ export class ServiceFormDialog {
     estimatedDurationMinutes: [this.data.service?.estimatedDurationMinutes ?? null as number | null, [Validators.min(5), Validators.max(1440)]],
     description: [this.data.service?.description ?? '', Validators.maxLength(2000)],
     preparationInstructions: [this.data.service?.preparationInstructions ?? '', Validators.maxLength(2000)],
+    deliveryModeAvailability: [this.data.service?.deliveryModeAvailability ?? 1 as ServiceDeliveryModeAvailability, Validators.required],
     isActive: [this.data.service?.isActive ?? true],
   });
 

@@ -1,17 +1,19 @@
 import { CurrencyPipe } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, input, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { RouterLink } from '@angular/router';
 import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor';
 import { MedicalServiceProviderDetails, PROVIDER_TYPE_LABELS } from '../../../core/models/medical-service-provider.model';
 import { GeolocationFailure, GeolocationService } from '../../../core/services/geolocation.service';
 import { MedicalServiceProviderService } from '../../../core/services/medical-service-provider.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-medical-service-provider-details',
-  imports: [CurrencyPipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [CurrencyPipe, RouterLink, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <section class="cc-page">
@@ -21,7 +23,7 @@ import { NotificationService } from '../../../core/services/notification.service
         <article class="cc-card hero"><div><span class="eyebrow">{{ labels[item.providerType] }}</span><h1>{{ item.businessName }}</h1><p>{{ item.description }}</p><p><mat-icon>location_on</mat-icon>{{ item.address }}, {{ item.city }}, {{ item.governorate }}</p><p><mat-icon>phone</mat-icon>{{ item.phoneNumber }}</p>@if (item.distanceKm !== null) { <strong>{{ item.distanceKm }} km away (approximate straight-line distance)</strong> }</div>
           <div class="hero-actions"><button mat-stroked-button (click)="calculateDistance()"><mat-icon>my_location</mat-icon>Distance from me</button><a mat-flat-button [href]="item.directionsUrl" target="_blank" rel="noopener"><mat-icon>directions</mat-icon>Get directions</a></div>
         </article>
-        <div class="columns"><section><h2>Services and prices</h2><div class="services">@for (service of item.services; track service.id) { <article class="cc-card"><div class="service-head"><div><small>{{ service.categoryName }}</small><h3>{{ service.name }}</h3></div><strong>{{ service.price | currency:'EGP ':'symbol':'1.0-2' }}</strong></div><p>{{ service.description }}</p>@if (service.estimatedDurationMinutes) { <p><b>Estimated duration:</b> {{ service.estimatedDurationMinutes }} minutes</p> }@if (service.preparationInstructions) { <p><b>Preparation:</b> {{ service.preparationInstructions }}</p> }</article> }</div></section>
+          <div class="columns"><section><h2>Services and prices</h2><div class="services">@for (service of item.services; track service.id) { <article class="cc-card"><div class="service-head"><div><small>{{ service.categoryName }}</small><h3>{{ service.name }}</h3></div><strong>{{ service.price | currency:'EGP ':'symbol':'1.0-2' }}</strong></div><p>{{ service.description }}</p>@if (service.estimatedDurationMinutes) { <p><b>Estimated duration:</b> {{ service.estimatedDurationMinutes }} minutes</p> }<p><b>Delivery:</b> {{ deliveryLabel(service.deliveryModeAvailability) }}</p>@if (service.preparationInstructions) { <p><b>Preparation:</b> {{ service.preparationInstructions }}</p> }@if (isPatient()) { <a mat-flat-button [routerLink]="['/medical-service-providers', item.id, 'services', service.id, 'request']"><mat-icon>send</mat-icon>Request service</a> }</article> }</div></section>
           <section><h2>Working hours</h2><article class="cc-card">@for (hour of item.workingHours; track hour.dayOfWeek) { <div class="hour"><span>{{ hour.dayName }}</span><strong>{{ hour.isClosed ? 'Closed' : hour.openTime + ' – ' + hour.closeTime }}</strong></div> }</article></section></div>
       }
     </section>
@@ -31,13 +33,19 @@ import { NotificationService } from '../../../core/services/notification.service
 export class MedicalServiceProviderDetailsPage implements OnInit {
   readonly id = input.required<string>();
   private readonly service = inject(MedicalServiceProviderService);
+  private readonly auth = inject(AuthService);
   private readonly geolocation = inject(GeolocationService);
   private readonly notify = inject(NotificationService);
   protected readonly labels = PROVIDER_TYPE_LABELS;
   protected readonly provider = signal<MedicalServiceProviderDetails | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
+  protected readonly isPatient = computed(() => this.auth.role() === 'Patient');
   ngOnInit(): void { this.load(); }
+  protected deliveryLabel(value: number): string {
+    if (value === 3) return 'Provider location or home visit';
+    return value === 2 ? 'Home visit only' : 'Provider location only';
+  }
   protected calculateDistance(): void {
     this.geolocation.getCurrentPosition().then((coords) => this.load(coords.latitude, coords.longitude)).catch((error: unknown) => this.notify.error(error instanceof GeolocationFailure ? error.message : 'Could not determine your location.'));
   }

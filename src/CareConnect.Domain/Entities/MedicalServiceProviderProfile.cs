@@ -26,4 +26,6 @@ public class MedicalServiceProviderProfile
         new List<MedicalServiceOffering>();
     public ICollection<MedicalServiceProviderWorkingHour> WorkingHours { get; set; } =
         new List<MedicalServiceProviderWorkingHour>();
+    public ICollection<MedicalServiceRequest> MedicalServiceRequests { get; set; } =
+        new List<MedicalServiceRequest>();
 }

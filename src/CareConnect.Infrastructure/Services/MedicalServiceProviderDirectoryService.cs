@@ -224,6 +224,7 @@ public sealed class MedicalServiceProviderDirectoryService
                         Price = service.Price,
                         EstimatedDurationMinutes = service.EstimatedDurationMinutes,
                         PreparationInstructions = service.PreparationInstructions,
+                        DeliveryModeAvailability = service.DeliveryModeAvailability,
                         IsActive = true,
                         CreatedAt = service.CreatedAt,
                         UpdatedAt = service.UpdatedAt

@@ -5,7 +5,9 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor';
 import { MedicalServiceProviderProfile } from '../../../core/models/medical-service-provider.model';
+import { MedicalServiceRequestDashboardSummary } from '../../../core/models/medical-service-request.model';
 import { MedicalServiceProviderService } from '../../../core/services/medical-service-provider.service';
+import { MedicalServiceRequestService } from '../../../core/services/medical-service-request.service';
 
 @Component({
   selector: 'app-service-provider-dashboard',
@@ -36,6 +38,15 @@ import { MedicalServiceProviderService } from '../../../core/services/medical-se
           <article class="cc-card"><mat-icon>category</mat-icon><strong>{{ item.serviceCategoriesCount }}</strong><span>Categories used</span></article>
           <article class="cc-card"><mat-icon>{{ item.isReadyToPublish ? 'task_alt' : 'pending_actions' }}</mat-icon><strong>{{ item.isReadyToPublish ? 'Complete' : 'Needs work' }}</strong><span>Publication readiness</span></article>
         </div>
+        @if (requestSummary(); as requests) {
+          <h2>Request activity</h2>
+          <div class="cc-card-grid stats">
+            <article class="cc-card"><mat-icon>hourglass_top</mat-icon><strong>{{ requests.pendingCount }}</strong><span>Pending requests</span></article>
+            <article class="cc-card"><mat-icon>event_available</mat-icon><strong>{{ requests.acceptedUpcomingCount }}</strong><span>Accepted upcoming</span></article>
+            <article class="cc-card"><mat-icon>task_alt</mat-icon><strong>{{ requests.completedCount }}</strong><span>Completed</span></article>
+            <article class="cc-card"><mat-icon>cancel</mat-icon><strong>{{ requests.cancelledOrRejectedCount }}</strong><span>Cancelled or rejected</span></article>
+          </div>
+        }
         @if (!item.isReadyToPublish) {
           <article class="cc-card requirements">
             <h2>Before publishing</h2>
@@ -45,6 +56,7 @@ import { MedicalServiceProviderService } from '../../../core/services/medical-se
         <div class="quick-links">
           <a mat-stroked-button routerLink="/dashboard/service-provider/services"><mat-icon>medical_services</mat-icon> My services</a>
           <a mat-stroked-button routerLink="/dashboard/service-provider/working-hours"><mat-icon>schedule</mat-icon> Working hours</a>
+          <a mat-stroked-button routerLink="/dashboard/service-provider/requests"><mat-icon>assignment</mat-icon> Service requests</a>
           <a mat-stroked-button routerLink="/dashboard/service-provider/preview"><mat-icon>preview</mat-icon> Public preview</a>
         </div>
       }
@@ -56,7 +68,9 @@ import { MedicalServiceProviderService } from '../../../core/services/medical-se
 })
 export class ServiceProviderDashboard implements OnInit {
   private readonly providers = inject(MedicalServiceProviderService);
+  private readonly requests = inject(MedicalServiceRequestService);
   protected readonly profile = signal<MedicalServiceProviderProfile | null>(null);
+  protected readonly requestSummary = signal<MedicalServiceRequestDashboardSummary | null>(null);
   protected readonly loading = signal(true);
   protected readonly error = signal<string | null>(null);
 
@@ -64,6 +78,10 @@ export class ServiceProviderDashboard implements OnInit {
     this.providers.getProfile().subscribe({
       next: (profile) => { this.profile.set(profile); this.loading.set(false); },
       error: (error: unknown) => { this.loading.set(false); this.error.set(friendlyMessageOf(error, 'Could not load the provider dashboard.')); },
+    });
+    this.requests.getProviderSummary().subscribe({
+      next: (summary) => this.requestSummary.set(summary),
+      error: () => this.requestSummary.set(null),
     });
   }
 }
