@@ -12,7 +12,21 @@
       </div>
     </section>
 
-    @if (stats() && stats()!.length > 0) {
+    @if (loading()) {
+      <div class="cc-loading" role="status" aria-live="polite">
+        <mat-spinner diameter="42" />
+        <span>Loading dashboard…</span>
+      </div>
+    } @else if (error(); as message) {
+      <section class="cc-notice cc-notice--error dashboard-error" role="alert">
+        <mat-icon>cloud_off</mat-icon>
+        <div>
+          <strong>Dashboard unavailable</strong>
+          <span>{{ message }}</span>
+        </div>
+        <button type="button" mat-stroked-button (click)="loadDashboard()">Retry</button>
+      </section>
+    } @else if (stats() && stats()!.length > 0) {
       <div class="stat-row">
         @for (tile of stats()!; track tile.label) {
           <article class="stat-tile">
@@ -26,7 +40,7 @@
       </div>
     }
 
-    @if (config().quickLinks.length) {
+    @if (!loading() && !error() && config().quickLinks.length) {
       <nav class="quick-links" aria-label="Quick actions">
         @for (link of config().quickLinks; track link.route) {
           <a class="quick-link" [routerLink]="link.route">
@@ -41,6 +55,78 @@
           </a>
         }
       </nav>
+    }
+
+    @if (recentRequests().length > 0) {
+      <section class="cc-card dashboard-list" aria-labelledby="recent-requests-title">
+        <div class="dashboard-list__head">
+          <h2 id="recent-requests-title">
+            {{ role() === 'MedicalServiceProvider' ? 'Upcoming accepted requests' : 'Recent requests' }}
+          </h2>
+        </div>
+        <div class="dashboard-list__items">
+          @for (item of recentRequests(); track item.id) {
+            <a [routerLink]="item.actionRoute" class="dashboard-list__item">
+              <mat-icon aria-hidden="true">
+                {{ item.category === 'Insurance' ? 'fact_check' : item.category === 'Blood' ? 'bloodtype' : 'medical_services' }}
+              </mat-icon>
+              <span>
+                <strong>{{ item.title }}</strong>
+                <small>{{ item.category }} · {{ item.submittedAt | date: 'medium' }}</small>
+              </span>
+              <span class="cc-status-chip cc-status-chip--pending">{{ item.status }}</span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    @if (recentAppointments().length > 0) {
+      <section class="cc-card dashboard-list" aria-labelledby="recent-appointments-title">
+        <div class="dashboard-list__head">
+          <h2 id="recent-appointments-title">Recent appointments</h2>
+          <a mat-button routerLink="/dashboard/doctor/appointments">View all</a>
+        </div>
+        <div class="dashboard-list__items">
+          @for (item of recentAppointments(); track item.id) {
+            <a [routerLink]="['/dashboard/doctor/appointments', item.id]" class="dashboard-list__item">
+              <mat-icon aria-hidden="true">event</mat-icon>
+              <span>
+                <strong>{{ item.primaryName }}</strong>
+                <small>{{ item.secondaryName }} · {{ item.appointmentDate }} {{ item.startTime.slice(0, 5) }}</small>
+              </span>
+              <span class="cc-status-chip cc-status-chip--pending">{{ item.status }}</span>
+            </a>
+          }
+        </div>
+      </section>
+    }
+
+    @if (recentRegistrations().length > 0) {
+      <section class="cc-card dashboard-list" aria-labelledby="recent-registrations-title">
+        <div class="dashboard-list__head">
+          <h2 id="recent-registrations-title">Recent registrations</h2>
+          <a mat-button routerLink="/super-admin">Manage users</a>
+        </div>
+        <div class="dashboard-list__items">
+          @for (item of recentRegistrations(); track item.userId) {
+            <div class="dashboard-list__item">
+              <mat-icon aria-hidden="true">person</mat-icon>
+              <span>
+                <strong>{{ item.fullName }}</strong>
+                <small>{{ item.email }} · {{ item.role }} · {{ item.createdAt | date: 'mediumDate' }}</small>
+              </span>
+              <span
+                class="cc-status-chip"
+                [class.cc-status-chip--active]="item.isActive"
+                [class.cc-status-chip--inactive]="!item.isActive"
+              >
+                {{ item.isActive ? 'Active' : 'Inactive' }}
+              </span>
+            </div>
+          }
+        </div>
+      </section>
     }
 
     <div class="grid">
@@ -116,18 +202,19 @@
         </article>
       }
 
-      <article class="cc-card soon">
-        <h2>Coming soon</h2>
-        <p class="soon__lead">These features arrive in later steps of the project.</p>
-        <ul>
-          @for (feature of config().comingSoon; track feature) {
-            <li>
-              <mat-icon>schedule</mat-icon>
-              <span>{{ feature }}</span>
-            </li>
-          }
-        </ul>
-      </article>
+      @if (config().comingSoon.length > 0) {
+        <article class="cc-card soon">
+          <h2>Coming soon</h2>
+          <ul>
+            @for (feature of config().comingSoon; track feature) {
+              <li>
+                <mat-icon>schedule</mat-icon>
+                <span>{{ feature }}</span>
+              </li>
+            }
+          </ul>
+        </article>
+      }
     </div>
   </div>
 }

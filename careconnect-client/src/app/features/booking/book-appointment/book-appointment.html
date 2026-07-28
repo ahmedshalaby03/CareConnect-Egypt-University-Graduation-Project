@@ -33,7 +33,7 @@
         <div class="cc-form-grid">
           <mat-form-field appearance="outline" class="cc-form-field">
             <mat-label>Hospital</mat-label>
-            <mat-select [formControl]="hospitalControl" (selectionChange)="onHospitalOrDateChange()">
+            <mat-select [formControl]="hospitalControl" (selectionChange)="onHospitalChange()">
               @for (hospital of d.hospitals; track hospital.id) {
                 <mat-option [value]="hospital.id">
                   {{ hospital.hospitalName }}
@@ -52,7 +52,7 @@
               type="date"
               [formControl]="dateControl"
               [min]="minDate"
-              (change)="onHospitalOrDateChange()"
+              (change)="onDateChange()"
             />
           </mat-form-field>
         </div>
@@ -66,10 +66,21 @@
         }
 
         @if (slotsLoaded() && !loadingSlots()) {
+          @if (nearestDateSelected()) {
+            <div class="cc-notice">
+              <mat-icon>event_available</mat-icon>
+              <span>The nearest available date has been selected automatically.</span>
+            </div>
+          }
+
           @if (slots().length === 0) {
             <div class="no-slots">
               <mat-icon>event_busy</mat-icon>
-              <p>No slots are available on this date. Try another date or hospital.</p>
+              <p>No slots are available on this date.</p>
+              <button type="button" mat-stroked-button (click)="findNextAvailableDate()">
+                <mat-icon>event_search</mat-icon>
+                Find the next available date
+              </button>
             </div>
           } @else {
             <div class="slot-grid">

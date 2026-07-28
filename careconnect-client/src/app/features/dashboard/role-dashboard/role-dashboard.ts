@@ -2,18 +2,20 @@ import { ChangeDetectionStrategy, Component, computed, inject, input, OnInit, si
 import { DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { friendlyMessageOf } from '../../../core/interceptors/error.interceptor';
+import {
+  DashboardAppointmentItem,
+  DashboardRequestItem,
+  RecentRegistration,
+} from '../../../core/models/dashboard.model';
 import { ROLE_LABELS, UserRole } from '../../../core/models/user.model';
 import { HospitalDirectoryItem } from '../../../core/models/directory.model';
 import { AuthService } from '../../../core/services/auth.service';
-import { AppointmentService } from '../../../core/services/appointment.service';
-import { BloodRequestService } from '../../../core/services/blood-request.service';
-import { BloodStockService } from '../../../core/services/blood-stock.service';
+import { DashboardService } from '../../../core/services/dashboard.service';
 import { GeolocationFailure, GeolocationService } from '../../../core/services/geolocation.service';
 import { HospitalDiscoveryService } from '../../../core/services/hospital-discovery.service';
-import { HospitalLocationService } from '../../../core/services/hospital-location.service';
-import { InsuranceRequestService } from '../../../core/services/insurance-request.service';
 
 interface StatTile {
   label: string;
@@ -36,8 +38,6 @@ interface DashboardConfig {
   comingSoon: string[];
 }
 
-// Placeholder content per role. Real features (appointments, insurance, blood bank, maps,
-// AI) are explicitly out of scope for this step and land in later ones.
 const DASHBOARDS: Record<UserRole, DashboardConfig> = {
   Patient: {
     accent: '#00796b',
@@ -61,6 +61,18 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         description: 'Track your bookings and their status.',
         route: '/dashboard/patient/appointments',
         icon: 'event_note',
+      },
+      {
+        label: 'Medical services',
+        description: 'Browse providers and request a medical service.',
+        route: '/medical-service-providers',
+        icon: 'health_and_safety',
+      },
+      {
+        label: 'AI Medical Assistant',
+        description: 'Get general health guidance with safety boundaries.',
+        route: '/dashboard/patient/ai-assistant',
+        icon: 'smart_toy',
       },
       {
         label: 'Insurance requests',
@@ -87,7 +99,7 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         icon: 'near_me',
       },
     ],
-    comingSoon: ['View medical records'],
+    comingSoon: [],
   },
   Doctor: {
     accent: '#00695c',
@@ -124,8 +136,20 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/doctor/appointments',
         icon: 'event_note',
       },
+      {
+        label: 'Unavailable periods',
+        description: 'Block future periods when you cannot receive bookings.',
+        route: '/dashboard/doctor/unavailable-periods',
+        icon: 'event_busy',
+      },
+      {
+        label: 'Patient reviews',
+        description: 'See verified feedback from completed appointments.',
+        route: '/dashboard/doctor/reviews',
+        icon: 'star',
+      },
     ],
-    comingSoon: ['Patient medical history', 'Prescriptions'],
+    comingSoon: [],
   },
   Hospital: {
     accent: '#0277bd',
@@ -180,8 +204,14 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/dashboard/hospital/location',
         icon: 'near_me',
       },
+      {
+        label: 'Patient reviews',
+        description: 'See verified feedback for completed appointments.',
+        route: '/dashboard/hospital/reviews',
+        icon: 'star',
+      },
     ],
-    comingSoon: ['Departments & staff', 'Bed availability'],
+    comingSoon: [],
   },
   MedicalServiceProvider: {
     accent: '#5e35b1',
@@ -189,25 +219,43 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
     intro: 'Offer your medical services to patients across Egypt.',
     quickLinks: [
       {
-        label: 'Browse doctors',
-        description: 'See who is practising on the network.',
-        route: '/doctors',
-        icon: 'medical_information',
+        label: 'Business profile',
+        description: 'Keep your public business details current.',
+        route: '/dashboard/service-provider/profile',
+        icon: 'storefront',
       },
       {
-        label: 'Browse hospitals',
-        description: 'Explore hospitals across Egypt.',
-        route: '/hospitals',
-        icon: 'local_hospital',
+        label: 'My services',
+        description: 'Manage your active and inactive service catalogue.',
+        route: '/dashboard/service-provider/services',
+        icon: 'medical_services',
       },
       {
-        label: 'Blood bank',
-        description: 'Search hospitals for available blood groups.',
-        route: '/blood-bank',
-        icon: 'bloodtype',
+        label: 'Working hours',
+        description: 'Maintain the hours patients can request.',
+        route: '/dashboard/service-provider/working-hours',
+        icon: 'schedule',
+      },
+      {
+        label: 'Service requests',
+        description: 'Review and manage incoming patient requests.',
+        route: '/dashboard/service-provider/requests',
+        icon: 'assignment',
+      },
+      {
+        label: 'Public preview',
+        description: 'Preview the profile patients can discover.',
+        route: '/dashboard/service-provider/preview',
+        icon: 'preview',
+      },
+      {
+        label: 'Patient reviews',
+        description: 'Read verified patient feedback.',
+        route: '/dashboard/service-provider/reviews',
+        icon: 'star',
       },
     ],
-    comingSoon: ['Service catalogue', 'Incoming requests', 'Coverage map'],
+    comingSoon: [],
   },
   SuperAdmin: {
     accent: '#c62828',
@@ -232,6 +280,18 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
         route: '/super-admin/insurance-companies',
         icon: 'fact_check',
       },
+      {
+        label: 'Medical service categories',
+        description: 'Manage categories used by service providers.',
+        route: '/super-admin/medical-service-categories',
+        icon: 'medical_services',
+      },
+      {
+        label: 'Review moderation',
+        description: 'Moderate visible and hidden verified reviews.',
+        route: '/super-admin/reviews',
+        icon: 'policy',
+      },
     ],
     comingSoon: [],
   },
@@ -239,18 +299,14 @@ const DASHBOARDS: Record<UserRole, DashboardConfig> = {
 
 @Component({
   selector: 'app-role-dashboard',
-  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule],
+  imports: [DatePipe, RouterLink, MatIconModule, MatButtonModule, MatProgressSpinnerModule],
   templateUrl: './role-dashboard.html',
   styleUrl: './role-dashboard.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RoleDashboard implements OnInit {
   private readonly auth = inject(AuthService);
-  private readonly appointments = inject(AppointmentService);
-  private readonly insuranceRequests = inject(InsuranceRequestService);
-  private readonly bloodRequests = inject(BloodRequestService);
-  private readonly bloodStock = inject(BloodStockService);
-  private readonly hospitalLocation = inject(HospitalLocationService);
+  private readonly dashboard = inject(DashboardService);
   private readonly hospitalDiscovery = inject(HospitalDiscoveryService);
   private readonly geolocation = inject(GeolocationService);
 
@@ -263,6 +319,11 @@ export class RoleDashboard implements OnInit {
   protected readonly roleLabel = computed(() => ROLE_LABELS[this.role()]);
 
   protected readonly stats = signal<StatTile[] | null>(null);
+  protected readonly loading = signal(true);
+  protected readonly error = signal<string | null>(null);
+  protected readonly recentRequests = signal<DashboardRequestItem[]>([]);
+  protected readonly recentAppointments = signal<DashboardAppointmentItem[]>([]);
+  protected readonly recentRegistrations = signal<RecentRegistration[]>([]);
 
   /**
    * Session-only: filled in solely when the Patient clicks the button below, never on load.
@@ -273,111 +334,140 @@ export class RoleDashboard implements OnInit {
   protected readonly closestHospitalMessage = signal<string | null>(null);
 
   ngOnInit(): void {
-    // Scoped to the signed-in profile server-side; this just decides which call to make.
+    this.loadDashboard();
+  }
+
+  protected loadDashboard(): void {
+    this.loading.set(true);
+    this.error.set(null);
+    this.stats.set(null);
+    this.recentRequests.set([]);
+    this.recentAppointments.set([]);
+    this.recentRegistrations.set([]);
+
     switch (this.role()) {
       case 'Patient':
-        forkJoin({
-          appointments: this.appointments.getPatientDashboardStats(),
-          insurance: this.insuranceRequests.getPatientDashboardStats(),
-          blood: this.bloodRequests.getPatientDashboardStats(),
-        }).subscribe({
-          next: ({ appointments: s, insurance: i, blood: b }) =>
+        this.dashboard.getPatient().subscribe({
+          next: (summary) => {
             this.stats.set([
               {
                 label: 'Next appointment',
-                value: s.nextAppointment
-                  ? `${s.nextAppointment.appointmentDate} ${s.nextAppointment.startTime.slice(0, 5)}`
+                value: summary.nextAppointment
+                  ? `${summary.nextAppointment.appointmentDate} ${summary.nextAppointment.startTime.slice(0, 5)}`
                   : 'None scheduled',
                 icon: 'event_upcoming',
               },
-              { label: 'Upcoming appointments', value: s.upcomingCount, icon: 'event_available' },
-              { label: 'Pending requests', value: s.pendingCount, icon: 'hourglass_top' },
-              { label: 'Pending insurance requests', value: i.pendingCount, icon: 'fact_check' },
-              { label: 'Approved insurance requests', value: i.approvedCount, icon: 'verified' },
-              { label: 'Pending blood requests', value: b.pendingCount, icon: 'bloodtype' },
-              { label: 'Approved blood requests', value: b.approvedCount, icon: 'water_drop' },
-            ]),
-          error: () => this.stats.set([]),
+              { label: 'Upcoming appointments', value: summary.upcomingAppointmentsCount, icon: 'event_available' },
+              { label: 'Pending appointments', value: summary.pendingAppointmentsCount, icon: 'hourglass_top' },
+              { label: 'Pending insurance', value: summary.pendingInsuranceRequestsCount, icon: 'fact_check' },
+              { label: 'Pending blood requests', value: summary.pendingBloodRequestsCount, icon: 'bloodtype' },
+              { label: 'Active service requests', value: summary.activeMedicalServiceRequestsCount, icon: 'medical_services' },
+              { label: 'Unread notifications', value: summary.unreadNotificationsCount, icon: 'notifications' },
+              { label: 'Reviews available', value: summary.eligibleReviewsCount, icon: 'rate_review' },
+            ]);
+            this.recentRequests.set(summary.recentRequests);
+            this.loading.set(false);
+          },
+          error: (error: unknown) => this.handleLoadError(error),
         });
         break;
 
       case 'Doctor':
-        this.appointments.getDoctorDashboardStats().subscribe({
-          next: (s) =>
+        this.dashboard.getDoctor().subscribe({
+          next: (summary) => {
             this.stats.set([
-              { label: "Today's appointments", value: s.todayCount, icon: 'today' },
-              { label: 'Pending requests', value: s.pendingCount, icon: 'hourglass_top' },
-              { label: 'Confirmed', value: s.confirmedCount, icon: 'event_available' },
-              { label: 'Completed this month', value: s.completedThisMonthCount, icon: 'task_alt' },
-            ]),
-          error: () => this.stats.set([]),
+              { label: "Today's appointments", value: summary.todayAppointmentsCount, icon: 'today' },
+              { label: 'Upcoming confirmed', value: summary.upcomingConfirmedAppointmentsCount, icon: 'event_available' },
+              { label: 'Pending appointments', value: summary.pendingAppointmentRequestsCount, icon: 'hourglass_top' },
+              { label: 'Completed appointments', value: summary.completedAppointmentsCount, icon: 'task_alt' },
+              { label: 'Current hospitals', value: summary.currentHospitalAffiliationsCount, icon: 'local_hospital' },
+              { label: 'Pending affiliations', value: summary.pendingHospitalAffiliationRequestsCount, icon: 'handshake' },
+              { label: 'Average rating', value: summary.averageVisibleRating ?? '—', icon: 'star' },
+              { label: 'Visible reviews', value: summary.visibleReviewsCount, icon: 'rate_review' },
+              { label: 'Unread notifications', value: summary.unreadNotificationsCount, icon: 'notifications' },
+            ]);
+            this.recentAppointments.set(summary.recentAppointments);
+            this.loading.set(false);
+          },
+          error: (error: unknown) => this.handleLoadError(error),
         });
         break;
 
       case 'Hospital':
-        forkJoin({
-          appointments: this.appointments.getHospitalDashboardStats(),
-          insurance: this.insuranceRequests.getHospitalDashboardStats(),
-          blood: this.bloodRequests.getHospitalDashboardStats(),
-          location: this.hospitalLocation.get(),
-        }).subscribe({
-          next: ({ appointments: s, insurance: i, blood: b, location: loc }) =>
+        this.dashboard.getHospital().subscribe({
+          next: (summary) => {
             this.stats.set([
-              { label: "Today's appointments", value: s.todayCount, icon: 'today' },
-              { label: 'Pending appointments', value: s.pendingCount, icon: 'hourglass_top' },
-              { label: 'Active approved doctors', value: s.activeApprovedDoctorsCount, icon: 'groups' },
-              { label: 'New insurance requests', value: i.pendingCount, icon: 'fact_check' },
-              { label: 'Insurance under review', value: i.underReviewCount, icon: 'pending_actions' },
-              { label: 'Approved this month', value: i.approvedThisMonthCount, icon: 'task_alt' },
-              { label: 'Rejected this month', value: i.rejectedThisMonthCount, icon: 'block' },
-              { label: 'Total blood units available', value: b.totalAvailableUnits, icon: 'bloodtype' },
-              { label: 'Blood groups below minimum', value: b.bloodGroupsBelowMinimumCount, icon: 'warning' },
-              { label: 'Pending blood requests', value: b.pendingRequestsCount, icon: 'water_drop' },
-              { label: 'Emergency blood requests', value: b.emergencyRequestsCount, icon: 'emergency' },
-              { label: 'Approved, awaiting fulfillment', value: b.approvedAwaitingFulfillmentCount, icon: 'inventory' },
-              {
-                label: 'Location status',
-                value: loc.isLocationCompleted ? 'Complete' : 'Incomplete',
-                icon: loc.isLocationCompleted ? 'near_me' : 'location_off',
-              },
-              {
-                label: 'Coordinates',
-                value: loc.latitude !== null && loc.longitude !== null ? 'Set' : 'Missing',
-                icon: 'my_location',
-              },
-            ]),
-          error: () => this.stats.set([]),
+              { label: 'Active doctors', value: summary.activeAffiliatedDoctorsCount, icon: 'groups' },
+              { label: 'Pending doctor requests', value: summary.pendingDoctorAffiliationRequestsCount, icon: 'how_to_reg' },
+              { label: "Today's appointments", value: summary.todayAppointmentsCount, icon: 'today' },
+              { label: 'Pending insurance', value: summary.pendingInsuranceRequestsCount, icon: 'fact_check' },
+              { label: 'Pending blood requests', value: summary.pendingBloodRequestsCount, icon: 'water_drop' },
+              { label: 'Low blood-stock groups', value: summary.lowBloodStockGroupsCount, icon: 'warning' },
+              { label: 'Average rating', value: summary.averageVisibleRating ?? '—', icon: 'star' },
+              { label: 'Visible reviews', value: summary.visibleReviewsCount, icon: 'rate_review' },
+              { label: 'Unread notifications', value: summary.unreadNotificationsCount, icon: 'notifications' },
+            ]);
+            this.loading.set(false);
+          },
+          error: (error: unknown) => this.handleLoadError(error),
+        });
+        break;
+
+      case 'MedicalServiceProvider':
+        this.dashboard.getMedicalServiceProvider().subscribe({
+          next: (summary) => {
+            this.stats.set([
+              { label: 'Publication status', value: summary.isPublished ? 'Published' : 'Draft', icon: 'public' },
+              { label: 'Active services', value: summary.activeServicesCount, icon: 'medical_services' },
+              { label: 'Inactive services', value: summary.inactiveServicesCount, icon: 'visibility_off' },
+              { label: 'Pending requests', value: summary.pendingRequestsCount, icon: 'hourglass_top' },
+              { label: 'Accepted upcoming', value: summary.acceptedUpcomingRequestsCount, icon: 'event_available' },
+              { label: 'Completed requests', value: summary.completedRequestsCount, icon: 'task_alt' },
+              { label: 'Average rating', value: summary.averageVisibleRating ?? '—', icon: 'star' },
+              { label: 'Visible reviews', value: summary.visibleReviewsCount, icon: 'rate_review' },
+              { label: 'Unread notifications', value: summary.unreadNotificationsCount, icon: 'notifications' },
+            ]);
+            this.recentRequests.set(summary.upcomingRequests);
+            this.loading.set(false);
+          },
+          error: (error: unknown) => this.handleLoadError(error),
         });
         break;
 
       case 'SuperAdmin':
-        forkJoin({
-          blood: this.bloodStock.getSuperAdminDashboardStats(),
-          location: this.hospitalDiscovery.getSuperAdminDashboardStats(),
-        }).subscribe({
-          next: ({ blood: b, location: loc }) =>
+        this.dashboard.getSuperAdmin().subscribe({
+          next: (summary) => {
             this.stats.set([
-              { label: 'Hospitals with blood stock', value: b.hospitalsWithStockCount, icon: 'local_hospital' },
-              { label: 'Active blood stock records', value: b.activeBloodStockRecordsCount, icon: 'bloodtype' },
-              {
-                label: 'Hospitals with completed locations',
-                value: loc.activeHospitalsWithCompletedLocationCount,
-                icon: 'near_me',
-              },
-              {
-                label: 'Hospitals missing coordinates',
-                value: loc.activeHospitalsMissingCoordinatesCount,
-                icon: 'location_off',
-              },
-              { label: 'Governorates covered', value: loc.governoratesCovered.length, icon: 'map' },
-            ]),
-          error: () => this.stats.set([]),
+              { label: 'Total users', value: summary.totalUsersCount, icon: 'group' },
+              { label: 'Active users', value: summary.activeUsersCount, icon: 'person_check' },
+              { label: 'Inactive users', value: summary.inactiveUsersCount, icon: 'person_off' },
+              { label: 'Patients', value: summary.patientsCount, icon: 'personal_injury' },
+              { label: 'Doctors', value: summary.doctorsCount, icon: 'medical_information' },
+              { label: 'Hospitals', value: summary.hospitalsCount, icon: 'local_hospital' },
+              { label: 'Service providers', value: summary.medicalServiceProvidersCount, icon: 'medical_services' },
+              { label: 'Specialties', value: summary.medicalSpecialtiesCount, icon: 'category' },
+              { label: 'Insurance companies', value: summary.insuranceCompaniesCount, icon: 'fact_check' },
+              { label: 'Service categories', value: summary.medicalServiceCategoriesCount, icon: 'list_alt' },
+              { label: 'Visible reviews', value: summary.visibleReviewsCount, icon: 'visibility' },
+              { label: 'Hidden reviews', value: summary.hiddenReviewsCount, icon: 'visibility_off' },
+            ]);
+            this.recentRegistrations.set(summary.recentRegistrations);
+            this.loading.set(false);
+          },
+          error: (error: unknown) => this.handleLoadError(error),
         });
         break;
 
       default:
         this.stats.set([]);
+        this.loading.set(false);
     }
+  }
+
+  private handleLoadError(error: unknown): void {
+    this.loading.set(false);
+    this.stats.set([]);
+    this.error.set(friendlyMessageOf(error, 'Could not load the dashboard.'));
   }
 
   /**

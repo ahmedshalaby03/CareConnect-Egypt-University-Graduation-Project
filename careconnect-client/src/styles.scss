@@ -45,6 +45,73 @@ body {
   box-sizing: border-box;
 }
 
+img,
+svg {
+  max-width: 100%;
+}
+
+a,
+button,
+[tabindex] {
+  &:focus-visible {
+    outline: 3px solid color-mix(in srgb, var(--cc-accent) 70%, white);
+    outline-offset: 2px;
+  }
+}
+
+table {
+  max-width: 100%;
+}
+
+/* Account-menu content is rendered in the global Material overlay, so its avatar and
+   identity block belong in global styles rather than the MainLayout style budget. */
+.app-menu-head {
+  opacity: 1 !important;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 260px;
+  height: auto;
+  min-height: 70px;
+  line-height: 1.25;
+
+  &__avatar {
+    display: grid;
+    place-items: center;
+    flex: 0 0 42px;
+    width: 42px;
+    height: 42px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: var(--cc-brand-light);
+    color: var(--cc-brand-dark);
+    font-weight: 800;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__copy {
+    display: grid;
+    min-width: 0;
+  }
+
+  &__name {
+    overflow: hidden;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__email {
+    font-size: 0.8rem;
+    color: var(--mat-sys-on-surface-variant);
+  }
+}
+
 // ------------------------------------------------------------------- Utilities
 
 .cc-page {
@@ -74,6 +141,7 @@ body {
   border: 1px solid var(--mat-sys-outline-variant);
   border-radius: var(--cc-radius);
   padding: 24px;
+  min-width: 0;
 }
 
 .cc-form-field {
@@ -237,6 +305,74 @@ body {
   }
 }
 
+// Dashboard list/error blocks are shared by every role dashboard and kept global so the
+// role component stays within Angular's per-component style budget.
+.dashboard-error {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+
+  div {
+    display: grid;
+    gap: 2px;
+    flex: 1 1 auto;
+  }
+}
+
+.dashboard-list {
+  margin-bottom: 24px;
+}
+
+.dashboard-list__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+
+  h2 {
+    margin: 0;
+    font-size: 1.1rem;
+  }
+}
+
+.dashboard-list__items {
+  display: grid;
+}
+
+.dashboard-list__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 4px;
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  color: inherit;
+  text-decoration: none;
+
+  > span:nth-child(2) {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  strong,
+  small {
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    color: var(--mat-sys-on-surface-variant);
+  }
+
+  > mat-icon {
+    color: var(--accent);
+    flex: 0 0 auto;
+  }
+}
+
 /* Hospital and doctor cards appear in the public directory and in the doctor's browse
    screen, so they live here rather than being duplicated per component. */
 .hospital-card,
@@ -340,6 +476,28 @@ body {
 }
 
 @media (max-width: 560px) {
+  .cc-page {
+    padding-inline: 12px;
+  }
+
+  .cc-card-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cc-card {
+    padding: 18px;
+  }
+
+  .dashboard-error,
+  .dashboard-list__item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-list__item .cc-status-chip {
+    margin-inline-start: 36px;
+  }
+
   .cc-notice {
     flex-wrap: wrap;
 

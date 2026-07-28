@@ -14,6 +14,7 @@ public class UserDto
     public bool IsActive { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime? LastLoginAt { get; init; }
+    public string? ProfileImageUrl { get; init; }
 }
 
 public class RegisterResponse

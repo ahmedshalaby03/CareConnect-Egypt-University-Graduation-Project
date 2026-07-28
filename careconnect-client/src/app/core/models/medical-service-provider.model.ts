@@ -159,6 +159,7 @@ export interface MedicalServiceProviderFilter {
 
 export interface MedicalServiceProviderSummary {
   id: string;
+  profileImageUrl: string | null;
   businessName: string;
   providerType: MedicalServiceProviderType;
   providerTypeName: string;
@@ -174,6 +175,7 @@ export interface MedicalServiceProviderSummary {
 
 export interface MedicalServiceProviderDetails {
   id: string;
+  profileImageUrl: string | null;
   businessName: string;
   providerType: MedicalServiceProviderType;
   providerTypeName: string;

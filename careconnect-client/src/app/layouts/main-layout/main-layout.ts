@@ -4,6 +4,7 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   signal,
 } from '@angular/core';
@@ -46,15 +47,19 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
       route: '/dashboard/patient/ai-assistant',
       icon: 'smart_toy',
     },
+    { label: 'Notifications', route: '/notifications', icon: 'notifications' },
   ],
   Doctor: [
     { label: 'Dashboard', route: '/dashboard/doctor', icon: 'dashboard', exact: true },
     { label: 'My profile', route: '/dashboard/doctor/profile', icon: 'badge' },
     { label: 'Find hospitals', route: '/dashboard/doctor/hospitals', icon: 'travel_explore' },
     { label: 'My requests', route: '/dashboard/doctor/hospital-requests', icon: 'assignment' },
+    { label: 'Availability', route: '/dashboard/doctor/availability', icon: 'schedule' },
+    { label: 'Unavailable periods', route: '/dashboard/doctor/unavailable-periods', icon: 'event_busy' },
     { label: 'Appointments', route: '/dashboard/doctor/appointments', icon: 'event_note' },
     { label: 'Patient Reviews', route: '/dashboard/doctor/reviews', icon: 'star' },
     { label: 'Blood bank', route: '/blood-bank', icon: 'bloodtype' },
+    { label: 'Notifications', route: '/notifications', icon: 'notifications' },
   ],
   Hospital: [
     { label: 'Dashboard', route: '/dashboard/hospital', icon: 'dashboard', exact: true },
@@ -67,6 +72,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Blood stock', route: '/dashboard/hospital/blood-stock', icon: 'bloodtype' },
     { label: 'Blood requests', route: '/dashboard/hospital/blood-requests', icon: 'water_drop' },
     { label: 'Patient Reviews', route: '/dashboard/hospital/reviews', icon: 'star' },
+    { label: 'Notifications', route: '/notifications', icon: 'notifications' },
   ],
   MedicalServiceProvider: [
     { label: 'Dashboard', route: '/dashboard/service-provider', icon: 'dashboard', exact: true },
@@ -77,8 +83,10 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Working Hours', route: '/dashboard/service-provider/working-hours', icon: 'schedule' },
     { label: 'Public Preview', route: '/dashboard/service-provider/preview', icon: 'preview' },
     { label: 'Directory', route: '/medical-service-providers', icon: 'travel_explore' },
+    { label: 'Notifications', route: '/notifications', icon: 'notifications' },
   ],
   SuperAdmin: [
+    { label: 'Dashboard', route: '/super-admin/dashboard', icon: 'dashboard', exact: true },
     { label: 'Users', route: '/super-admin', icon: 'manage_accounts', exact: true },
     { label: 'Specialties', route: '/super-admin/specialties', icon: 'category' },
     { label: 'Insurance companies', route: '/super-admin/insurance-companies', icon: 'fact_check' },
@@ -87,6 +95,7 @@ const NAV_BY_ROLE: Record<UserRole, NavLink[]> = {
     { label: 'Doctors', route: '/doctors', icon: 'medical_information' },
     { label: 'Hospitals', route: '/hospitals', icon: 'local_hospital' },
     { label: 'Blood bank', route: '/blood-bank', icon: 'bloodtype' },
+    { label: 'Notifications', route: '/notifications', icon: 'notifications' },
   ],
 };
 
@@ -119,6 +128,7 @@ export class MainLayout {
   protected readonly unreadCount = this.notifications.unreadCount;
   protected readonly recentNotifications = signal<AppNotification[]>([]);
   protected readonly notificationsLoading = signal(false);
+  protected readonly avatarLoadFailed = signal(false);
   protected readonly badgeText = computed(() => this.unreadCount() > 99 ? '99+' : `${this.unreadCount()}`);
 
   protected readonly navLinks = computed<NavLink[]>(() => {
@@ -144,6 +154,11 @@ export class MainLayout {
   });
 
   constructor() {
+    effect(() => {
+      this.user()?.profileImageUrl;
+      this.avatarLoadFailed.set(false);
+    });
+
     const refreshes: Observable<unknown>[] = [timer(0, 60_000)];
     const browserWindow = this.document.defaultView;
     if (browserWindow) {
@@ -202,6 +217,10 @@ export class MainLayout {
 
   protected logout(): void {
     this.auth.logout();
+  }
+
+  protected onAvatarError(): void {
+    this.avatarLoadFailed.set(true);
   }
 
   private safeInternalRoute(route: string | null): string {

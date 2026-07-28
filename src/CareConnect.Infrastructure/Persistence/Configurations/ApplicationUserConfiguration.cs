@@ -18,6 +18,9 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
 
         builder.Property(u => u.CreatedAt).IsRequired();
 
+        builder.Property(u => u.ProfileImageFileName)
+            .HasMaxLength(255);
+
         // Identity already gives us a unique index on NormalizedEmail. Phone numbers are
         // optional, so this one is filtered: many users may have no phone, only one may
         // have any given phone.

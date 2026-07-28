@@ -14,6 +14,7 @@ import {
 } from '../models/auth.model';
 import { homeRouteForRole, User } from '../models/user.model';
 import { TokenService } from './token.service';
+import { ApiAssetUrlService } from './api-asset-url.service';
 
 /**
  * Marks the calls the JWT interceptor must leave alone: attaching an expired token to the
@@ -30,6 +31,7 @@ export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly tokens = inject(TokenService);
   private readonly router = inject(Router);
+  private readonly assets = inject(ApiAssetUrlService);
 
   private readonly baseUrl = `${environment.apiBaseUrl}/auth`;
 
@@ -78,7 +80,7 @@ export class AuthService {
 
   me(): Observable<User> {
     return this.http.get<ApiResponse<User>>(`${this.baseUrl}/me`).pipe(
-      map((response) => response.data!),
+      map((response) => this.normalizeUser(response.data!)),
       tap((user) => this.tokens.updateUser(user)),
     );
   }
@@ -121,12 +123,24 @@ export class AuthService {
     return homeRouteForRole(this.role());
   }
 
+  updateCurrentUser(user: User): void {
+    this.tokens.updateUser(user);
+  }
+
   private storeSession(auth: AuthResponse): void {
+    const user = this.normalizeUser(auth.user);
     this.tokens.save({
       accessToken: auth.accessToken,
       refreshToken: auth.refreshToken,
       accessTokenExpiresAt: auth.accessTokenExpiresAt,
-      user: auth.user,
+      user,
     });
+  }
+
+  private normalizeUser(user: User): User {
+    return {
+      ...user,
+      profileImageUrl: this.assets.resolve(user.profileImageUrl),
+    };
   }
 }

@@ -37,6 +37,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
     options.SuppressModelStateInvalidFilter = true);
 
 builder.Services.AddSwaggerWithJwt();
+builder.Services.AddCareConnectHealthChecks();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -46,6 +47,8 @@ var app = builder.Build();
 app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging();
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseManagedProfileImages();
 
 if (app.Environment.IsDevelopment())
 {
@@ -68,6 +71,7 @@ app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapCareConnectHealthChecks();
 
 await app.SeedDatabaseAsync();
 await app.SeedDemoDataAsync();

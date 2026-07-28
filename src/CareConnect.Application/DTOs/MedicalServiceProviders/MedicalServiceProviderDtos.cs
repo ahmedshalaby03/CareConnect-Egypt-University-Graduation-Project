@@ -183,6 +183,7 @@ public class MedicalServiceProviderFilter : PagedQueryParameters
 public class MedicalServiceProviderSummaryDto
 {
     public Guid Id { get; init; }
+    public string? ProfileImageUrl { get; init; }
     public string BusinessName { get; init; } = string.Empty;
     public MedicalServiceProviderType ProviderType { get; init; }
     public string ProviderTypeName { get; init; } = string.Empty;
@@ -199,6 +200,7 @@ public class MedicalServiceProviderSummaryDto
 public class MedicalServiceProviderDetailsDto
 {
     public Guid Id { get; init; }
+    public string? ProfileImageUrl { get; init; }
     public string BusinessName { get; init; } = string.Empty;
     public MedicalServiceProviderType ProviderType { get; init; }
     public string ProviderTypeName { get; init; } = string.Empty;

@@ -14,6 +14,10 @@ node_modules/
 careconnect-client/dist/
 careconnect-client/.angular/
 
+# Runtime-managed profile images
+src/CareConnect.Api/wwwroot/uploads/profile-images/*
+!src/CareConnect.Api/wwwroot/uploads/profile-images/.gitkeep
+
 # Environment / secrets — never commit real secrets
 *.local.json
 appsettings.*.local.json

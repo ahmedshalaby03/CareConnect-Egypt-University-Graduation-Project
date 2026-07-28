@@ -86,6 +86,7 @@
               type="button"
               mat-icon-button
               matTooltip="Edit insurance company"
+              [attr.aria-label]="'Edit ' + company.name"
               (click)="openForm(company)"
             >
               <mat-icon>edit</mat-icon>

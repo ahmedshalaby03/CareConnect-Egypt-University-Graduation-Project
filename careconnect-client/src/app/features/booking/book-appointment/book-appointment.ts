@@ -15,9 +15,23 @@ import { DirectoryService } from '../../../core/services/directory.service';
 import { AppointmentService } from '../../../core/services/appointment.service';
 import { NotificationService } from '../../../core/services/notification.service';
 
-/** Today, as "yyyy-MM-dd", used both as the date input's min and its default value. */
+/** Formats a local calendar date without the UTC shift caused by Date#toISOString. */
+function localDateIso(date: Date): string {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return localDateIso(new Date());
+}
+
+function addDays(dateIso: string, days: number): string {
+  const [year, month, day] = dateIso.split('-').map(Number);
+  const date = new Date(year, month - 1, day);
+  date.setDate(date.getDate() + days);
+  return localDateIso(date);
 }
 
 @Component({
@@ -38,6 +52,8 @@ function todayIso(): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BookAppointment implements OnInit {
+  private static readonly nearestSlotSearchDays = 14;
+
   private readonly directory = inject(DirectoryService);
   private readonly appointments = inject(AppointmentService);
   private readonly notify = inject(NotificationService);
@@ -59,9 +75,11 @@ export class BookAppointment implements OnInit {
   protected readonly selectedSlot = signal<Slot | null>(null);
 
   protected readonly submitting = signal(false);
+  protected readonly nearestDateSelected = signal(false);
 
   protected readonly hospitalControl = this.fb.control('', [Validators.required]);
   protected readonly dateControl = this.fb.control(this.minDate, [Validators.required]);
+  private slotRequestVersion = 0;
 
   protected readonly detailsForm = this.fb.group({
     reason: ['', [Validators.required, Validators.maxLength(500)]],
@@ -77,12 +95,12 @@ export class BookAppointment implements OnInit {
         // A doctor with exactly one hospital can go straight to picking slots.
         if (doctor.hospitals.length === 1) {
           this.hospitalControl.setValue(doctor.hospitals[0].id);
-          this.loadSlots();
+          this.findNextAvailableDate();
         } else {
           const primary = doctor.hospitals.find((h) => h.isPrimary);
           if (primary) {
             this.hospitalControl.setValue(primary.id);
-            this.loadSlots();
+            this.findNextAvailableDate();
           }
         }
       },
@@ -93,9 +111,30 @@ export class BookAppointment implements OnInit {
     });
   }
 
-  protected onHospitalOrDateChange(): void {
+  protected onHospitalChange(): void {
     this.selectedSlot.set(null);
+    this.findNextAvailableDate();
+  }
+
+  protected onDateChange(): void {
+    this.selectedSlot.set(null);
+    this.nearestDateSelected.set(false);
     this.loadSlots();
+  }
+
+  protected findNextAvailableDate(): void {
+    if (this.hospitalControl.invalid) {
+      return;
+    }
+
+    const startingDate = this.dateControl.valid ? this.dateControl.value : this.minDate;
+    const requestVersion = ++this.slotRequestVersion;
+
+    this.selectedSlot.set(null);
+    this.nearestDateSelected.set(false);
+    this.loadingSlots.set(true);
+    this.slotsLoaded.set(false);
+    this.searchNextAvailableDate(startingDate, 0, requestVersion);
   }
 
   protected selectSlot(slot: Slot): void {
@@ -153,6 +192,7 @@ export class BookAppointment implements OnInit {
       return;
     }
 
+    const requestVersion = ++this.slotRequestVersion;
     this.loadingSlots.set(true);
     this.slotsLoaded.set(false);
 
@@ -160,14 +200,68 @@ export class BookAppointment implements OnInit {
       .getAvailableSlots(this.id(), this.hospitalControl.value, this.dateControl.value)
       .subscribe({
         next: (response) => {
+          if (requestVersion !== this.slotRequestVersion) {
+            return;
+          }
+
           this.loadingSlots.set(false);
           this.slotsLoaded.set(true);
           this.slots.set(response.slots);
         },
         error: (error: unknown) => {
+          if (requestVersion !== this.slotRequestVersion) {
+            return;
+          }
+
           this.loadingSlots.set(false);
           this.slotsLoaded.set(true);
           this.slots.set([]);
+          this.notify.error(friendlyMessageOf(error, 'Could not load available slots.'));
+        },
+      });
+  }
+
+  private searchNextAvailableDate(
+    startingDate: string,
+    dayOffset: number,
+    requestVersion: number,
+  ): void {
+    const candidateDate = addDays(startingDate, dayOffset);
+
+    this.directory
+      .getAvailableSlots(this.id(), this.hospitalControl.value, candidateDate)
+      .subscribe({
+        next: (response) => {
+          if (requestVersion !== this.slotRequestVersion) {
+            return;
+          }
+
+          if (response.slots.length > 0) {
+            this.dateControl.setValue(candidateDate, { emitEvent: false });
+            this.slots.set(response.slots);
+            this.nearestDateSelected.set(dayOffset > 0);
+            this.loadingSlots.set(false);
+            this.slotsLoaded.set(true);
+            return;
+          }
+
+          if (dayOffset + 1 < BookAppointment.nearestSlotSearchDays) {
+            this.searchNextAvailableDate(startingDate, dayOffset + 1, requestVersion);
+            return;
+          }
+
+          this.slots.set([]);
+          this.loadingSlots.set(false);
+          this.slotsLoaded.set(true);
+        },
+        error: (error: unknown) => {
+          if (requestVersion !== this.slotRequestVersion) {
+            return;
+          }
+
+          this.slots.set([]);
+          this.loadingSlots.set(false);
+          this.slotsLoaded.set(true);
           this.notify.error(friendlyMessageOf(error, 'Could not load available slots.'));
         },
       });
